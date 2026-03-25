@@ -1,81 +1,236 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>FICHE RAPACES</title>
+  <meta charset="UTF-8">
+  <title>FICHE RAPACES</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: #000;
+      color: #ffd700;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
 
-<style>
-body {
-  background: black;
-  color: gold;
-  font-family: Arial;
-  padding: 20px;
-}
+    h1 {
+      margin-top: 0;
+      font-size: 42px;
+    }
 
-input, button {
-  padding: 10px;
-  margin: 5px;
-  width: 100%;
-}
+    .bloc {
+      background: #111;
+      border: 1px solid #5a4a00;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
 
-.card {
-  border: 1px solid gold;
-  padding: 10px;
-  margin-top: 10px;
-}
-</style>
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 6px 0;
+      border-radius: 8px;
+      border: 1px solid #555;
+      font-size: 16px;
+    }
 
+    input {
+      background: #f2f2f2;
+      color: #000;
+    }
+
+    button {
+      background: #ffd700;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+
+    button:hover {
+      opacity: 0.95;
+    }
+
+    .card {
+      border: 1px solid #ffd700;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 14px;
+      background: #0d0d0d;
+    }
+
+    .card img {
+      max-width: 140px;
+      max-height: 140px;
+      display: block;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      object-fit: cover;
+      border: 1px solid #444;
+    }
+
+    .ligne {
+      margin: 4px 0;
+      color: #fff2b3;
+    }
+
+    .titre-oiseau {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #ffd700;
+    }
+
+    .btn-supprimer {
+      margin-top: 10px;
+      background: #b30000;
+      color: white;
+    }
+
+    .vide {
+      color: #ccc;
+      font-style: italic;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>🦅 FICHE RAPACES</h1>
+  <h1>🦅 FICHE RAPACES</h1>
 
-<input id="nom" placeholder="Nom de l’oiseau">
-<input id="poids" placeholder="Poids">
-<input id="nourriture" placeholder="Nourriture">
-<input id="perte" placeholder="Perte">
-<input id="exercice" placeholder="Exercice">
+  <div class="bloc">
+    <input id="nom" placeholder="Nom de l’oiseau">
+    <input id="poids_depart" type="number" step="0.01" placeholder="Poids de départ">
+    <input id="poids" type="number" step="0.01" placeholder="Poids actuel">
+    <input id="nourriture" type="number" step="0.01" placeholder="Nourriture donnée">
+    <input id="perte" type="number" step="0.01" placeholder="Perte du jour">
+    <input id="exercice" placeholder="Exercice">
+    <input id="dateAjout" type="date">
+    <input id="photo" type="file" accept="image/*">
+    <button onclick="ajouter()">Ajouter</button>
+  </div>
 
-<button onclick="ajouter()">Ajouter</button>
+  <div id="liste"></div>
 
-<div id="liste"></div>
+  <script>
+    let data = JSON.parse(localStorage.getItem("rapaces")) || [];
 
-<script>
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      if (isNaN(d)) return dateStr;
+      return d.toLocaleDateString("fr-BE");
+    }
 
-let data = JSON.parse(localStorage.getItem("rapaces")) || [];
+    function calculPourcentagePerte(poidsDepart, poidsActuel) {
+      const depart = parseFloat(poidsDepart);
+      const actuel = parseFloat(poidsActuel);
 
-function afficher() {
-  let html = "";
-  data.forEach(o => {
-    html += `<div class="card">
-      <b>${o.nom}</b><br>
-      Poids: ${o.poids}<br>
-      Nourriture: ${o.nourriture}<br>
-      Perte: ${o.perte}<br>
-      Exercice: ${o.exercice}
-    </div>`;
-  });
-  document.getElementById("liste").innerHTML = html;
-}
+      if (!depart || isNaN(depart) || isNaN(actuel)) return "";
+      const perte = depart - actuel;
+      const pourcentage = (perte / depart) * 100;
+      return pourcentage.toFixed(2) + " %";
+    }
 
-function ajouter() {
-  const oiseau = {
-    nom: document.getElementById("nom").value,
-    poids: document.getElementById("poids").value,
-    nourriture: document.getElementById("nourriture").value,
-    perte: document.getElementById("perte").value,
-    exercice: document.getElementById("exercice").value
-  };
+    function afficher() {
+      const liste = document.getElementById("liste");
 
-  data.push(oiseau);
-  localStorage.setItem("rapaces", JSON.stringify(data));
-  afficher();
-}
+      if (data.length === 0) {
+        liste.innerHTML = '<div class="vide">Aucun oiseau enregistré.</div>';
+        return;
+      }
 
-afficher();
+      let html = "";
 
-</script>
+      data.forEach((o, index) => {
+        html += `
+          <div class="card">
+            <div class="titre-oiseau">${o.nom || "Sans nom"}</div>
+            ${o.photo ? `<img src="${o.photo}" alt="Photo de ${o.nom}">` : ""}
+            <div class="ligne"><strong>Date d’ajout :</strong> ${formatDate(o.dateAjout)}</div>
+            <div class="ligne"><strong>Poids de départ :</strong> ${o.poidsDepart || "-"}</div>
+            <div class="ligne"><strong>Poids actuel :</strong> ${o.poids || "-"}</div>
+            <div class="ligne"><strong>Nourriture :</strong> ${o.nourriture || "-"}</div>
+            <div class="ligne"><strong>Perte du jour :</strong> ${o.perte || "-"}</div>
+            <div class="ligne"><strong>Exercice :</strong> ${o.exercice || "-"}</div>
+            <div class="ligne"><strong>% perte :</strong> ${o.pourcentagePerte || "-"}</div>
+            <button class="btn-supprimer" onclick="supprimerOiseau(${index})">Supprimer</button>
+          </div>
+        `;
+      });
 
+      liste.innerHTML = html;
+    }
+
+    function ajouter() {
+      const nom = document.getElementById("nom").value.trim();
+      const poidsDepart = document.getElementById("poids_depart").value;
+      const poids = document.getElementById("poids").value;
+      const nourriture = document.getElementById("nourriture").value;
+      const perte = document.getElementById("perte").value;
+      const exercice = document.getElementById("exercice").value.trim();
+      const dateAjout = document.getElementById("dateAjout").value || new Date().toISOString().split("T")[0];
+      const photoInput = document.getElementById("photo");
+      const fichier = photoInput.files[0];
+
+      if (!nom) {
+        alert("Entre un nom d’oiseau.");
+        return;
+      }
+
+      const pourcentagePerte = calculPourcentagePerte(poidsDepart, poids);
+
+      const enregistrer = (photoBase64 = "") => {
+        const oiseau = {
+          nom,
+          poidsDepart,
+          poids,
+          nourriture,
+          perte,
+          exercice,
+          dateAjout,
+          pourcentagePerte,
+          photo: photoBase64
+        };
+
+        data.push(oiseau);
+        localStorage.setItem("rapaces", JSON.stringify(data));
+        afficher();
+        viderFormulaire();
+      };
+
+      if (fichier) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          enregistrer(e.target.result);
+        };
+        reader.readAsDataURL(fichier);
+      } else {
+        enregistrer();
+      }
+    }
+
+    function supprimerOiseau(index) {
+      if (!confirm("Supprimer cette fiche ?")) return;
+      data.splice(index, 1);
+      localStorage.setItem("rapaces", JSON.stringify(data));
+      afficher();
+    }
+
+    function viderFormulaire() {
+      document.getElementById("nom").value = "";
+      document.getElementById("poids_depart").value = "";
+      document.getElementById("poids").value = "";
+      document.getElementById("nourriture").value = "";
+      document.getElementById("perte").value = "";
+      document.getElementById("exercice").value = "";
+      document.getElementById("dateAjout").value = "";
+      document.getElementById("photo").value = "";
+    }
+
+    afficher();
+  </script>
 </body>
 </html>
