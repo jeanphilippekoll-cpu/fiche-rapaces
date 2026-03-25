@@ -1,5 +1,76 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>FICHE RAPACES</title></head>
-<body style="background:black;color:white;font-family:sans-serif;">
-<h1>FICHE RAPACES</h1>
-</body></html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>FICHE RAPACES</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      background: black;
+      color: gold;
+      font-family: Arial;
+      padding: 20px;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 100%;
+    }
+    .card {
+      border: 1px solid gold;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🦅 FICHE RAPACES</h1>
+
+<input id="nom" placeholder="Nom de l’oiseau">
+<input id="poids" placeholder="Poids">
+<input id="nourriture" placeholder="Nourriture">
+<input id="perte" placeholder="Perte">
+<input id="exercice" placeholder="Exercice">
+
+<button onclick="ajouter()">Ajouter</button>
+
+<div id="liste"></div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("rapaces")) || [];
+
+function afficher() {
+  let html = "";
+  data.forEach(o => {
+    html += `<div class="card">
+      <b>${o.nom}</b><br>
+      Poids: ${o.poids}<br>
+      Nourriture: ${o.nourriture}<br>
+      Perte: ${o.perte}<br>
+      Exercice: ${o.exercice}
+    </div>`;
+  });
+  document.getElementById("liste").innerHTML = html;
+}
+
+function ajouter() {
+  const oiseau = {
+    nom: nom.value,
+    poids: poids.value,
+    nourriture: nourriture.value,
+    perte: perte.value,
+    exercice: exercice.value
+  };
+
+  data.push(oiseau);
+  localStorage.setItem("rapaces", JSON.stringify(data));
+  afficher();
+}
+
+afficher();
+</script>
+
+</body>
+</html>
