@@ -5,46 +5,58 @@
   <title>FICHE RAPACES</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- POUR ANDROID -->
   <link rel="manifest" href="manifest.json">
-
-  <!-- POUR IPHONE (TRÈS IMPORTANT) -->
-  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="FICHE RAPACES">
+  <meta name="theme-color" content="#000000">
 
   <style>
     body {
       background: #000;
       color: #ffd700;
-      font-family: Arial;
+      font-family: Arial, sans-serif;
       padding: 20px;
+      margin: 0;
     }
 
     h1 {
+      margin-top: 0;
       font-size: 40px;
     }
 
     input, button {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      font-size: 16px;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 6px 0;
       border-radius: 8px;
+      border: 1px solid #555;
+      font-size: 16px;
+    }
+
+    input {
+      background: #f2f2f2;
+      color: #000;
     }
 
     button {
       background: gold;
+      color: #000;
       border: none;
       font-weight: bold;
+      cursor: pointer;
     }
 
     .card {
       border: 1px solid gold;
-      padding: 10px;
-      margin-top: 10px;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 10px;
+      background: #111;
     }
   </style>
 </head>
-
 <body>
 
 <h1>🦅 FICHE RAPACES</h1>
@@ -63,12 +75,12 @@ let data = JSON.parse(localStorage.getItem("rapaces")) || [];
 function afficher() {
   let html = "";
 
-  data.forEach((o, i) => {
+  data.forEach((o) => {
     html += `
       <div class="card">
         <b>${o.nom}</b><br>
-        Poids: ${o.poids}<br>
-        Date: ${o.date}
+        Poids : ${o.poids}<br>
+        Date : ${o.date}
       </div>
     `;
   });
@@ -77,7 +89,7 @@ function afficher() {
 }
 
 function ajouter() {
-  let oiseau = {
+  const oiseau = {
     nom: document.getElementById("nom").value,
     poids: document.getElementById("poids").value,
     date: document.getElementById("date").value
@@ -85,7 +97,6 @@ function ajouter() {
 
   data.push(oiseau);
   localStorage.setItem("rapaces", JSON.stringify(data));
-
   afficher();
 }
 
