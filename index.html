@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>FICHE RAPACES</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      background: black;
-      color: gold;
-      font-family: Arial;
-      padding: 20px;
-    }
-    input, button {
-      padding: 10px;
-      margin: 5px;
-      width: 100%;
-    }
-    .card {
-      border: 1px solid gold;
-      padding: 10px;
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>FICHE RAPACES</title>
+
+<style>
+body {
+  background: black;
+  color: gold;
+  font-family: Arial;
+  padding: 20px;
+}
+
+input, button {
+  padding: 10px;
+  margin: 5px;
+  width: 100%;
+}
+
+.card {
+  border: 1px solid gold;
+  padding: 10px;
+  margin-top: 10px;
+}
+</style>
+
 </head>
 
 <body>
@@ -39,6 +42,7 @@
 <div id="liste"></div>
 
 <script>
+
 let data = JSON.parse(localStorage.getItem("rapaces")) || [];
 
 function afficher() {
@@ -57,11 +61,11 @@ function afficher() {
 
 function ajouter() {
   const oiseau = {
-    nom: nom.value,
-    poids: poids.value,
-    nourriture: nourriture.value,
-    perte: perte.value,
-    exercice: exercice.value
+    nom: document.getElementById("nom").value,
+    poids: document.getElementById("poids").value,
+    nourriture: document.getElementById("nourriture").value,
+    perte: document.getElementById("perte").value,
+    exercice: document.getElementById("exercice").value
   };
 
   data.push(oiseau);
@@ -70,6 +74,7 @@ function ajouter() {
 }
 
 afficher();
+
 </script>
 
 </body>
