@@ -78,6 +78,11 @@
       color: #fff;
     }
 
+    .btn-edit {
+      background: #2c6aa6;
+      color: #fff;
+    }
+
     .card {
       border: 1px solid #d9c38b;
       border-radius: 16px;
@@ -238,7 +243,7 @@
   </div>
 
   <div class="bloc">
-    <h2>Ajouter une date d’encodage</h2>
+    <h2>Ajouter ou modifier une date d’encodage</h2>
     <select id="selectOiseau"></select>
     <input id="dateEncodage" type="date">
 
@@ -267,7 +272,7 @@
       <input id="notesEncodage" placeholder="Notes / observations">
     </div>
 
-    <button onclick="ajouterEncodage()">Ajouter l’encodage</button>
+    <button id="btnAjouterEncodage" onclick="ajouterOuModifierEncodage()">Ajouter l’encodage</button>
     <button class="btn-secondaire" type="button" onclick="viderFormulaireEncodage()">Vider le formulaire encodage</button>
   </div>
 
@@ -300,6 +305,11 @@
     let indexEditionOiseau = null;
     let graphique = null;
 
+    let editionEncodage = {
+      oiseauIndex: null,
+      encodageIndexReel: null
+    };
+
     function sauvegarder() {
       localStorage.setItem("rapaces_oiseaux", JSON.stringify(oiseaux));
     }
@@ -321,13 +331,28 @@
       return pourcentage.toFixed(2) + " %";
     }
 
-    function calculVariationPoids(encodages, nouveauPoids) {
-      if (!encodages || encodages.length === 0) return "0 g";
+    function calculVariationDepuisListe(encodages, indexIgnore, nouveauPoids, dateEncodage) {
+      const copie = [...encodages];
+      if (indexIgnore !== null && indexIgnore !== undefined && indexIgnore >= 0) {
+        copie.splice(indexIgnore, 1);
+      }
 
-      const encodagesTries = trierEncodagesParDate(encodages);
-      const dernier = encodagesTries[encodagesTries.length - 1];
+      const tries = [...copie].sort((a, b) => new Date(a.dateEncodage) - new Date(b.dateEncodage));
+      const dateNouvelle = new Date(dateEncodage);
 
-      const ancienPoids = parseFloat(dernier.poidsActuel);
+      let precedent = null;
+      for (const e of tries) {
+        const d = new Date(e.dateEncodage);
+        if (d <= dateNouvelle) {
+          precedent = e;
+        } else {
+          break;
+        }
+      }
+
+      if (!precedent) return "0 g";
+
+      const ancienPoids = parseFloat(precedent.poidsActuel);
       const actuel = parseFloat(nouveauPoids);
 
       if (isNaN(ancienPoids) || isNaN(actuel)) return "0 g";
@@ -337,6 +362,31 @@
       if (difference > 0) return "+" + difference.toFixed(1) + " g";
       if (difference < 0) return difference.toFixed(1) + " g";
       return "0 g";
+    }
+
+    function recalculerToutesLesVariations(indexOiseau) {
+      const encodages = oiseaux[indexOiseau].encodages || [];
+      const tries = [...encodages].sort((a, b) => new Date(a.dateEncodage) - new Date(b.dateEncodage));
+
+      for (let i = 0; i < tries.length; i++) {
+        if (i === 0) {
+          tries[i].perteJour = "0 g";
+        } else {
+          const precedent = parseFloat(tries[i - 1].poidsActuel);
+          const actuel = parseFloat(tries[i].poidsActuel);
+
+          if (isNaN(precedent) || isNaN(actuel)) {
+            tries[i].perteJour = "0 g";
+          } else {
+            const difference = actuel - precedent;
+            if (difference > 0) tries[i].perteJour = "+" + difference.toFixed(1) + " g";
+            else if (difference < 0) tries[i].perteJour = difference.toFixed(1) + " g";
+            else tries[i].perteJour = "0 g";
+          }
+        }
+      }
+
+      oiseaux[indexOiseau].encodages = tries;
     }
 
     function classeVariation(valeur) {
@@ -440,6 +490,7 @@
                           <div class="ligne"><strong>Exercice :</strong> ${e.exercice || "-"}</div>
                           <div class="ligne"><strong>% perte :</strong> ${e.pourcentagePerte || "-"}</div>
                           <div class="ligne"><strong>Notes :</strong> ${e.notesEncodage || "-"}</div>
+                          <button class="btn-edit" onclick="modifierEncodage(${index}, ${i})">Modifier cet encodage</button>
                           <button class="btn-danger" onclick="supprimerEncodageParOrdreDate(${index}, ${i})">Supprimer cet encodage</button>
                         </div>
                       `)
@@ -575,7 +626,7 @@
       afficherOiseaux();
     }
 
-    function ajouterEncodage() {
+    function ajouterOuModifierEncodage() {
       const indexOiseau = document.getElementById("selectOiseau").value;
       const dateEncodage = document.getElementById("dateEncodage").value || new Date().toISOString().split("T")[0];
       const poidsDepart = document.getElementById("poidsDepart").value;
@@ -591,7 +642,7 @@
         return;
       }
 
-      const encodagesExistants = oiseaux[indexOiseau].encodages || [];
+      const indexNum = parseInt(indexOiseau, 10);
 
       const encodage = {
         dateEncodage,
@@ -602,19 +653,60 @@
         poidsNourriture,
         exercice,
         notesEncodage,
-        perteJour: calculVariationPoids(encodagesExistants, poidsActuel),
+        perteJour: "0 g",
         pourcentagePerte: calculPourcentagePerte(poidsDepart, poidsActuel)
       };
 
-      if (!oiseaux[indexOiseau].encodages) {
-        oiseaux[indexOiseau].encodages = [];
+      if (!oiseaux[indexNum].encodages) {
+        oiseaux[indexNum].encodages = [];
       }
 
-      oiseaux[indexOiseau].encodages.push(encodage);
+      if (
+        editionEncodage.oiseauIndex !== null &&
+        editionEncodage.encodageIndexReel !== null &&
+        editionEncodage.oiseauIndex === indexNum
+      ) {
+        oiseaux[indexNum].encodages[editionEncodage.encodageIndexReel] = encodage;
+      } else {
+        oiseaux[indexNum].encodages.push(encodage);
+      }
+
+      recalculerToutesLesVariations(indexNum);
 
       sauvegarder();
       afficherOiseaux();
       viderFormulaireEncodage();
+    }
+
+    function modifierEncodage(indexOiseau, indexTrie) {
+      const encodagesTries = trierEncodagesParDate(oiseaux[indexOiseau].encodages || []);
+      const encodage = encodagesTries[indexTrie];
+
+      const indexReel = oiseaux[indexOiseau].encodages.findIndex(e =>
+        e.dateEncodage === encodage.dateEncodage &&
+        e.poidsDepart === encodage.poidsDepart &&
+        e.poidsActuel === encodage.poidsActuel &&
+        e.typeNourriture === encodage.typeNourriture &&
+        e.nombreNourriture === encodage.nombreNourriture &&
+        e.poidsNourriture === encodage.poidsNourriture &&
+        e.exercice === encodage.exercice &&
+        e.notesEncodage === encodage.notesEncodage
+      );
+
+      document.getElementById("selectOiseau").value = String(indexOiseau);
+      document.getElementById("dateEncodage").value = encodage.dateEncodage || "";
+      document.getElementById("poidsDepart").value = encodage.poidsDepart || "";
+      document.getElementById("poidsActuel").value = encodage.poidsActuel || "";
+      document.getElementById("typeNourriture").value = encodage.typeNourriture || "";
+      document.getElementById("nombreNourriture").value = encodage.nombreNourriture || "";
+      document.getElementById("poidsNourriture").value = encodage.poidsNourriture || "";
+      document.getElementById("exercice").value = encodage.exercice || "";
+      document.getElementById("notesEncodage").value = encodage.notesEncodage || "";
+
+      editionEncodage.oiseauIndex = indexOiseau;
+      editionEncodage.encodageIndexReel = indexReel;
+      document.getElementById("btnAjouterEncodage").textContent = "Enregistrer les modifications";
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
     function supprimerEncodageParOrdreDate(indexOiseau, indexTrie) {
@@ -636,6 +728,7 @@
 
       if (indexReel !== -1) {
         oiseaux[indexOiseau].encodages.splice(indexReel, 1);
+        recalculerToutesLesVariations(indexOiseau);
         sauvegarder();
         afficherOiseaux();
       }
@@ -665,6 +758,9 @@
       document.getElementById("poidsNourriture").value = "";
       document.getElementById("exercice").value = "";
       document.getElementById("notesEncodage").value = "";
+      editionEncodage.oiseauIndex = null;
+      editionEncodage.encodageIndexReel = null;
+      document.getElementById("btnAjouterEncodage").textContent = "Ajouter l’encodage";
     }
 
     function mettreAJourGraphique() {
