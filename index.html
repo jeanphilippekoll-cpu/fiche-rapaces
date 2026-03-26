@@ -1,348 +1,412 @@
-<!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>FICHE RAPACES PRO</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>FICHE RAPACES V2</title>
+  <title>FICHE RAPACES V3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
+  <style>
+    body {
+@@ -97,6 +98,10 @@
+      background: #7d7a72;
+    }
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    .btn-export {
+      background: #2f7d32;
+    }
 
-<style>
-body{
-font-family:Arial;
-background:linear-gradient(#f7f4ec,#efe6d2);
-margin:0;
-padding:10px;
-}
+    .hidden {
+      display: none;
+    }
+@@ -188,6 +193,62 @@
+      margin-top: 8px;
+    }
 
-.hidden{display:none}
+    .alert-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
 
-.menu{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-margin-bottom:10px;
-}
+    .alert-low {
+      background: #fff1f0;
+      border: 1px solid #f1a6a0;
+      color: #a92d24;
+    }
 
-.menu button{
-padding:12px;
-border:none;
-border-radius:10px;
-color:white;
-font-weight:bold;
-}
+    .alert-high {
+      background: #fff8e6;
+      border: 1px solid #e7c36a;
+      color: #8a5a00;
+    }
 
-#btnMenuAccueil{background:#2d6aa1;}
-#btnMenuOiseaux{background:#b88a1b;}
-#btnMenuEncodage{background:#2f7d32;}
-#btnMenuDocuments{background:#8a5a2b;}
+    .alert-ok {
+      background: #eef7ef;
+      border: 1px solid #9ed1a3;
+      color: #1f6b2d;
+    }
 
-.bloc{
-background:white;
-padding:12px;
-border-radius:12px;
-margin-bottom:10px;
-}
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 28, 18, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
 
-input,select,textarea{
-width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:8px;
-border:1px solid #ccc;
-}
+    .lock-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fffdfa;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #d9c38b;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
 
-.bird{
-padding:10px;
-border-radius:10px;
-margin-top:6px;
-background:#fffdfa;
-cursor:pointer;
-}
+    .lock-card h2 {
+      margin-bottom: 10px;
+    }
 
-.enc{
-background:#eef7ef;
-border-left:5px solid #2f7d32;
-padding:10px;
-margin-top:8px;
-}
+    .lock-error {
+      color: #b13a2f;
+      font-weight: bold;
+      min-height: 22px;
+    }
 
-.doc{
-background:#f6efe7;
-border-left:5px solid #8a5a2b;
-padding:10px;
-margin-top:8px;
-}
-
-.gain{color:green;font-weight:bold;}
-.perte{color:red;font-weight:bold;}
-
-.lock{
-position:fixed;
-inset:0;
-background:black;
-color:white;
-display:flex;
-justify-content:center;
-align-items:center;
-flex-direction:column;
-}
-</style>
+    @media (max-width: 900px) {
+      .menu,
+      .actions {
+@@ -198,7 +259,17 @@
 </head>
-
 <body>
 
-<div id="lock" class="lock">
-<h2>🔒 Code accès</h2>
-<input id="pin">
-<button onclick="unlock()">Entrer</button>
-</div>
+  <h1>🦅 FICHE RAPACES V2</h1>
+  <div id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+      <h2>🔒 Accès protégé</h2>
+      <p>Entre le code pour ouvrir l’application.</p>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="Code de sécurité">
+      <button class="btn" onclick="unlockApp()">Ouvrir l’application</button>
+      <div id="lockError" class="lock-error"></div>
+    </div>
+  </div>
 
-<h1>🦅 FICHE RAPACES</h1>
-<div id="status">Connexion...</div>
+  <h1>🦅 FICHE RAPACES V3</h1>
+  <div id="status" class="status">Connexion...</div>
 
-<div class="menu">
-<button onclick="show('accueil')">Accueil</button>
-<button onclick="show('oiseaux')">Oiseaux</button>
-<button onclick="show('encodage')">Encodage</button>
-<button onclick="show('documents')">Documents</button>
-</div>
+  <div class="menu">
+@@ -219,6 +290,9 @@ <h2>Oiseaux</h2>
+    <input id="nom" placeholder="Nom de l’oiseau">
+    <input id="espece" placeholder="Espèce">
 
-<div id="accueil" class="bloc">Accueil</div>
+    <input id="alerteBasse" type="number" placeholder="Alerte poids bas (optionnel)">
+    <input id="alerteHaute" type="number" placeholder="Alerte poids haut (optionnel)">
 
-<div id="oiseaux" class="bloc hidden">
+    <div>Photo :</div>
+    <input type="file" id="photoOiseau" accept="image/*">
 
-<input id="nom" placeholder="Nom">
-<input id="espece" placeholder="Espèce">
-<input id="photo" type="file">
-<input id="docOiseau" type="file">
+@@ -270,6 +344,8 @@ <h2>Encodage</h2>
+  <div id="documents" class="bloc hidden">
+    <h2>Documents</h2>
 
-<button onclick="addBird()">Ajouter</button>
+    <button class="btn btn-export" onclick="exportExcel()">Exporter Excel / CSV</button>
 
-<div id="liste"></div>
-<div id="fiche"></div>
+    <input type="file" id="fichierDocument">
+    <button class="btn" onclick="uploadDocument()">Envoyer le document</button>
 
-</div>
+@@ -282,6 +358,8 @@ <h3>Liste des documents</h3>
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
-<div id="encodage" class="bloc hidden">
+    const APP_PIN = "1234";
 
-<select id="sel"></select>
-<input id="date" type="date">
-<input id="poids" placeholder="Poids">
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+      authDomain: "fiche-rapaces.firebaseapp.com",
+@@ -351,6 +429,59 @@ <h3>Liste des documents</h3>
+      oiseaux[indexOiseau].encodages = tries;
+    }
 
-<select id="nour">
-<option>Poussin</option>
-<option>Caille</option>
-<option>Pigeon</option>
-<option>Rat</option>
-<option>Souris</option>
-<option>Lapin</option>
-<option>Cou poulet</option>
-<option>Poisson</option>
-<option>Coeur</option>
-</select>
+    function getAlertePoids(oiseau) {
+      const encodages = trierEncodages(Array.isArray(oiseau.encodages) ? oiseau.encodages : []);
+      if (!encodages.length) return null;
 
-<input id="nb" placeholder="Nombre">
+      const dernier = encodages[encodages.length - 1];
+      const poids = parseFloat(dernier.poids);
+      const basse = parseFloat(oiseau.alerteBasse);
+      const haute = parseFloat(oiseau.alerteHaute);
 
-<button onclick="addEnc()">Ajouter</button>
+      if (isNaN(poids)) return null;
 
-</div>
+      if (!isNaN(basse) && poids < basse) {
+        return {
+          type: "low",
+          text: `Alerte : poids bas (${poids} g < ${basse} g)`
+        };
+      }
 
-<div id="documents" class="bloc hidden">
+      if (!isNaN(haute) && poids > haute) {
+        return {
+          type: "high",
+          text: `Alerte : poids haut (${poids} g > ${haute} g)`
+        };
+      }
 
-<input type="file" id="fileDoc">
-<button onclick="addDoc()">Ajouter document</button>
+      if (!isNaN(basse) || !isNaN(haute)) {
+        return {
+          type: "ok",
+          text: `Poids dans la zone prévue`
+        };
+      }
 
-<div id="docs"></div>
+      return null;
+    }
 
-</div>
+    window.unlockApp = function() {
+      const pin = document.getElementById("pinInput").value;
+      const err = document.getElementById("lockError");
 
-<script type="module">
+      if (pin === APP_PIN) {
+        document.getElementById("lockScreen").style.display = "none";
+        err.innerText = "";
+      } else {
+        err.innerText = "Code incorrect.";
+      }
+    };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
+    document.getElementById("pinInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        window.unlockApp();
+      }
+    });
 
-const app=initializeApp({
-apiKey:"AIza...",
-authDomain:"fiche-rapaces.firebaseapp.com",
-projectId:"fiche-rapaces",
-storageBucket:"fiche-rapaces.firebasestorage.app",
-appId:"1:881543403206:web:17915a78ddbbde9a1929c7"
-});
+    window.showSection = function(section) {
+      document.getElementById("accueil").classList.add("hidden");
+      document.getElementById("oiseaux").classList.add("hidden");
+@@ -418,11 +549,14 @@ <h3>Liste des documents</h3>
 
-const db=getFirestore(app);
-const storage=getStorage(app);
-const refDB=doc(db,"rapaces","data");
+      const o = oiseaux[indexOiseauSelectionne];
+      const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+      const alerte = getAlertePoids(o);
 
-let oiseaux=[];
-let documents=[];
+      fiche.innerHTML = `
+        <div class="fiche">
+          <div><strong>Nom :</strong> ${o.nom || "-"}</div>
+          <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
+          <div><strong>Alerte basse :</strong> ${o.alerteBasse || "-"}</div>
+          <div><strong>Alerte haute :</strong> ${o.alerteHaute || "-"}</div>
+          ${o.photo ? `<img class="photo" src="${o.photo}" alt="photo">` : ""}
 
-function couleur(i){
-const c=["#2d6aa1","#b88a1b","#2f7d32","#8a5a2b","#6a2da1","#a12d6a"];
-return c[i%c.length];
-}
+          ${
+@@ -431,11 +565,21 @@ <h3>Liste des documents</h3>
+              : ""
+          }
 
-window.unlock=function(){
-if(document.getElementById("pin").value==="0212"){
-document.getElementById("lock").style.display="none";
-}
-}
+          ${
+            alerte
+              ? `<div class="alert-box ${alerte.type === "low" ? "alert-low" : alerte.type === "high" ? "alert-high" : "alert-ok"}">${alerte.text}</div>`
+              : ""
+          }
 
-function setStatus(t){document.getElementById("status").innerText=t;}
+          <div class="actions">
+            <button class="btn btn-edit" onclick="modifierOiseau(${indexOiseauSelectionne})">Modifier l’oiseau</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau(${indexOiseauSelectionne})">Supprimer l’oiseau</button>
+          </div>
 
-window.show=function(s){
-["accueil","oiseaux","encodage","documents"].forEach(id=>{
-document.getElementById(id).classList.add("hidden");
-});
-document.getElementById(s).classList.remove("hidden");
-}
+          <div class="actions">
+            <button class="btn btn-export" onclick="exportPDF(${indexOiseauSelectionne})">Exporter PDF fiche</button>
+          </div>
 
-async function upload(file,path){
-const r=ref(storage,path);
-await uploadBytes(r,file);
-return await getDownloadURL(r);
-}
+          <h3>Courbe de poids</h3>
+          ${
+            encodages.some(e => e.poids !== null && e.poids !== "" && !isNaN(parseFloat(e.poids)))
+@@ -532,6 +676,8 @@ <h3>Encodages</h3>
+          photo: o.photo || "",
+          documentUrl: o.documentUrl || "",
+          documentNom: o.documentNom || "",
+          alerteBasse: o.alerteBasse || "",
+          alerteHaute: o.alerteHaute || "",
+          encodages: Array.isArray(o.encodages) ? o.encodages : []
+        }));
 
-window.addBird=async function(){
-let nom=nomInput.value;
-let espece=especeInput.value;
-let photoF=photo.files[0];
-let docF=docOiseau.files[0];
+@@ -572,6 +718,8 @@ <h3>Encodages</h3>
+      const espece = document.getElementById("espece").value.trim();
+      const photoFile = document.getElementById("photoOiseau").files[0];
+      const documentFile = document.getElementById("documentOiseau").files[0];
+      const alerteBasse = document.getElementById("alerteBasse").value.trim();
+      const alerteHaute = document.getElementById("alerteHaute").value.trim();
 
-let photoURL="",docURL="";
+      if (!nom) {
+        alert("Nom obligatoire");
+@@ -608,6 +756,8 @@ <h3>Encodages</h3>
+          photo,
+          documentUrl,
+          documentNom,
+          alerteBasse,
+          alerteHaute,
+          encodages
+        };
 
-if(photoF) photoURL=await upload(photoF,"photo/"+Date.now());
-if(docF) docURL=await upload(docF,"doc/"+Date.now());
+@@ -622,11 +772,7 @@ <h3>Encodages</h3>
+        await sauver();
+        afficherListeOiseaux();
+        remplirSelectOiseaux();
 
-oiseaux.push({nom,espece,photo:photoURL,doc:docURL,enc:[]});
+        document.getElementById("nom").value = "";
+        document.getElementById("espece").value = "";
+        document.getElementById("photoOiseau").value = "";
+        document.getElementById("documentOiseau").value = "";
+        viderFormulaireOiseau();
+      } catch (e) {
+        console.error(e);
+        setStatus("Erreur ❌");
+@@ -638,6 +784,8 @@ <h3>Encodages</h3>
+      const o = oiseaux[index];
+      document.getElementById("nom").value = o.nom || "";
+      document.getElementById("espece").value = o.espece || "";
+      document.getElementById("alerteBasse").value = o.alerteBasse || "";
+      document.getElementById("alerteHaute").value = o.alerteHaute || "";
+      indexEditionOiseau = index;
+      document.getElementById("btnAjouterOiseau").innerText = "Enregistrer les modifications";
+      showSection("oiseaux");
+@@ -660,6 +808,8 @@ <h3>Encodages</h3>
+      document.getElementById("espece").value = "";
+      document.getElementById("photoOiseau").value = "";
+      document.getElementById("documentOiseau").value = "";
+      document.getElementById("alerteBasse").value = "";
+      document.getElementById("alerteHaute").value = "";
+      indexEditionOiseau = null;
+      document.getElementById("btnAjouterOiseau").innerText = "Ajouter l’oiseau";
+    };
+@@ -743,6 +893,124 @@ <h3>Encodages</h3>
+      }
+    };
 
-await save();
-render();
-}
+    window.exportPDF = function(index) {
+      const o = oiseaux[index];
+      if (!o) return;
 
-window.openBird=function(i){
-let o=oiseaux[i];
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
 
-document.getElementById("fiche").innerHTML=`
-<div style="border-top:5px solid ${couleur(i)}">
-<h3>${o.nom}</h3>
-<img src="${o.photo||""}" width="150">
+      let y = 15;
+      const addLine = (txt) => {
+        pdf.text(String(txt), 10, y);
+        y += 8;
+      };
 
-${o.doc?`<a href="${o.doc}" target="_blank">Document</a>`:""}
+      addLine("FICHE RAPACES V3");
+      addLine("Nom : " + (o.nom || "-"));
+      addLine("Espèce : " + (o.espece || "-"));
+      addLine("Alerte basse : " + (o.alerteBasse || "-"));
+      addLine("Alerte haute : " + (o.alerteHaute || "-"));
+      addLine("Document : " + (o.documentNom || "-"));
+      y += 4;
+      addLine("Encodages :");
 
-<button onclick="delBird(${i})">Supprimer</button>
+      const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+      if (!encodages.length) {
+        addLine("Aucun encodage");
+      } else {
+        encodages.forEach((e) => {
+          const ligne = [
+            e.date || "-",
+            "Poids " + (e.poids || "-"),
+            "Var " + (e.variation || "0 g"),
+            e.nourriture || "-",
+            e.notes || "-"
+          ].join(" | ");
 
-${o.enc.map((e,j)=>`
-<div class="enc">
-${e.date} ${e.poids}g 
-<span class="${e.var>0?'gain':'perte'}">${e.var}g</span>
-<button onclick="delEnc(${i},${j})">X</button>
-</div>
-`).join("")}
-</div>
-`;
+          const lignes = pdf.splitTextToSize(ligne, 185);
+          pdf.text(lignes, 10, y);
+          y += lignes.length * 7;
 
-draw(o.enc);
-}
+          if (y > 270) {
+            pdf.addPage();
+            y = 15;
+          }
+        });
+      }
 
-window.addEnc=async function(){
-let i=sel.value;
-let p=parseFloat(poids.value);
+      pdf.save(`fiche_${(o.nom || "oiseau").replace(/\s+/g, "_")}.pdf`);
+    };
 
-let arr=oiseaux[i].enc;
-let prev=arr.length?arr[arr.length-1].poids:0;
-let diff=p-prev;
+    window.exportExcel = function() {
+      const lignes = [];
+      lignes.push([
+        "Nom",
+        "Espèce",
+        "Alerte basse",
+        "Alerte haute",
+        "Date encodage",
+        "Poids",
+        "Variation",
+        "Nourriture",
+        "Nombre",
+        "Poids nourriture",
+        "Exercice",
+        "Notes"
+      ]);
 
-arr.push({date:date.value,poids:p,var:diff});
+      oiseaux.forEach((o) => {
+        const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+        if (!encodages.length) {
+          lignes.push([
+            o.nom || "",
+            o.espece || "",
+            o.alerteBasse || "",
+            o.alerteHaute || "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]);
+        } else {
+          encodages.forEach((e) => {
+            lignes.push([
+              o.nom || "",
+              o.espece || "",
+              o.alerteBasse || "",
+              o.alerteHaute || "",
+              e.date || "",
+              e.poids || "",
+              e.variation || "",
+              e.nourriture || "",
+              e.nombre || "",
+              e.poidsNourriture || "",
+              e.exercice || "",
+              e.notes || ""
+            ]);
+          });
+        }
+      });
 
-await save();
-openBird(i);
-}
+      const csv = lignes
+        .map((ligne) => ligne.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";"))
+        .join("\n");
 
-window.delEnc=async function(i,j){
-oiseaux[i].enc.splice(j,1);
-await save();
-openBird(i);
-}
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rapaces_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
 
-window.delBird=async function(i){
-if(!confirm("Supprimer ?"))return;
-oiseaux.splice(i,1);
-await save();
-render();
-}
-
-function draw(enc){
-let c=document.getElementById("chart");
-if(!c){
-document.getElementById("fiche").innerHTML+="<canvas id='chart'></canvas>";
-c=document.getElementById("chart");
-}
-new Chart(c,{
-type:"line",
-data:{labels:enc.map(e=>e.date),datasets:[{data:enc.map(e=>e.poids)}]}
-});
-}
-
-window.addDoc=async function(){
-let f=fileDoc.files[0];
-if(!f)return;
-
-let url=await upload(f,"docs/"+Date.now());
-
-documents.push({nom:f.name,lien:url});
-await save();
-renderDocs();
-}
-
-window.delDoc=async function(i){
-documents.splice(i,1);
-await save();
-renderDocs();
-}
-
-function renderDocs(){
-docs.innerHTML=documents.map((d,i)=>`
-<div class="doc">
-<a href="${d.lien}" target="_blank">${d.nom}</a>
-<button onclick="delDoc(${i})">X</button>
-</div>`).join("");
-}
-
-function render(){
-liste.innerHTML=oiseaux.map((o,i)=>
-`<div class="bird" onclick="openBird(${i})"
-style="border-left:5px solid ${couleur(i)}">${o.nom}</div>`
-).join("");
-
-sel.innerHTML=oiseaux.map((o,i)=>
-`<option value="${i}">${o.nom}</option>`
-).join("");
-
-renderDocs();
-}
-
-async function load(){
-let s=await getDoc(refDB);
-if(s.exists()){
-oiseaux=s.data().oiseaux||[];
-documents=s.data().documents||[];
-}
-render();
-setStatus("Synchronisé");
-}
-
-async function save(){
-await setDoc(refDB,{oiseaux,documents},{merge:true});
-}
-
-load();
-
-</script>
-
+    charger();
+  </script>
 </body>
-</html>
