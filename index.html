@@ -59,29 +59,12 @@
       border: none;
     }
 
-    button:hover {
-      opacity: 0.95;
-    }
+    button:hover { opacity: 0.95; }
 
-    .btn-danger {
-      background: #b13a2f;
-      color: #fff;
-    }
-
-    .btn-secondaire {
-      background: #7d7a72;
-      color: #fff;
-    }
-
-    .btn-export {
-      background: #3d8650;
-      color: #fff;
-    }
-
-    .btn-edit {
-      background: #2c6aa6;
-      color: #fff;
-    }
+    .btn-danger { background: #b13a2f; color: #fff; }
+    .btn-secondaire { background: #7d7a72; color: #fff; }
+    .btn-export { background: #3d8650; color: #fff; }
+    .btn-edit { background: #2c6aa6; color: #fff; }
 
     .card {
       border: 1px solid #d9c38b;
@@ -102,10 +85,7 @@
       border: 1px solid #d8c49a;
     }
 
-    .ligne {
-      margin: 4px 0;
-      color: #4a402f;
-    }
+    .ligne { margin: 4px 0; color: #4a402f; }
 
     .titre-oiseau {
       font-size: 24px;
@@ -128,16 +108,8 @@
       margin-top: 8px;
     }
 
-    .vide {
-      color: #7a7465;
-      font-style: italic;
-      margin-top: 10px;
-    }
-
-    .petit {
-      font-size: 14px;
-      color: #7a7465;
-    }
+    .vide { color: #7a7465; font-style: italic; margin-top: 10px; }
+    .petit { font-size: 14px; color: #7a7465; }
 
     .grid-2 {
       display: grid;
@@ -162,20 +134,9 @@
       border: 1px solid #d2b973;
     }
 
-    .variation-plus {
-      color: #23874c;
-      font-weight: bold;
-    }
-
-    .variation-moins {
-      color: #c0392b;
-      font-weight: bold;
-    }
-
-    .variation-neutre {
-      color: #666;
-      font-weight: bold;
-    }
+    .variation-plus { color: #23874c; font-weight: bold; }
+    .variation-moins { color: #c0392b; font-weight: bold; }
+    .variation-neutre { color: #666; font-weight: bold; }
 
     .doc-item {
       background: #f9f5ea;
@@ -199,6 +160,16 @@
       margin-top: 10px;
     }
 
+    .sync-box {
+      background: #eef7ef;
+      border: 1px solid #b8d7bd;
+      color: #2a5d34;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
     @media (max-width: 800px) {
       .grid-2, .grid-3 {
         grid-template-columns: 1fr;
@@ -209,6 +180,8 @@
 <body>
 
   <h1>🦅 FICHE RAPACES</h1>
+
+  <div class="sync-box" id="syncStatus">Synchronisation : connexion…</div>
 
   <div class="bloc">
     <h2>Ajouter ou modifier un oiseau</h2>
@@ -239,11 +212,11 @@
 
     <button id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
     <button class="btn-secondaire" type="button" onclick="viderFormulaireOiseau()">Vider le formulaire oiseau</button>
-    <div class="petit">Documents : préfère de petits fichiers pour éviter de saturer le stockage local.</div>
+    <div class="petit">Documents : préfère de petits fichiers.</div>
   </div>
 
   <div class="bloc">
-    <h2>Ajouter ou modifier une date d’encodage</h2>
+    <h2>Ajouter ou modifier un encodage</h2>
     <select id="selectOiseau"></select>
     <input id="dateEncodage" type="date">
 
@@ -277,7 +250,7 @@
   </div>
 
   <div class="bloc">
-    <h2>Exports et sauvegarde</h2>
+    <h2>Exports et sauvegarde locale</h2>
     <div class="grid-3">
       <button class="btn-export" onclick="exportJSON()">Exporter JSON</button>
       <button class="btn-export" onclick="exportCSV()">Exporter CSV Excel</button>
@@ -300,18 +273,77 @@
 
   <div id="listeOiseaux"></div>
 
-  <script>
-    let oiseaux = JSON.parse(localStorage.getItem("rapaces_oiseaux")) || [];
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+      authDomain: "fiche-rapaces.firebaseapp.com",
+      projectId: "fiche-rapaces",
+      storageBucket: "fiche-rapaces.firebasestorage.app",
+      messagingSenderId: "881543403206",
+      appId: "1:881543403206:web:17915a78ddbbde9a1929c7",
+      measurementId: "G-J5VVJY05QD"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dataRef = doc(db, "rapacesApp", "data");
+
+    let oiseaux = [];
     let indexEditionOiseau = null;
     let graphique = null;
+    let isSaving = false;
 
     let editionEncodage = {
       oiseauIndex: null,
       encodageIndexReel: null
     };
 
-    function sauvegarder() {
-      localStorage.setItem("rapaces_oiseaux", JSON.stringify(oiseaux));
+    function setSyncStatus(text) {
+      document.getElementById("syncStatus").textContent = text;
+    }
+
+    async function sauvegarderCloud() {
+      try {
+        isSaving = true;
+        setSyncStatus("Synchronisation : enregistrement…");
+        await setDoc(dataRef, { oiseaux });
+        setSyncStatus("Synchronisation : données enregistrées ✅");
+      } catch (e) {
+        console.error(e);
+        setSyncStatus("Synchronisation : erreur d’enregistrement ❌");
+        alert("Erreur de synchronisation Firebase.");
+      } finally {
+        isSaving = false;
+      }
+    }
+
+    async function chargerCloud() {
+      try {
+        setSyncStatus("Synchronisation : chargement…");
+        const snap = await getDoc(dataRef);
+
+        if (snap.exists()) {
+          oiseaux = snap.data().oiseaux || [];
+        } else {
+          oiseaux = [];
+          await setDoc(dataRef, { oiseaux: [] });
+        }
+
+        afficherOiseaux();
+        setSyncStatus("Synchronisation : données chargées ✅");
+      } catch (e) {
+        console.error(e);
+        setSyncStatus("Synchronisation : impossible de charger ❌");
+        alert("Impossible de charger les données Firebase. Vérifie Firestore.");
+      }
     }
 
     function formatDate(dateStr) {
@@ -331,28 +363,13 @@
       return pourcentage.toFixed(2) + " %";
     }
 
-    function calculVariationDepuisListe(encodages, indexIgnore, nouveauPoids, dateEncodage) {
-      const copie = [...encodages];
-      if (indexIgnore !== null && indexIgnore !== undefined && indexIgnore >= 0) {
-        copie.splice(indexIgnore, 1);
-      }
+    function calculVariationPoids(encodages, nouveauPoids) {
+      if (!encodages || encodages.length === 0) return "0 g";
 
-      const tries = [...copie].sort((a, b) => new Date(a.dateEncodage) - new Date(b.dateEncodage));
-      const dateNouvelle = new Date(dateEncodage);
+      const encodagesTries = trierEncodagesParDate(encodages);
+      const dernier = encodagesTries[encodagesTries.length - 1];
 
-      let precedent = null;
-      for (const e of tries) {
-        const d = new Date(e.dateEncodage);
-        if (d <= dateNouvelle) {
-          precedent = e;
-        } else {
-          break;
-        }
-      }
-
-      if (!precedent) return "0 g";
-
-      const ancienPoids = parseFloat(precedent.poidsActuel);
+      const ancienPoids = parseFloat(dernier.poidsActuel);
       const actuel = parseFloat(nouveauPoids);
 
       if (isNaN(ancienPoids) || isNaN(actuel)) return "0 g";
@@ -462,10 +479,10 @@
               ${
                 !oiseau.documents || oiseau.documents.length === 0
                   ? '<div class="vide">Aucun document joint.</div>'
-                  : oiseau.documents.map((doc, docIndex) => `
+                  : oiseau.documents.map((docItem, docIndex) => `
                     <div class="doc-item">
-                      <div class="ligne"><strong>${doc.nom}</strong></div>
-                      <a class="doc-link" href="${doc.data}" download="${doc.nom}" target="_blank">Ouvrir / télécharger</a>
+                      <div class="ligne"><strong>${docItem.nom}</strong></div>
+                      <a class="doc-link" href="${docItem.data}" download="${docItem.nom}" target="_blank">Ouvrir / télécharger</a>
                       <button class="btn-danger" onclick="supprimerDocument(${index}, ${docIndex})">Supprimer ce document</button>
                     </div>
                   `).join("")
@@ -589,10 +606,11 @@
           oiseaux.push(oiseau);
         }
 
-        sauvegarder();
+        await sauvegarderCloud();
         afficherOiseaux();
         viderFormulaireOiseau();
       } catch (e) {
+        console.error(e);
         alert("Impossible de joindre un ou plusieurs fichiers. Essaie avec des fichiers plus petits.");
       }
     }
@@ -611,22 +629,22 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function supprimerOiseau(index) {
+    async function supprimerOiseau(index) {
       if (!confirm("Supprimer cet oiseau et tout son historique ?")) return;
       oiseaux.splice(index, 1);
-      sauvegarder();
+      await sauvegarderCloud();
       afficherOiseaux();
       viderFormulaireOiseau();
     }
 
-    function supprimerDocument(indexOiseau, indexDocument) {
+    async function supprimerDocument(indexOiseau, indexDocument) {
       if (!confirm("Supprimer ce document ?")) return;
       oiseaux[indexOiseau].documents.splice(indexDocument, 1);
-      sauvegarder();
+      await sauvegarderCloud();
       afficherOiseaux();
     }
 
-    function ajouterOuModifierEncodage() {
+    async function ajouterOuModifierEncodage() {
       const indexOiseau = document.getElementById("selectOiseau").value;
       const dateEncodage = document.getElementById("dateEncodage").value || new Date().toISOString().split("T")[0];
       const poidsDepart = document.getElementById("poidsDepart").value;
@@ -673,7 +691,7 @@
 
       recalculerToutesLesVariations(indexNum);
 
-      sauvegarder();
+      await sauvegarderCloud();
       afficherOiseaux();
       viderFormulaireEncodage();
     }
@@ -709,7 +727,7 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    function supprimerEncodageParOrdreDate(indexOiseau, indexTrie) {
+    async function supprimerEncodageParOrdreDate(indexOiseau, indexTrie) {
       if (!confirm("Supprimer cet encodage ?")) return;
 
       const tries = trierEncodagesParDate(oiseaux[indexOiseau].encodages);
@@ -729,7 +747,7 @@
       if (indexReel !== -1) {
         oiseaux[indexOiseau].encodages.splice(indexReel, 1);
         recalculerToutesLesVariations(indexOiseau);
-        sauvegarder();
+        await sauvegarderCloud();
         afficherOiseaux();
       }
     }
@@ -768,9 +786,7 @@
       const canvas = document.getElementById("graphiquePoids");
       const ctx = canvas.getContext("2d");
 
-      if (graphique) {
-        graphique.destroy();
-      }
+      if (graphique) graphique.destroy();
 
       if (!select.value && oiseaux.length > 0) {
         select.value = "0";
@@ -781,25 +797,8 @@
       if (index === "" || !oiseaux[index] || !oiseaux[index].encodages || oiseaux[index].encodages.length === 0) {
         graphique = new Chart(ctx, {
           type: "line",
-          data: {
-            labels: [],
-            datasets: [{
-              label: "Poids",
-              data: []
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                labels: { color: "#000" }
-              }
-            },
-            scales: {
-              x: { ticks: { color: "#000" } },
-              y: { ticks: { color: "#000" } }
-            }
-          }
+          data: { labels: [], datasets: [{ label: "Poids", data: [] }] },
+          options: { responsive: true }
         });
         return;
       }
@@ -811,25 +810,14 @@
       graphique = new Chart(ctx, {
         type: "line",
         data: {
-          labels: labels,
+          labels,
           datasets: [{
             label: "Poids",
             data: dataPoids,
             tension: 0.2
           }]
         },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: {
-              labels: { color: "#000" }
-            }
-          },
-          scales: {
-            x: { ticks: { color: "#000" } },
-            y: { ticks: { color: "#000" } }
-          }
-        }
+        options: { responsive: true }
       });
     }
 
@@ -982,7 +970,7 @@
       if (!fichier) return;
 
       const reader = new FileReader();
-      reader.onload = function(e) {
+      reader.onload = async function(e) {
         try {
           const contenu = JSON.parse(e.target.result);
           if (!Array.isArray(contenu)) {
@@ -990,7 +978,7 @@
             return;
           }
           oiseaux = contenu;
-          sauvegarder();
+          await sauvegarderCloud();
           afficherOiseaux();
           alert("Import JSON réussi.");
         } catch (err) {
@@ -1000,7 +988,23 @@
       reader.readAsText(fichier);
     }
 
-    afficherOiseaux();
+    window.modifierOiseau = modifierOiseau;
+    window.supprimerOiseau = supprimerOiseau;
+    window.supprimerDocument = supprimerDocument;
+    window.modifierEncodage = modifierEncodage;
+    window.supprimerEncodageParOrdreDate = supprimerEncodageParOrdreDate;
+    window.ajouterOuModifierOiseau = ajouterOuModifierOiseau;
+    window.ajouterOuModifierEncodage = ajouterOuModifierEncodage;
+    window.viderFormulaireOiseau = viderFormulaireOiseau;
+    window.viderFormulaireEncodage = viderFormulaireEncodage;
+    window.exportJSON = exportJSON;
+    window.exportCSV = exportCSV;
+    window.exportPDF = exportPDF;
+    window.importJSON = importJSON;
+    window.mettreAJourGraphique = mettreAJourGraphique;
+    window.afficherCalendrierDates = afficherCalendrierDates;
+
+    chargerCloud();
   </script>
 </body>
 </html>
