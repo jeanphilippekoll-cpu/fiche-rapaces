@@ -55,6 +55,21 @@
       background: #7d7a72;
     }
 
+    .btn-danger {
+      background: #b13a2f;
+    }
+
+    .btn-edit {
+      background: #2d6aa1;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
     .card {
       background: #fff;
       border: 1px solid #d9c38b;
@@ -98,8 +113,15 @@
       margin: 4px 0;
     }
 
+    .titre-card {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
     @media (max-width: 700px) {
-      .grid-2 {
+      .grid-2,
+      .actions {
         grid-template-columns: 1fr;
       }
     }
@@ -109,6 +131,11 @@
 
   <h1>🦅 FICHE RAPACES</h1>
   <div id="status" class="status">Connexion...</div>
+
+  <div class="bloc">
+    <h2>Recherche oiseau</h2>
+    <input id="recherche" placeholder="Rechercher par nom, espèce, CITES, bague..." oninput="afficher()" />
+  </div>
 
   <div class="bloc">
     <h2>Oiseau</h2>
@@ -140,7 +167,8 @@
     <div>📄 Documents :</div>
     <input type="file" id="docs" multiple />
 
-    <button onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+    <button id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
+    <button class="btn-secondaire" onclick="viderFormulaireOiseau()" type="button">Vider le formulaire oiseau</button>
   </div>
 
   <div class="bloc">
@@ -200,6 +228,7 @@
     const refDB = doc(db, "rapaces", "data");
 
     let oiseaux = [];
+    let indexEditionOiseau = null;
 
     function setStatus(txt) {
       document.getElementById("status").innerText = txt;
@@ -309,7 +338,22 @@
       return diff > 0 ? "+" + diff + " g" : diff + " g";
     }
 
-    window.ajouterOiseau = async function () {
+    function matchesRecherche(o) {
+      const q = document.getElementById("recherche").value.trim().toLowerCase();
+      if (!q) return true;
+
+      const texte = [
+        o.nom,
+        o.espece,
+        o.sexe,
+        o.numeroCites,
+        o.numeroBague
+      ].join(" ").toLowerCase();
+
+      return texte.includes(q);
+    }
+
+    window.ajouterOuModifierOiseau = async function () {
       try {
         const nom = document.getElementById("nom").value.trim();
         const espece = document.getElementById("espece").value.trim();
@@ -329,6 +373,11 @@
         let photoURL = "";
         let docsURL = [];
 
+        if (indexEditionOiseau !== null) {
+          photoURL = oiseaux[indexEditionOiseau].photo || "";
+          docsURL = Array.isArray(oiseaux[indexEditionOiseau].documents) ? [...oiseaux[indexEditionOiseau].documents] : [];
+        }
+
         if (photoFile) {
           setStatus("Upload photo...");
           photoURL = await uploadPhoto(photoFile);
@@ -336,10 +385,11 @@
 
         if (docsFiles && docsFiles.length > 0) {
           setStatus("Upload documents...");
-          docsURL = await uploadDocuments(docsFiles);
+          const nouveauxDocs = await uploadDocuments(docsFiles);
+          docsURL = docsURL.concat(nouveauxDocs);
         }
 
-        oiseaux.push({
+        const oiseau = {
           nom,
           espece,
           sexe,
@@ -349,27 +399,68 @@
           dateAjout,
           photo: photoURL,
           documents: docsURL,
-          encodages: []
-        });
+          encodages: indexEditionOiseau !== null ? oiseaux[indexEditionOiseau].encodages || [] : []
+        };
+
+        if (indexEditionOiseau !== null) {
+          oiseaux[indexEditionOiseau] = oiseau;
+        } else {
+          oiseaux.push(oiseau);
+        }
 
         await sauver();
         afficher();
         remplirSelect();
-
-        document.getElementById("nom").value = "";
-        document.getElementById("espece").value = "";
-        document.getElementById("sexe").value = "";
-        document.getElementById("dateNaissance").value = "";
-        document.getElementById("numeroCites").value = "";
-        document.getElementById("numeroBague").value = "";
-        document.getElementById("dateAjout").value = "";
-        document.getElementById("photo").value = "";
-        document.getElementById("docs").value = "";
+        viderFormulaireOiseau();
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
-        alert("Erreur ajout oiseau : " + e.message);
+        alert("Erreur ajout/modification oiseau : " + e.message);
       }
+    };
+
+    window.viderFormulaireOiseau = function () {
+      document.getElementById("nom").value = "";
+      document.getElementById("espece").value = "";
+      document.getElementById("sexe").value = "";
+      document.getElementById("dateNaissance").value = "";
+      document.getElementById("numeroCites").value = "";
+      document.getElementById("numeroBague").value = "";
+      document.getElementById("dateAjout").value = "";
+      document.getElementById("photo").value = "";
+      document.getElementById("docs").value = "";
+      indexEditionOiseau = null;
+      document.getElementById("btnAjouterOiseau").textContent = "Ajouter l’oiseau";
+    };
+
+    window.modifierOiseau = function (index) {
+      const o = oiseaux[index];
+      document.getElementById("nom").value = o.nom || "";
+      document.getElementById("espece").value = o.espece || "";
+      document.getElementById("sexe").value = o.sexe || "";
+      document.getElementById("dateNaissance").value = o.dateNaissance || "";
+      document.getElementById("numeroCites").value = o.numeroCites || "";
+      document.getElementById("numeroBague").value = o.numeroBague || "";
+      document.getElementById("dateAjout").value = o.dateAjout || "";
+      indexEditionOiseau = index;
+      document.getElementById("btnAjouterOiseau").textContent = "Enregistrer les modifications";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.supprimerOiseau = async function (index) {
+      if (!confirm("Supprimer cet oiseau ?")) return;
+      oiseaux.splice(index, 1);
+      await sauver();
+      afficher();
+      remplirSelect();
+      viderFormulaireOiseau();
+    };
+
+    window.supprimerDocument = async function (indexOiseau, indexDoc) {
+      if (!confirm("Supprimer ce document de la fiche ?")) return;
+      oiseaux[indexOiseau].documents.splice(indexDoc, 1);
+      await sauver();
+      afficher();
     };
 
     window.ajouterEncodage = async function () {
@@ -427,13 +518,22 @@
       const div = document.getElementById("liste");
       div.innerHTML = "";
 
-      oiseaux.forEach(o => {
+      const filtres = oiseaux.filter(matchesRecherche);
+
+      if (filtres.length === 0) {
+        div.innerHTML = "<div class='card'>Aucun oiseau trouvé.</div>";
+        return;
+      }
+
+      filtres.forEach(o => {
+        const index = oiseaux.indexOf(o);
         const encodages = Array.isArray(o.encodages) ? o.encodages : [];
         const documents = Array.isArray(o.documents) ? o.documents : [];
 
         div.innerHTML += `
           <div class="card">
-            <div class="ligne"><strong>${o.nom || "-"}</strong> (${o.espece || "-"})</div>
+            <div class="titre-card">${o.nom || "-"}</div>
+            <div class="ligne"><strong>Espèce :</strong> ${o.espece || "-"}</div>
             <div class="ligne"><strong>Sexe :</strong> ${o.sexe || "-"}</div>
             <div class="ligne"><strong>Date naissance :</strong> ${formatDate(o.dateNaissance)}</div>
             <div class="ligne"><strong>CITES :</strong> ${o.numeroCites || "-"}</div>
@@ -444,13 +544,19 @@
 
             ${
               documents.length
-                ? `<h3>Documents</h3>` + documents.map(d => `
+                ? `<h3>Documents</h3>` + documents.map((d, iDoc) => `
                     <div class="doc">
                       <a href="${d.url}" target="_blank">${d.nom}</a>
+                      <button class="btn-danger" onclick="supprimerDocument(${index}, ${iDoc})">Supprimer le document</button>
                     </div>
                   `).join("")
                 : ""
             }
+
+            <div class="actions">
+              <button class="btn-edit" onclick="modifierOiseau(${index})">Modifier</button>
+              <button class="btn-danger" onclick="supprimerOiseau(${index})">Supprimer</button>
+            </div>
 
             <h3>Encodages</h3>
             ${
