@@ -1,79 +1,73 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>FICHE RAPACES</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>FICHE RAPACES</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #f7f4ec;
-      margin: 0;
-      padding: 10px;
-    }
+<style>
+body {
+  font-family: Arial;
+  background: #f7f4ec;
+  margin: 0;
+  padding: 10px;
+}
 
-    h1 {
-      color: #6b4f12;
-    }
+h1 { color:#6b4f12; }
 
-    .status {
-      background: #eef6ff;
-      border: 1px solid #b9d6f2;
-      color: #1f4f7a;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      font-weight: bold;
-    }
+.status {
+  background:#eef6ff;
+  border:1px solid #b9d6f2;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px;
+  font-weight:bold;
+}
 
-    .menu {
-      display: grid;
-      grid-template-columns: repeat(4,1fr);
-      gap: 10px;
-      margin-bottom: 10px;
-    }
+.menu {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:10px;
+}
 
-    button {
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
+button {
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    #btnMenuAccueil { background:#2d6aa1; }
-    #btnMenuOiseaux { background:#b88a1b; }
-    #btnMenuEncodage { background:#2f7d32; }
-    #btnMenuDocuments { background:#8a5a2b; }
+#btnMenuAccueil {background:#2d6aa1;}
+#btnMenuOiseaux {background:#b88a1b;}
+#btnMenuEncodage {background:#2f7d32;}
+#btnMenuDocuments {background:#8a5a2b;}
 
-    .bloc {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-    }
+.bloc {
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:10px;
+}
 
-    input, select {
-      width: 100%;
-      padding: 8px;
-      margin: 5px 0;
-      box-sizing: border-box;
-    }
+input {
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+}
 
-    .hidden { display:none; }
+.hidden {display:none;}
 
-    .bird {
-      padding: 10px;
-      border: 1px solid #ccc;
-      margin-top: 5px;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #fffdfa;
-    }
-  </style>
+.bird {
+  padding:10px;
+  border:1px solid #ccc;
+  margin-top:5px;
+  border-radius:8px;
+  background:#fffdfa;
+}
+</style>
 </head>
 
 <body>
@@ -82,36 +76,34 @@
 <div id="status" class="status">Connexion...</div>
 
 <div class="menu">
-  <button id="btnMenuAccueil" onclick="show('accueil')">Accueil</button>
-  <button id="btnMenuOiseaux" onclick="show('oiseaux')">Oiseaux</button>
-  <button id="btnMenuEncodage" onclick="show('encodage')">Encodage</button>
-  <button id="btnMenuDocuments" onclick="show('documents')">Documents</button>
+<button onclick="show('accueil')">Accueil</button>
+<button onclick="show('oiseaux')">Oiseaux</button>
+<button onclick="show('encodage')">Encodage</button>
+<button onclick="show('documents')">Documents</button>
 </div>
 
 <div id="accueil" class="bloc">
-  <h2>Accueil</h2>
-  <p>Bienvenue dans ton application.</p>
+<h2>Accueil</h2>
+Bienvenue dans ton application.
 </div>
 
 <div id="oiseaux" class="bloc hidden">
-  <h2>Oiseaux</h2>
+<h2>Oiseaux</h2>
 
-  <input id="nom" placeholder="Nom">
-  <input id="espece" placeholder="Espèce">
+<input id="nom" placeholder="Nom">
+<input id="espece" placeholder="Espèce">
 
-  <button onclick="ajouter()">Ajouter</button>
+<button onclick="ajouter()">Ajouter</button>
 
-  <div id="liste"></div>
+<div id="liste"></div>
 </div>
 
 <div id="encodage" class="bloc hidden">
-  <h2>Encodage</h2>
-  <p>Fonction en cours</p>
+<h2>Encodage</h2>
 </div>
 
 <div id="documents" class="bloc hidden">
-  <h2>Documents</h2>
-  <p>Fonction en cours</p>
+<h2>Documents</h2>
 </div>
 
 <script type="module">
@@ -133,7 +125,7 @@ const refDB = doc(db, "rapaces", "data");
 
 let oiseaux = [];
 
-function setStatus(txt) {
+function setStatus(txt){
   document.getElementById("status").innerText = txt;
 }
 
@@ -142,18 +134,18 @@ window.show = function(section){
   document.getElementById("oiseaux").classList.add("hidden");
   document.getElementById("encodage").classList.add("hidden");
   document.getElementById("documents").classList.add("hidden");
+
   document.getElementById(section).classList.remove("hidden");
 };
 
 function afficher(){
-  let div = document.getElementById("liste");
-
-  div.innerHTML = oiseaux.map(o => `
-    <div class="bird">
-      <b>${o.nom || ""}</b><br>
-      ${o.espece || ""}
-    </div>
-  `).join("");
+  document.getElementById("liste").innerHTML =
+    oiseaux.map(o => `
+      <div class="bird">
+        <b>${o.nom}</b><br>
+        ${o.espece}
+      </div>
+    `).join("");
 }
 
 async function charger(){
@@ -163,48 +155,37 @@ async function charger(){
 
     if(snap.exists()){
       const data = snap.data();
-      oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
-    } else {
-      oiseaux = [];
+      oiseaux = data.oiseaux || [];
     }
 
     afficher();
     setStatus("Synchronisé ✅");
+
   }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur lecture Firebase : " + e.message);
+    alert("Erreur Firebase : " + e.message);
   }
 }
 
 async function sauver(){
-  try{
-    setStatus("Sauvegarde...");
-    await setDoc(refDB, { oiseaux }, { merge: true });
-    setStatus("Synchronisé ✅");
-  }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur écriture Firebase : " + e.message);
-  }
+  await setDoc(refDB, { oiseaux });
 }
 
 window.ajouter = async function(){
-  let nom = document.getElementById("nom").value.trim();
-  let espece = document.getElementById("espece").value.trim();
+  const nom = document.getElementById("nom").value.trim();
+  const espece = document.getElementById("espece").value.trim();
 
   if(!nom){
     alert("Nom obligatoire");
     return;
   }
 
-  oiseaux.push({ nom, espece });
+  oiseaux.push({nom, espece});
 
   await sauver();
   afficher();
 
-  document.getElementById("nom").value = "";
-  document.getElementById("espece").value = "";
+  document.getElementById("nom").value="";
+  document.getElementById("espece").value="";
 };
 
 charger();
