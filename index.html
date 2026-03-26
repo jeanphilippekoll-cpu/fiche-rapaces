@@ -2,9 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>FICHE RAPACES V2</title>
+  <title>FICHE RAPACES V3</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
   <style>
     body {
@@ -97,6 +99,10 @@
       background: #7d7a72;
     }
 
+    .btn-export {
+      background: #2f7d32;
+    }
+
     .hidden {
       display: none;
     }
@@ -129,6 +135,7 @@
       margin-top: 10px;
       display: block;
       object-fit: cover;
+      border: 1px solid #d9c38b;
     }
 
     .enc {
@@ -188,6 +195,62 @@
       margin-top: 8px;
     }
 
+    .alert-box {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .alert-low {
+      background: #fff1f0;
+      border: 1px solid #f1a6a0;
+      color: #a92d24;
+    }
+
+    .alert-high {
+      background: #fff8e6;
+      border: 1px solid #e7c36a;
+      color: #8a5a00;
+    }
+
+    .alert-ok {
+      background: #eef7ef;
+      border: 1px solid #9ed1a3;
+      color: #1f6b2d;
+    }
+
+    .lock-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 28, 18, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+
+    .lock-card {
+      width: 100%;
+      max-width: 420px;
+      background: #fffdfa;
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid #d9c38b;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    }
+
+    .lock-card h2 {
+      margin-bottom: 10px;
+    }
+
+    .lock-error {
+      color: #b13a2f;
+      font-weight: bold;
+      min-height: 22px;
+    }
+
     @media (max-width: 900px) {
       .menu,
       .actions {
@@ -198,7 +261,17 @@
 </head>
 <body>
 
-  <h1>🦅 FICHE RAPACES V2</h1>
+  <div id="lockScreen" class="lock-screen">
+    <div class="lock-card">
+      <h2>🔒 Accès protégé</h2>
+      <p>Entre le code pour ouvrir l’application.</p>
+      <input id="pinInput" type="password" inputmode="numeric" placeholder="Code de sécurité">
+      <button class="btn" onclick="unlockApp()">Ouvrir l’application</button>
+      <div id="lockError" class="lock-error"></div>
+    </div>
+  </div>
+
+  <h1>🦅 FICHE RAPACES</h1>
   <div id="status" class="status">Connexion...</div>
 
   <div class="menu">
@@ -219,8 +292,14 @@
     <input id="nom" placeholder="Nom de l’oiseau">
     <input id="espece" placeholder="Espèce">
 
+    <input id="alerteBasse" type="number" placeholder="Alerte poids bas (optionnel)">
+    <input id="alerteHaute" type="number" placeholder="Alerte poids haut (optionnel)">
+
     <div>Photo :</div>
     <input type="file" id="photoOiseau" accept="image/*">
+
+    <div>Fichier / document de l’oiseau :</div>
+    <input type="file" id="documentOiseau">
 
     <button class="btn" id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
     <button class="btn btn-secondaire" onclick="viderFormulaireOiseau()">Vider le formulaire</button>
@@ -260,12 +339,14 @@
     <input id="exercice" placeholder="Exercice">
     <textarea id="notes" placeholder="Notes"></textarea>
 
-    <button class="btn" onclick="ajouterEncodage()">Ajouter l’encodage</button>
+    <button class="btn" id="btnAjouterEncodage" onclick="ajouterOuModifierEncodage()">Ajouter l’encodage</button>
     <button class="btn btn-secondaire" onclick="viderFormulaireEncodage()">Vider l’encodage</button>
   </div>
 
   <div id="documents" class="bloc hidden">
     <h2>Documents</h2>
+
+    <button class="btn btn-export" onclick="exportExcel()">Exporter Excel / CSV</button>
 
     <input type="file" id="fichierDocument">
     <button class="btn" onclick="uploadDocument()">Envoyer le document</button>
@@ -278,6 +359,8 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
+
+    const APP_PIN = "0212";
 
     const firebaseConfig = {
       apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -297,6 +380,7 @@
     let documents = [];
     let indexOiseauSelectionne = null;
     let indexEditionOiseau = null;
+    let editionEncodage = { oiseau: null, index: null };
     let graph = null;
 
     function setStatus(txt) {
@@ -347,6 +431,50 @@
       });
       oiseaux[indexOiseau].encodages = tries;
     }
+
+    function getAlertePoids(oiseau) {
+      const encodages = trierEncodages(Array.isArray(oiseau.encodages) ? oiseau.encodages : []);
+      if (!encodages.length) return null;
+
+      const dernier = encodages[encodages.length - 1];
+      const poids = parseFloat(dernier.poids);
+      const basse = parseFloat(oiseau.alerteBasse);
+      const haute = parseFloat(oiseau.alerteHaute);
+
+      if (isNaN(poids)) return null;
+
+      if (!isNaN(basse) && poids < basse) {
+        return { type: "low", text: `Alerte : poids bas (${poids} g < ${basse} g)` };
+      }
+
+      if (!isNaN(haute) && poids > haute) {
+        return { type: "high", text: `Alerte : poids haut (${poids} g > ${haute} g)` };
+      }
+
+      if (!isNaN(basse) || !isNaN(haute)) {
+        return { type: "ok", text: `Poids dans la zone prévue` };
+      }
+
+      return null;
+    }
+
+    window.unlockApp = function() {
+      const pin = document.getElementById("pinInput").value;
+      const err = document.getElementById("lockError");
+
+      if (pin === APP_PIN) {
+        document.getElementById("lockScreen").style.display = "none";
+        err.innerText = "";
+      } else {
+        err.innerText = "Code incorrect.";
+      }
+    };
+
+    document.getElementById("pinInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        window.unlockApp();
+      }
+    });
 
     window.showSection = function(section) {
       document.getElementById("accueil").classList.add("hidden");
@@ -415,16 +543,35 @@
 
       const o = oiseaux[indexOiseauSelectionne];
       const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+      const alerte = getAlertePoids(o);
 
       fiche.innerHTML = `
         <div class="fiche">
           <div><strong>Nom :</strong> ${o.nom || "-"}</div>
           <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
+          <div><strong>Alerte basse :</strong> ${o.alerteBasse || "-"}</div>
+          <div><strong>Alerte haute :</strong> ${o.alerteHaute || "-"}</div>
           ${o.photo ? `<img class="photo" src="${o.photo}" alt="photo">` : ""}
+
+          ${
+            o.documentUrl
+              ? `<div class="doc"><a href="${o.documentUrl}" target="_blank">${o.documentNom || "Document de l’oiseau"}</a></div>`
+              : ""
+          }
+
+          ${
+            alerte
+              ? `<div class="alert-box ${alerte.type === "low" ? "alert-low" : alerte.type === "high" ? "alert-high" : "alert-ok"}">${alerte.text}</div>`
+              : ""
+          }
 
           <div class="actions">
             <button class="btn btn-edit" onclick="modifierOiseau(${indexOiseauSelectionne})">Modifier l’oiseau</button>
             <button class="btn btn-danger" onclick="supprimerOiseau(${indexOiseauSelectionne})">Supprimer l’oiseau</button>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-export" onclick="exportPDF(${indexOiseauSelectionne})">Exporter PDF fiche</button>
           </div>
 
           <h3>Courbe de poids</h3>
@@ -438,7 +585,7 @@
           ${
             encodages.length === 0
               ? "<div class='enc'>Aucun encodage</div>"
-              : encodages.map(e => `
+              : encodages.map((e, i) => `
                   <div class="enc">
                     <div><strong>Date :</strong> ${e.date || "-"}</div>
                     <div><strong>Poids :</strong> ${e.poids || "-"}</div>
@@ -448,6 +595,11 @@
                     <div><strong>Poids nourriture :</strong> ${e.poidsNourriture || "-"}</div>
                     <div><strong>Exercice :</strong> ${e.exercice || "-"}</div>
                     <div><strong>Notes :</strong> ${e.notes || "-"}</div>
+
+                    <div class="actions">
+                      <button class="btn btn-edit" onclick="modifierEncodage(${indexOiseauSelectionne}, ${i})">Modifier</button>
+                      <button class="btn btn-danger" onclick="supprimerEncodage(${indexOiseauSelectionne}, ${i})">Supprimer</button>
+                    </div>
                   </div>
                 `).join("")
           }
@@ -521,6 +673,10 @@
           nom: o.nom || "",
           espece: o.espece || "",
           photo: o.photo || "",
+          documentUrl: o.documentUrl || "",
+          documentNom: o.documentNom || "",
+          alerteBasse: o.alerteBasse || "",
+          alerteHaute: o.alerteHaute || "",
           encodages: Array.isArray(o.encodages) ? o.encodages : []
         }));
 
@@ -560,6 +716,9 @@
       const nom = document.getElementById("nom").value.trim();
       const espece = document.getElementById("espece").value.trim();
       const photoFile = document.getElementById("photoOiseau").files[0];
+      const documentFile = document.getElementById("documentOiseau").files[0];
+      const alerteBasse = document.getElementById("alerteBasse").value.trim();
+      const alerteHaute = document.getElementById("alerteHaute").value.trim();
 
       if (!nom) {
         alert("Nom obligatoire");
@@ -568,10 +727,14 @@
 
       try {
         let photo = "";
+        let documentUrl = "";
+        let documentNom = "";
         let encodages = [];
 
         if (indexEditionOiseau !== null) {
           photo = oiseaux[indexEditionOiseau].photo || "";
+          documentUrl = oiseaux[indexEditionOiseau].documentUrl || "";
+          documentNom = oiseaux[indexEditionOiseau].documentNom || "";
           encodages = Array.isArray(oiseaux[indexEditionOiseau].encodages) ? oiseaux[indexEditionOiseau].encodages : [];
         }
 
@@ -580,10 +743,20 @@
           photo = await uploadFile("photos/" + Date.now() + "_" + photoFile.name, photoFile);
         }
 
+        if (documentFile) {
+          setStatus("Upload document oiseau...");
+          documentUrl = await uploadFile("docs-oiseaux/" + Date.now() + "_" + documentFile.name, documentFile);
+          documentNom = documentFile.name;
+        }
+
         const oiseau = {
           nom,
           espece,
           photo,
+          documentUrl,
+          documentNom,
+          alerteBasse,
+          alerteHaute,
           encodages
         };
 
@@ -598,10 +771,7 @@
         await sauver();
         afficherListeOiseaux();
         remplirSelectOiseaux();
-
-        document.getElementById("nom").value = "";
-        document.getElementById("espece").value = "";
-        document.getElementById("photoOiseau").value = "";
+        viderFormulaireOiseau();
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
@@ -613,6 +783,8 @@
       const o = oiseaux[index];
       document.getElementById("nom").value = o.nom || "";
       document.getElementById("espece").value = o.espece || "";
+      document.getElementById("alerteBasse").value = o.alerteBasse || "";
+      document.getElementById("alerteHaute").value = o.alerteHaute || "";
       indexEditionOiseau = index;
       document.getElementById("btnAjouterOiseau").innerText = "Enregistrer les modifications";
       showSection("oiseaux");
@@ -634,11 +806,14 @@
       document.getElementById("nom").value = "";
       document.getElementById("espece").value = "";
       document.getElementById("photoOiseau").value = "";
+      document.getElementById("documentOiseau").value = "";
+      document.getElementById("alerteBasse").value = "";
+      document.getElementById("alerteHaute").value = "";
       indexEditionOiseau = null;
       document.getElementById("btnAjouterOiseau").innerText = "Ajouter l’oiseau";
     };
 
-    window.ajouterEncodage = async function() {
+    window.ajouterOuModifierEncodage = async function() {
       const index = document.getElementById("selectOiseau").value;
 
       if (index === "") {
@@ -661,21 +836,46 @@
         oiseaux[index].encodages = [];
       }
 
-      oiseaux[index].encodages.push(enc);
-      recalculerVariationsPourOiseau(parseInt(index, 10));
+      if (editionEncodage.oiseau !== null) {
+        oiseaux[editionEncodage.oiseau].encodages[editionEncodage.index] = enc;
+        recalculerVariationsPourOiseau(editionEncodage.oiseau);
+        indexOiseauSelectionne = editionEncodage.oiseau;
+        editionEncodage = { oiseau: null, index: null };
+        document.getElementById("btnAjouterEncodage").innerText = "Ajouter l’encodage";
+      } else {
+        oiseaux[index].encodages.push(enc);
+        recalculerVariationsPourOiseau(parseInt(index, 10));
+        indexOiseauSelectionne = parseInt(index, 10);
+      }
 
       await sauver();
-
-      indexOiseauSelectionne = parseInt(index, 10);
       afficherFiche();
+      viderFormulaireEncodage();
+    };
 
-      document.getElementById("dateEncodage").value = "";
-      document.getElementById("poids").value = "";
-      document.getElementById("nourriture").value = "";
-      document.getElementById("nombre").value = "";
-      document.getElementById("poidsNourriture").value = "";
-      document.getElementById("exercice").value = "";
-      document.getElementById("notes").value = "";
+    window.modifierEncodage = function(indexOiseau, indexEnc) {
+      const e = oiseaux[indexOiseau].encodages[indexEnc];
+      document.getElementById("selectOiseau").value = indexOiseau;
+      document.getElementById("dateEncodage").value = e.date || "";
+      document.getElementById("poids").value = e.poids || "";
+      document.getElementById("nourriture").value = e.nourriture || "";
+      document.getElementById("nombre").value = e.nombre || "";
+      document.getElementById("poidsNourriture").value = e.poidsNourriture || "";
+      document.getElementById("exercice").value = e.exercice || "";
+      document.getElementById("notes").value = e.notes || "";
+      editionEncodage = { oiseau: indexOiseau, index: indexEnc };
+      document.getElementById("btnAjouterEncodage").innerText = "Enregistrer les modifications";
+      showSection("encodage");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.supprimerEncodage = async function(indexOiseau, indexEnc) {
+      if (!confirm("Supprimer cet encodage ?")) return;
+      oiseaux[indexOiseau].encodages.splice(indexEnc, 1);
+      recalculerVariationsPourOiseau(indexOiseau);
+      indexOiseauSelectionne = indexOiseau;
+      await sauver();
+      afficherFiche();
     };
 
     window.viderFormulaireEncodage = function() {
@@ -686,6 +886,8 @@
       document.getElementById("poidsNourriture").value = "";
       document.getElementById("exercice").value = "";
       document.getElementById("notes").value = "";
+      editionEncodage = { oiseau: null, index: null };
+      document.getElementById("btnAjouterEncodage").innerText = "Ajouter l’encodage";
     };
 
     window.uploadDocument = async function() {
@@ -715,6 +917,123 @@
         setStatus("Erreur ❌");
         alert("Erreur upload document : " + e.message);
       }
+    };
+
+    window.exportPDF = function(index) {
+      const o = oiseaux[index];
+      if (!o) return;
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+
+      let y = 15;
+      const addLine = (txt) => {
+        const lignes = pdf.splitTextToSize(String(txt), 185);
+        pdf.text(lignes, 10, y);
+        y += lignes.length * 7;
+        if (y > 270) {
+          pdf.addPage();
+          y = 15;
+        }
+      };
+
+      addLine("FICHE RAPACES V3");
+      addLine("Nom : " + (o.nom || "-"));
+      addLine("Espèce : " + (o.espece || "-"));
+      addLine("Alerte basse : " + (o.alerteBasse || "-"));
+      addLine("Alerte haute : " + (o.alerteHaute || "-"));
+      addLine("Document : " + (o.documentNom || "-"));
+      y += 4;
+      addLine("Encodages :");
+
+      const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+      if (!encodages.length) {
+        addLine("Aucun encodage");
+      } else {
+        encodages.forEach((e) => {
+          addLine([
+            e.date || "-",
+            "Poids " + (e.poids || "-"),
+            "Variation " + (e.variation || "0 g"),
+            "Nourriture " + (e.nourriture || "-"),
+            "Nombre " + (e.nombre || "-"),
+            "Poids nourriture " + (e.poidsNourriture || "-"),
+            "Exercice " + (e.exercice || "-"),
+            "Notes " + (e.notes || "-")
+          ].join(" | "));
+        });
+      }
+
+      pdf.save(`fiche_${(o.nom || "oiseau").replace(/\s+/g, "_")}.pdf`);
+    };
+
+    window.exportExcel = function() {
+      const lignes = [];
+      lignes.push([
+        "Nom",
+        "Espèce",
+        "Alerte basse",
+        "Alerte haute",
+        "Date encodage",
+        "Poids",
+        "Variation",
+        "Nourriture",
+        "Nombre",
+        "Poids nourriture",
+        "Exercice",
+        "Notes"
+      ]);
+
+      oiseaux.forEach((o) => {
+        const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
+        if (!encodages.length) {
+          lignes.push([
+            o.nom || "",
+            o.espece || "",
+            o.alerteBasse || "",
+            o.alerteHaute || "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]);
+        } else {
+          encodages.forEach((e) => {
+            lignes.push([
+              o.nom || "",
+              o.espece || "",
+              o.alerteBasse || "",
+              o.alerteHaute || "",
+              e.date || "",
+              e.poids || "",
+              e.variation || "",
+              e.nourriture || "",
+              e.nombre || "",
+              e.poidsNourriture || "",
+              e.exercice || "",
+              e.notes || ""
+            ]);
+          });
+        }
+      });
+
+      const csv = lignes
+        .map((ligne) => ligne.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(";"))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rapaces_export.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     };
 
     charger();
