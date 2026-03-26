@@ -6,8 +6,269 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-   <style>
+  <style<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(180deg, #f7f4ec 0%, #efe6d2 100%);
+    color: #2f2a20;
+    margin: 0;
+    padding: 12px;
+  }
+
+  h1, h2, h3 {
+    color: #6b4f12;
+    margin-top: 0;
+  }
+
+  .status {
+    margin-bottom: 14px;
+    padding: 12px;
+    background: #eef6ff;
+    border: 1px solid #b9d6f2;
+    border-radius: 10px;
+    color: #1f4f7a;
+    font-weight: bold;
+  }
+
+  .menu {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .menu button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+
+  #btnMenuAccueil {
+    background: #2d6aa1;
+  }
+
+  #btnMenuOiseaux {
+    background: #b88a1b;
+  }
+
+  #btnMenuEncodage {
+    background: #2f7d32;
+  }
+
+  #btnMenuDocuments {
+    background: #8a5a2b;
+  }
+
+  .menu button.actif {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.9) inset;
+    transform: scale(0.98);
+  }
+
+  .gros-bouton {
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 14px;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+  }
+
+  .accueil-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+
+  .accueil-grid .gros-bouton:nth-child(1) {
+    background: linear-gradient(135deg, #c89a1d, #9f7510);
+  }
+
+  .accueil-grid .gros-bouton:nth-child(2) {
+    background: linear-gradient(135deg, #3f9a43, #2e6f31);
+  }
+
+  .accueil-grid .gros-bouton:nth-child(3) {
+    background: linear-gradient(135deg, #9b6a35, #744b1d);
+  }
+
+  .bloc {
+    background: #fffdfa;
+    border: 1px solid #d8c9a3;
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 4px 10px rgba(80, 60, 20, 0.06);
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  input, select, textarea, button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin: 5px 0;
+    border: 1px solid #ccb98c;
+    border-radius: 10px;
+    font-size: 16px;
+  }
+
+  input, select, textarea {
+    background: #fffefb;
+    color: #2f2a20;
+  }
+
+  textarea {
+    min-height: 90px;
+    resize: vertical;
+  }
+
+  button {
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    background: #b88a1b;
+  }
+
+  .btn-secondaire {
+    background: #7d7a72;
+  }
+
+  .btn-danger {
+    background: #b13a2f;
+  }
+
+  .btn-edit {
+    background: #2d6aa1;
+  }
+
+  .btn-export {
+    background: #2f7d32;
+  }
+
+  .bird-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .bird-item {
+    background: linear-gradient(180deg, #fffdfa 0%, #f8f1e0 100%);
+    border: 1px solid #d9c38b;
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .bird-item:hover {
+    background: #f4e7c7;
+    transform: translateY(-1px);
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid #d9c38b;
+    border-radius: 12px;
+    padding: 12px;
+    margin-top: 10px;
+    box-shadow: 0 4px 10px rgba(80, 60, 20, 0.05);
+  }
+
+  .enc {
+    background: #eef7ef;
+    border-left: 5px solid #2f7d32;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 8px;
+  }
+
+  .doc {
+    background: #f6efe7;
+    border-left: 5px solid #8a5a2b;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 6px;
+  }
+
+  .photo {
+    width: 100%;
+    max-width: 220px;
+    max-height: 220px;
+    border-radius: 12px;
+    display: block;
+    margin-top: 10px;
+    object-fit: cover;
+    border: 1px solid #d9c38b;
+  }
+
+  .titre-card {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #6b4f12;
+  }
+
+  .ligne {
+    margin: 4px 0;
+    word-break: break-word;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .chart-wrap {
+    background: #ffffff;
+    border: 1px solid #d9d9d9;
+    border-radius: 10px;
+    padding: 8px;
+    margin-top: 10px;
+    height: 260px;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  @media print {
+    button, input, select, textarea {
+      display: none !important;
+    }
+
+    .bloc {
+      border: 1px solid #ccc;
+      box-shadow: none;
+    }
+
+    .chart-wrap {
+      height: 220px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .menu,
+    .accueil-grid,
+    .grid-2,
+    .actions {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+  
   body {
     font-family: Arial, sans-serif;
     background: linear-gradient(180deg, #f7f4ec 0%, #efe6d2 100%);
