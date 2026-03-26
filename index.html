@@ -4,131 +4,37 @@
   <meta charset="UTF-8" />
   <title>FICHE RAPACES</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f2e8;
-      color: #2f2a20;
-      padding: 20px;
-      margin: 0;
-    }
-
-    h1, h2, h3 {
-      color: #7b5a14;
-      margin-top: 0;
-    }
-
-    .bloc {
-      background: #fffdf8;
-      border: 1px solid #d9c38b;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 18px;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    input, select, textarea, button {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 10px;
-      margin: 5px 0;
-      border: 1px solid #cdbb8b;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-
-    button {
-      background: #b88a1b;
-      color: #fff;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-secondaire {
-      background: #7d7a72;
-    }
-
-    .btn-danger {
-      background: #b13a2f;
-    }
-
-    .btn-edit {
-      background: #2d6aa1;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .card {
-      background: #fff;
-      border: 1px solid #d9c38b;
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-
-    .enc {
-      background: #f1f1f1;
-      border-radius: 8px;
-      padding: 8px;
-      margin-top: 8px;
-    }
-
-    .doc {
-      background: #f7f7f7;
-      border-radius: 8px;
-      padding: 8px;
-      margin-top: 6px;
-    }
-
-    .photo {
-      max-width: 180px;
-      max-height: 180px;
-      border-radius: 10px;
-      display: block;
-      margin-top: 10px;
-      object-fit: cover;
-    }
-
-    .status {
-      margin-bottom: 16px;
-      padding: 10px;
-      background: #eef7ef;
-      border: 1px solid #b8d7bd;
-      border-radius: 8px;
-    }
-
-    .ligne {
-      margin: 4px 0;
-    }
-
-    .titre-card {
-      font-size: 20px;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
-
+    body { font-family: Arial, sans-serif; background: #f5f2e8; color: #2f2a20; padding: 12px; margin: 0; }
+    h1, h2, h3 { color: #7b5a14; margin-top: 0; }
+    .bloc { background: #fffdf8; border: 1px solid #d9c38b; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    input, select, textarea, button { width: 100%; box-sizing: border-box; padding: 12px; margin: 5px 0; border: 1px solid #cdbb8b; border-radius: 10px; font-size: 16px; }
+    textarea { min-height: 90px; resize: vertical; }
+    button { background: #b88a1b; color: #fff; border: none; font-weight: bold; cursor: pointer; }
+    .btn-secondaire { background: #7d7a72; }
+    .btn-danger { background: #b13a2f; }
+    .btn-edit { background: #2d6aa1; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+    .card { background: #fff; border: 1px solid #d9c38b; border-radius: 10px; padding: 12px; margin-top: 10px; }
+    .enc { background: #f1f1f1; border-radius: 8px; padding: 8px; margin-top: 8px; }
+    .doc { background: #f7f7f7; border-radius: 8px; padding: 8px; margin-top: 6px; }
+    .photo { width: 100%; max-width: 220px; max-height: 220px; border-radius: 10px; display: block; margin-top: 10px; object-fit: cover; }
+    .status { margin-bottom: 14px; padding: 10px; background: #eef7ef; border: 1px solid #b8d7bd; border-radius: 8px; }
+    .ligne { margin: 4px 0; word-break: break-word; }
+    .titre-card { font-size: 20px; font-weight: bold; margin-bottom: 6px; }
+    .chart-wrap { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 8px; margin-top: 10px; height: 260px; }
+    .no-chart { background: #f1f1f1; border-radius: 8px; padding: 8px; margin-top: 8px; }
     @media (max-width: 700px) {
-      .grid-2,
-      .actions {
-        grid-template-columns: 1fr;
-      }
+      .grid-2, .actions { grid-template-columns: 1fr; }
+      body { padding: 10px; }
+      .bloc { padding: 12px; }
+      .titre-card { font-size: 18px; }
     }
   </style>
 </head>
 <body>
-
   <h1>🦅 FICHE RAPACES</h1>
   <div id="status" class="status">Connexion...</div>
 
@@ -139,10 +45,8 @@
 
   <div class="bloc">
     <h2>Oiseau</h2>
-
     <input id="nom" placeholder="Nom de l’oiseau" />
     <input id="espece" placeholder="Espèce" />
-
     <div class="grid-2">
       <select id="sexe">
         <option value="">Choisir le sexe</option>
@@ -150,38 +54,29 @@
         <option value="Femelle">Femelle</option>
         <option value="Inconnu">Inconnu</option>
       </select>
-
       <input id="dateNaissance" type="date" />
     </div>
-
     <div class="grid-2">
       <input id="numeroCites" placeholder="Numéro CITES" />
       <input id="numeroBague" placeholder="Numéro de bague" />
     </div>
-
     <input id="dateAjout" type="date" />
-
     <div>📸 Photo :</div>
     <input type="file" id="photo" accept="image/*" />
-
     <div>📄 Documents :</div>
     <input type="file" id="docs" multiple />
-
     <button id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
     <button class="btn-secondaire" onclick="viderFormulaireOiseau()" type="button">Vider le formulaire oiseau</button>
   </div>
 
   <div class="bloc">
     <h2>Encodage</h2>
-
     <select id="selectOiseau"></select>
     <input id="dateEncodage" type="date" />
-
     <div class="grid-2">
       <input id="poidsDepart" placeholder="Poids départ" />
       <input id="poidsActuel" placeholder="Poids actuel" />
     </div>
-
     <select id="nourriture">
       <option value="">Nourriture</option>
       <option>Poussins</option>
@@ -191,16 +86,14 @@
       <option>Lapins</option>
       <option>Pigeon</option>
     </select>
-
     <div class="grid-2">
       <input id="nombre" placeholder="Nombre donné" />
       <input id="poidsNourriture" placeholder="Poids nourriture" />
     </div>
-
     <input id="exercice" placeholder="Exercice" />
     <textarea id="notes" placeholder="Notes"></textarea>
-
-    <button onclick="ajouterEncodage()">Ajouter l’encodage</button>
+    <button id="btnAjouterEncodage" onclick="ajouterOuModifierEncodage()">Ajouter l’encodage</button>
+    <button class="btn-secondaire" onclick="viderFormulaireEncodage()" type="button">Vider le formulaire encodage</button>
   </div>
 
   <div class="bloc">
@@ -229,6 +122,8 @@
 
     let oiseaux = [];
     let indexEditionOiseau = null;
+    let editionEncodage = { oiseauIndex: null, encIndex: null };
+    let charts = {};
 
     function setStatus(txt) {
       document.getElementById("status").innerText = txt;
@@ -236,7 +131,6 @@
 
     function normaliserDonnees() {
       if (!Array.isArray(oiseaux)) oiseaux = [];
-
       oiseaux = oiseaux.map(o => ({
         nom: o?.nom || "",
         espece: o?.espece || "",
@@ -249,6 +143,9 @@
         documents: Array.isArray(o?.documents) ? o.documents : [],
         encodages: Array.isArray(o?.encodages) ? o.encodages : []
       }));
+      oiseaux.forEach(o => {
+        o.encodages = trierEncodagesParDate(o.encodages);
+      });
     }
 
     function formatDate(dateStr) {
@@ -258,17 +155,32 @@
       return d.toLocaleDateString("fr-BE");
     }
 
+    function trierEncodagesParDate(encodages) {
+      return [...encodages].sort((a, b) => {
+        const da = new Date(a.date || "1900-01-01").getTime();
+        const db = new Date(b.date || "1900-01-01").getTime();
+        return da - db;
+      });
+    }
+
+    function recalculerVariations(indexOiseau) {
+      const liste = trierEncodagesParDate(oiseaux[indexOiseau].encodages || []);
+      for (let i = 0; i < liste.length; i++) {
+        const prev = i === 0 ? null : liste[i - 1].poidsActuel;
+        liste[i].variation = calculVariation(prev, liste[i].poidsActuel);
+      }
+      oiseaux[indexOiseau].encodages = liste;
+    }
+
     async function charger() {
       try {
         setStatus("Connexion...");
         const snap = await getDoc(refDB);
-
         if (snap.exists()) {
           oiseaux = snap.data().oiseaux || [];
         } else {
           oiseaux = [];
         }
-
         normaliserDonnees();
         afficher();
         remplirSelect();
@@ -295,15 +207,11 @@
 
     function remplirSelect() {
       const s = document.getElementById("selectOiseau");
-
       if (oiseaux.length === 0) {
         s.innerHTML = '<option value="">Aucun oiseau</option>';
         return;
       }
-
-      s.innerHTML = oiseaux
-        .map((o, i) => `<option value="${i}">${o.nom}</option>`)
-        .join("");
+      s.innerHTML = oiseaux.map((o, i) => `<option value="${i}">${o.nom}</option>`).join("");
     }
 
     async function uploadPhoto(file) {
@@ -317,39 +225,30 @@
     async function uploadDocuments(files) {
       const urls = [];
       if (!files || files.length === 0) return urls;
-
       for (const file of files) {
         const path = "docs/" + Date.now() + "_" + file.name;
         const ref = storageRef(storage, path);
         await uploadBytes(ref, file);
         const url = await getDownloadURL(ref);
-        urls.push({
-          nom: file.name,
-          url: url
-        });
+        urls.push({ nom: file.name, url });
       }
-
       return urls;
     }
 
     function calculVariation(prev, actuel) {
-      if (prev == null || isNaN(prev) || isNaN(actuel)) return "0 g";
-      const diff = actuel - prev;
-      return diff > 0 ? "+" + diff + " g" : diff + " g";
+      const p = parseFloat(prev);
+      const a = parseFloat(actuel);
+      if (isNaN(p) || isNaN(a)) return "0 g";
+      const diff = a - p;
+      if (diff > 0) return "+" + diff + " g";
+      if (diff < 0) return diff + " g";
+      return "0 g";
     }
 
     function matchesRecherche(o) {
       const q = document.getElementById("recherche").value.trim().toLowerCase();
       if (!q) return true;
-
-      const texte = [
-        o.nom,
-        o.espece,
-        o.sexe,
-        o.numeroCites,
-        o.numeroBague
-      ].join(" ").toLowerCase();
-
+      const texte = [o.nom, o.espece, o.sexe, o.numeroCites, o.numeroBague].join(" ").toLowerCase();
       return texte.includes(q);
     }
 
@@ -364,7 +263,6 @@
         const dateAjout = document.getElementById("dateAjout").value || new Date().toISOString().split("T")[0];
         const photoFile = document.getElementById("photo").files[0];
         const docsFiles = document.getElementById("docs").files;
-
         if (!nom) {
           alert("Nom obligatoire");
           return;
@@ -372,10 +270,12 @@
 
         let photoURL = "";
         let docsURL = [];
+        let encodages = [];
 
         if (indexEditionOiseau !== null) {
           photoURL = oiseaux[indexEditionOiseau].photo || "";
           docsURL = Array.isArray(oiseaux[indexEditionOiseau].documents) ? [...oiseaux[indexEditionOiseau].documents] : [];
+          encodages = Array.isArray(oiseaux[indexEditionOiseau].encodages) ? [...oiseaux[indexEditionOiseau].encodages] : [];
         }
 
         if (photoFile) {
@@ -389,18 +289,7 @@
           docsURL = docsURL.concat(nouveauxDocs);
         }
 
-        const oiseau = {
-          nom,
-          espece,
-          sexe,
-          dateNaissance,
-          numeroCites,
-          numeroBague,
-          dateAjout,
-          photo: photoURL,
-          documents: docsURL,
-          encodages: indexEditionOiseau !== null ? oiseaux[indexEditionOiseau].encodages || [] : []
-        };
+        const oiseau = { nom, espece, sexe, dateNaissance, numeroCites, numeroBague, dateAjout, photo: photoURL, documents: docsURL, encodages };
 
         if (indexEditionOiseau !== null) {
           oiseaux[indexEditionOiseau] = oiseau;
@@ -463,50 +352,40 @@
       afficher();
     };
 
-    window.ajouterEncodage = async function () {
+    window.ajouterOuModifierEncodage = async function () {
       try {
         const i = document.getElementById("selectOiseau").value;
-
         if (i === "" || oiseaux.length === 0) {
           alert("Choisis un oiseau");
           return;
         }
 
-        const poidsDepart = parseFloat(document.getElementById("poidsDepart").value);
-        const poidsActuel = parseFloat(document.getElementById("poidsActuel").value);
-
         const enc = {
           date: document.getElementById("dateEncodage").value,
-          poidsDepart: isNaN(poidsDepart) ? null : poidsDepart,
-          poidsActuel: isNaN(poidsActuel) ? null : poidsActuel,
+          poidsDepart: document.getElementById("poidsDepart").value === "" ? null : parseFloat(document.getElementById("poidsDepart").value),
+          poidsActuel: document.getElementById("poidsActuel").value === "" ? null : parseFloat(document.getElementById("poidsActuel").value),
           nourriture: document.getElementById("nourriture").value,
           nombre: document.getElementById("nombre").value,
           poidsNourriture: document.getElementById("poidsNourriture").value,
           exercice: document.getElementById("exercice").value,
-          notes: document.getElementById("notes").value
+          notes: document.getElementById("notes").value,
+          variation: "0 g"
         };
 
         if (!Array.isArray(oiseaux[i].encodages)) {
           oiseaux[i].encodages = [];
         }
 
-        const list = oiseaux[i].encodages;
-        const prev = list.length ? list[list.length - 1].poidsActuel : null;
-        enc.variation = calculVariation(prev, enc.poidsActuel);
+        if (editionEncodage.oiseauIndex !== null && editionEncodage.encIndex !== null) {
+          oiseaux[editionEncodage.oiseauIndex].encodages[editionEncodage.encIndex] = enc;
+        } else {
+          oiseaux[i].encodages.push(enc);
+        }
 
-        list.push(enc);
-
+        recalculerVariations(parseInt(i, 10));
         await sauver();
         afficher();
-
-        document.getElementById("dateEncodage").value = "";
-        document.getElementById("poidsDepart").value = "";
-        document.getElementById("poidsActuel").value = "";
-        document.getElementById("nourriture").value = "";
-        document.getElementById("nombre").value = "";
-        document.getElementById("poidsNourriture").value = "";
-        document.getElementById("exercice").value = "";
-        document.getElementById("notes").value = "";
+        viderFormulaireEncodage();
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
@@ -514,12 +393,78 @@
       }
     };
 
+    window.modifierEncodage = function (indexOiseau, indexEnc) {
+      const e = oiseaux[indexOiseau].encodages[indexEnc];
+      document.getElementById("selectOiseau").value = indexOiseau;
+      document.getElementById("dateEncodage").value = e.date || "";
+      document.getElementById("poidsDepart").value = e.poidsDepart ?? "";
+      document.getElementById("poidsActuel").value = e.poidsActuel ?? "";
+      document.getElementById("nourriture").value = e.nourriture || "";
+      document.getElementById("nombre").value = e.nombre || "";
+      document.getElementById("poidsNourriture").value = e.poidsNourriture || "";
+      document.getElementById("exercice").value = e.exercice || "";
+      document.getElementById("notes").value = e.notes || "";
+      editionEncodage = { oiseauIndex: indexOiseau, encIndex: indexEnc };
+      document.getElementById("btnAjouterEncodage").textContent = "Enregistrer les modifications";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.supprimerEncodage = async function (indexOiseau, indexEnc) {
+      if (!confirm("Supprimer cet encodage ?")) return;
+      oiseaux[indexOiseau].encodages.splice(indexEnc, 1);
+      recalculerVariations(indexOiseau);
+      await sauver();
+      afficher();
+      viderFormulaireEncodage();
+    };
+
+    window.viderFormulaireEncodage = function () {
+      document.getElementById("dateEncodage").value = "";
+      document.getElementById("poidsDepart").value = "";
+      document.getElementById("poidsActuel").value = "";
+      document.getElementById("nourriture").value = "";
+      document.getElementById("nombre").value = "";
+      document.getElementById("poidsNourriture").value = "";
+      document.getElementById("exercice").value = "";
+      document.getElementById("notes").value = "";
+      editionEncodage = { oiseauIndex: null, encIndex: null };
+      document.getElementById("btnAjouterEncodage").textContent = "Ajouter l’encodage";
+    };
+
+    function dessinerGraphique(canvasId, encodages) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      if (charts[canvasId]) charts[canvasId].destroy();
+
+      const tries = trierEncodagesParDate(encodages).filter(e => e.poidsActuel !== null && e.poidsActuel !== "" && !isNaN(parseFloat(e.poidsActuel)));
+      if (tries.length === 0) return;
+
+      const labels = tries.map(e => formatDate(e.date || "-"));
+      const data = tries.map(e => parseFloat(e.poidsActuel));
+
+      charts[canvasId] = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Poids",
+            data,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
     function afficher() {
       const div = document.getElementById("liste");
       div.innerHTML = "";
 
       const filtres = oiseaux.filter(matchesRecherche);
-
       if (filtres.length === 0) {
         div.innerHTML = "<div class='card'>Aucun oiseau trouvé.</div>";
         return;
@@ -527,8 +472,10 @@
 
       filtres.forEach(o => {
         const index = oiseaux.indexOf(o);
-        const encodages = Array.isArray(o.encodages) ? o.encodages : [];
+        const encodages = trierEncodagesParDate(Array.isArray(o.encodages) ? o.encodages : []);
         const documents = Array.isArray(o.documents) ? o.documents : [];
+        const canvasId = "chart_" + index;
+        const hasChart = encodages.some(e => e.poidsActuel !== null && e.poidsActuel !== "" && !isNaN(parseFloat(e.poidsActuel)));
 
         div.innerHTML += `
           <div class="card">
@@ -558,11 +505,18 @@
               <button class="btn-danger" onclick="supprimerOiseau(${index})">Supprimer</button>
             </div>
 
+            <h3>Courbe de poids</h3>
+            ${
+              hasChart
+                ? `<div class="chart-wrap" style="height:260px;"><canvas id="${canvasId}"></canvas></div>`
+                : `<div class="no-chart">Ajoute au moins un poids actuel pour voir la courbe.</div>`
+            }
+
             <h3>Encodages</h3>
             ${
               encodages.length === 0
                 ? `<div class="enc">Aucun encodage</div>`
-                : encodages.map(e => `
+                : encodages.map((e, iEnc) => `
                     <div class="enc">
                       <div><strong>Date :</strong> ${e.date || "-"}</div>
                       <div><strong>Poids départ :</strong> ${e.poidsDepart ?? "-"}</div>
@@ -573,12 +527,24 @@
                       <div><strong>Poids nourriture :</strong> ${e.poidsNourriture || "-"}</div>
                       <div><strong>Exercice :</strong> ${e.exercice || "-"}</div>
                       <div><strong>Notes :</strong> ${e.notes || "-"}</div>
+                      <div class="actions">
+                        <button class="btn-edit" onclick="modifierEncodage(${index}, ${iEnc})">Modifier</button>
+                        <button class="btn-danger" onclick="supprimerEncodage(${index}, ${iEnc})">Supprimer</button>
+                      </div>
                     </div>
                   `).join("")
             }
           </div>
         `;
       });
+
+      setTimeout(() => {
+        filtres.forEach(o => {
+          const index = oiseaux.indexOf(o);
+          const encodages = trierEncodagesParDate(Array.isArray(o.encodages) ? o.encodages : []);
+          dessinerGraphique("chart_" + index, encodages);
+        });
+      }, 50);
     }
 
     charger();
