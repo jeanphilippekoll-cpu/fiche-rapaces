@@ -7,11 +7,15 @@
 
 <style>
 body { font-family: Arial; background:#f5f2e8; padding:20px; }
-input, select, button { width:100%; padding:10px; margin:5px 0; }
+input, select, button { width:100%; padding:10px; margin:5px 0; box-sizing:border-box; }
 button { background:#b88a1b; color:white; border:none; }
 .card { background:white; padding:10px; margin-top:10px; border-radius:10px; }
 .enc { background:#eee; padding:8px; margin-top:5px; border-radius:6px; }
 .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+@media (max-width: 700px){
+  .grid { grid-template-columns:1fr; }
+}
 </style>
 </head>
 
@@ -30,23 +34,23 @@ button { background:#b88a1b; color:white; border:none; }
 <input id="date" type="date">
 
 <div class="grid">
-<input id="poidsDepart" placeholder="Poids départ">
-<input id="poidsActuel" placeholder="Poids actuel">
+  <input id="poidsDepart" placeholder="Poids départ">
+  <input id="poidsActuel" placeholder="Poids actuel">
 </div>
 
 <select id="nourriture">
-<option value="">Nourriture</option>
-<option>Poussins</option>
-<option>Cailles</option>
-<option>Rat</option>
-<option>Souris</option>
-<option>Lapins</option>
-<option>Pigeon</option>
+  <option value="">Nourriture</option>
+  <option>Poussins</option>
+  <option>Cailles</option>
+  <option>Rat</option>
+  <option>Souris</option>
+  <option>Lapins</option>
+  <option>Pigeon</option>
 </select>
 
 <div class="grid">
-<input id="nombre" placeholder="Nombre">
-<input id="poidsNourriture" placeholder="Poids nourriture">
+  <input id="nombre" placeholder="Nombre">
+  <input id="poidsNourriture" placeholder="Poids nourriture">
 </div>
 
 <input id="exercice" placeholder="Exercice">
@@ -78,6 +82,18 @@ function setStatus(t){
   document.getElementById("status").innerText = t;
 }
 
+function normaliserDonnees() {
+  if (!Array.isArray(oiseaux)) {
+    oiseaux = [];
+  }
+
+  oiseaux = oiseaux.map(o => ({
+    nom: o?.nom || "",
+    espece: o?.espece || "",
+    encodages: Array.isArray(o?.encodages) ? o.encodages : []
+  }));
+}
+
 async function charger(){
   try{
     setStatus("Connexion...");
@@ -89,6 +105,7 @@ async function charger(){
       oiseaux = [];
     }
 
+    normaliserDonnees();
     afficher();
     remplirSelect();
 
@@ -102,6 +119,7 @@ async function charger(){
 
 async function sauver(){
   try{
+    normaliserDonnees();
     setStatus("Sauvegarde...");
     await setDoc(ref, { oiseaux });
     setStatus("Synchronisé ✅");
@@ -114,31 +132,40 @@ async function sauver(){
 
 function remplirSelect(){
   const s = document.getElementById("selectOiseau");
+
   if(oiseaux.length === 0){
-    s.innerHTML = '<option>Aucun oiseau</option>';
+    s.innerHTML = '<option value="">Aucun oiseau</option>';
     return;
   }
+
   s.innerHTML = oiseaux.map((o,i)=>`<option value="${i}">${o.nom}</option>`).join("");
 }
 
 window.ajouterOiseau = async function(){
-  const nom = document.getElementById("nom").value;
-  const espece = document.getElementById("espece").value;
+  const nom = document.getElementById("nom").value.trim();
+  const espece = document.getElementById("espece").value.trim();
 
   if(!nom){
     alert("Nom obligatoire");
     return;
   }
 
-  oiseaux.push({nom, espece, encodages:[]});
+  oiseaux.push({
+    nom,
+    espece,
+    encodages:[]
+  });
 
   await sauver();
   afficher();
   remplirSelect();
+
+  document.getElementById("nom").value = "";
+  document.getElementById("espece").value = "";
 }
 
 function calculVariation(prev, actuel){
-  if(prev == null) return "0 g";
+  if(prev == null || isNaN(prev) || isNaN(actuel)) return "0 g";
   let diff = actuel - prev;
   return diff > 0 ? "+" + diff + " g" : diff + " g";
 }
@@ -151,16 +178,23 @@ window.ajouterEncodage = async function(){
     return;
   }
 
+  const poidsDepart = parseFloat(document.getElementById("poidsDepart").value);
+  const poidsActuel = parseFloat(document.getElementById("poidsActuel").value);
+
   let enc = {
     date: document.getElementById("date").value,
-    poidsDepart: parseFloat(document.getElementById("poidsDepart").value),
-    poidsActuel: parseFloat(document.getElementById("poidsActuel").value),
+    poidsDepart: isNaN(poidsDepart) ? null : poidsDepart,
+    poidsActuel: isNaN(poidsActuel) ? null : poidsActuel,
     nourriture: document.getElementById("nourriture").value,
     nombre: document.getElementById("nombre").value,
     poidsNourriture: document.getElementById("poidsNourriture").value,
     exercice: document.getElementById("exercice").value,
     notes: document.getElementById("notes").value
   };
+
+  if(!Array.isArray(oiseaux[i].encodages)){
+    oiseaux[i].encodages = [];
+  }
 
   let list = oiseaux[i].encodages;
   let prev = list.length ? list[list.length-1].poidsActuel : null;
@@ -171,22 +205,38 @@ window.ajouterEncodage = async function(){
 
   await sauver();
   afficher();
+
+  document.getElementById("date").value = "";
+  document.getElementById("poidsDepart").value = "";
+  document.getElementById("poidsActuel").value = "";
+  document.getElementById("nourriture").value = "";
+  document.getElementById("nombre").value = "";
+  document.getElementById("poidsNourriture").value = "";
+  document.getElementById("exercice").value = "";
+  document.getElementById("notes").value = "";
 }
 
 function afficher(){
   const div = document.getElementById("liste");
   div.innerHTML = "";
 
-  oiseaux.forEach(o=>{
+  oiseaux.forEach(o => {
+    const encodages = Array.isArray(o.encodages) ? o.encodages : [];
+
     div.innerHTML += `
-    <div class="card">
-      <strong>${o.nom}</strong> (${o.espece})
-      ${o.encodages.map(e=>`
-        <div class="enc">
-          ${e.date || "-"} - ${e.poidsActuel || "-"} g (${e.variation})
-        </div>
-      `).join("")}
-    </div>`;
+      <div class="card">
+        <strong>${o.nom || "-"}</strong> (${o.espece || "-"})
+        ${
+          encodages.length === 0
+            ? `<div class="enc">Aucun encodage</div>`
+            : encodages.map(e => `
+                <div class="enc">
+                  ${e.date || "-"} - ${e.poidsActuel ?? "-"} g (${e.variation || "0 g"})
+                </div>
+              `).join("")
+        }
+      </div>
+    `;
   });
 }
 
