@@ -286,17 +286,25 @@
       document.getElementById("syncStatus").textContent = txt;
     }
 
-    async function sauvegarderCloud() {
-      try {
-        setStatus("Synchronisation : sauvegarde...");
-        await setDoc(ref, { oiseaux });
-        setStatus("Synchronisation : OK ✅");
-      } catch (e) {
-        console.error(e);
-        setStatus("Synchronisation : erreur ❌");
-        alert("Erreur Firebase (écriture)");
-      }
+   async function chargerCloud() {
+  try {
+    setStatus("Synchronisation : chargement...");
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      oiseaux = snap.data().oiseaux || [];
+    } else {
+      oiseaux = [];
     }
+
+    afficherOiseaux();
+    setStatus("Synchronisation : OK ✅");
+  } catch (e) {
+    console.error("ERREUR FIREBASE LECTURE :", e);
+    setStatus("Synchronisation : erreur ❌");
+    alert("Erreur Firebase (lecture) : " + e.message);
+  }
+}
 
     async function chargerCloud() {
       try {
