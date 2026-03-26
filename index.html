@@ -9,8 +9,9 @@
     body {
       font-family: Arial, sans-serif;
       background: #f5f2e8;
-      padding: 20px;
       color: #2f2a20;
+      padding: 20px;
+      margin: 0;
     }
 
     h1, h2, h3 {
@@ -18,18 +19,33 @@
       margin-top: 0;
     }
 
-    input, select, button, textarea {
+    .bloc {
+      background: #fffdf8;
+      border: 1px solid #d9c38b;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 18px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    input, select, textarea, button {
       width: 100%;
+      box-sizing: border-box;
       padding: 10px;
       margin: 5px 0;
-      box-sizing: border-box;
-      border-radius: 8px;
       border: 1px solid #cdbb8b;
+      border-radius: 8px;
+      font-size: 15px;
     }
 
     button {
       background: #b88a1b;
-      color: white;
+      color: #fff;
       border: none;
       font-weight: bold;
       cursor: pointer;
@@ -39,49 +55,47 @@
       background: #7d7a72;
     }
 
-    .btn-danger {
-      background: #b13a2f;
-    }
-
     .card {
-      background: white;
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 10px;
+      background: #fff;
       border: 1px solid #d9c38b;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
     }
 
     .enc {
-      background: #eee;
+      background: #f1f1f1;
+      border-radius: 8px;
       padding: 8px;
-      margin-top: 6px;
-      border-radius: 6px;
+      margin-top: 8px;
     }
 
     .doc {
       background: #f7f7f7;
+      border-radius: 8px;
       padding: 8px;
-      margin-top: 5px;
-      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .photo {
+      max-width: 180px;
+      max-height: 180px;
+      border-radius: 10px;
+      display: block;
+      margin-top: 10px;
+      object-fit: cover;
+    }
+
+    .status {
+      margin-bottom: 16px;
+      padding: 10px;
+      background: #eef7ef;
+      border: 1px solid #b8d7bd;
+      border-radius: 8px;
     }
 
     .ligne {
       margin: 4px 0;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    img.photo {
-      max-width: 180px;
-      max-height: 180px;
-      border-radius: 10px;
-      margin-top: 10px;
-      object-fit: cover;
-      display: block;
     }
 
     @media (max-width: 700px) {
@@ -91,98 +105,104 @@
     }
   </style>
 </head>
-
 <body>
+
   <h1>🦅 FICHE RAPACES</h1>
-  <div id="status">Connexion...</div>
+  <div id="status" class="status">Connexion...</div>
 
-  <h2>Oiseau</h2>
-  <input id="nom" placeholder="Nom de l’oiseau" />
-  <input id="espece" placeholder="Espèce" />
+  <div class="bloc">
+    <h2>Oiseau</h2>
 
-  <div class="grid-2">
-    <select id="sexe">
-      <option value="">Choisir le sexe</option>
-      <option value="Mâle">Mâle</option>
-      <option value="Femelle">Femelle</option>
-      <option value="Inconnu">Inconnu</option>
+    <input id="nom" placeholder="Nom de l’oiseau" />
+    <input id="espece" placeholder="Espèce" />
+
+    <div class="grid-2">
+      <select id="sexe">
+        <option value="">Choisir le sexe</option>
+        <option value="Mâle">Mâle</option>
+        <option value="Femelle">Femelle</option>
+        <option value="Inconnu">Inconnu</option>
+      </select>
+
+      <input id="dateNaissance" type="date" />
+    </div>
+
+    <div class="grid-2">
+      <input id="numeroCites" placeholder="Numéro CITES" />
+      <input id="numeroBague" placeholder="Numéro de bague" />
+    </div>
+
+    <input id="dateAjout" type="date" />
+
+    <div>📸 Photo :</div>
+    <input type="file" id="photo" accept="image/*" />
+
+    <div>📄 Documents :</div>
+    <input type="file" id="docs" multiple />
+
+    <button onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+  </div>
+
+  <div class="bloc">
+    <h2>Encodage</h2>
+
+    <select id="selectOiseau"></select>
+    <input id="dateEncodage" type="date" />
+
+    <div class="grid-2">
+      <input id="poidsDepart" placeholder="Poids départ" />
+      <input id="poidsActuel" placeholder="Poids actuel" />
+    </div>
+
+    <select id="nourriture">
+      <option value="">Nourriture</option>
+      <option>Poussins</option>
+      <option>Cailles</option>
+      <option>Rat</option>
+      <option>Souris</option>
+      <option>Lapins</option>
+      <option>Pigeon</option>
     </select>
 
-    <input id="dateNaissance" type="date" />
+    <div class="grid-2">
+      <input id="nombre" placeholder="Nombre donné" />
+      <input id="poidsNourriture" placeholder="Poids nourriture" />
+    </div>
+
+    <input id="exercice" placeholder="Exercice" />
+    <textarea id="notes" placeholder="Notes"></textarea>
+
+    <button onclick="ajouterEncodage()">Ajouter l’encodage</button>
   </div>
 
-  <div class="grid-2">
-    <input id="numeroCites" placeholder="Numéro CITES" />
-    <input id="numeroBague" placeholder="Numéro de bague" />
+  <div class="bloc">
+    <h2>Liste</h2>
+    <div id="liste"></div>
   </div>
-
-  <input id="dateAjout" type="date" />
-
-  <div>📸 Photo :</div>
-  <input type="file" id="photo" accept="image/*" />
-
-  <div>📄 Documents :</div>
-  <input type="file" id="docs" multiple />
-
-  <button onclick="ajouterOiseau()">Ajouter l’oiseau</button>
-
-  <h2>Encodage</h2>
-  <select id="selectOiseau"></select>
-  <input id="dateEncodage" type="date" />
-
-  <div class="grid-2">
-    <input id="poidsDepart" placeholder="Poids départ" />
-    <input id="poidsActuel" placeholder="Poids actuel" />
-  </div>
-
-  <select id="nourriture">
-    <option value="">Nourriture</option>
-    <option>Poussins</option>
-    <option>Cailles</option>
-    <option>Rat</option>
-    <option>Souris</option>
-    <option>Lapins</option>
-    <option>Pigeon</option>
-  </select>
-
-  <div class="grid-2">
-    <input id="nombre" placeholder="Nombre donné" />
-    <input id="poidsNourriture" placeholder="Poids nourriture" />
-  </div>
-
-  <input id="exercice" placeholder="Exercice" />
-  <textarea id="notes" placeholder="Notes"></textarea>
-
-  <button onclick="ajouterEncodage()">Ajouter l’encodage</button>
-
-  <h2>Liste</h2>
-  <div id="liste"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
     import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
     import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
-    const config = {
+    const firebaseConfig = {
       apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
       authDomain: "fiche-rapaces.firebaseapp.com",
       projectId: "fiche-rapaces",
       storageBucket: "fiche-rapaces.firebasestorage.app",
+      messagingSenderId: "881543403206",
       appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
     };
 
-    const app = initializeApp(config);
-const db = getFirestore(app);
-
-// bucket explicite
-const storage = getStorage(app, "gs://fiche-rapaces.firebasestorage.app");
-
-const refDB = doc(db, "rapaces", "data");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app, "gs://fiche-rapaces.firebasestorage.app");
+    const refDB = doc(db, "rapaces", "data");
 
     let oiseaux = [];
 
-    function setStatus(t) {
-      document.getElementById("status").innerText = t;
+    function setStatus(txt) {
+      document.getElementById("status").innerText = txt;
     }
 
     function normaliserDonnees() {
@@ -227,7 +247,7 @@ const refDB = doc(db, "rapaces", "data");
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
-        alert("Erreur lecture Firebase: " + e.message);
+        alert("Erreur lecture Firebase : " + e.message);
       }
     }
 
@@ -240,12 +260,13 @@ const refDB = doc(db, "rapaces", "data");
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
-        alert("Erreur écriture Firebase: " + e.message);
+        alert("Erreur écriture Firebase : " + e.message);
       }
     }
 
     function remplirSelect() {
       const s = document.getElementById("selectOiseau");
+
       if (oiseaux.length === 0) {
         s.innerHTML = '<option value="">Aucun oiseau</option>';
         return;
@@ -257,35 +278,35 @@ const refDB = doc(db, "rapaces", "data");
     }
 
     async function uploadPhoto(file) {
-  if (!file) return "";
+      if (!file) return "";
+      const path = "photos/" + Date.now() + "_" + file.name;
+      const ref = storageRef(storage, path);
+      await uploadBytes(ref, file);
+      return await getDownloadURL(ref);
+    }
 
-  const path = "photos/" + Date.now() + "_" + file.name;
-  const ref = storageRef(storage, path);
+    async function uploadDocuments(files) {
+      const urls = [];
+      if (!files || files.length === 0) return urls;
 
-  await uploadBytes(ref, file);
-  return await getDownloadURL(ref);
-}
+      for (const file of files) {
+        const path = "docs/" + Date.now() + "_" + file.name;
+        const ref = storageRef(storage, path);
+        await uploadBytes(ref, file);
+        const url = await getDownloadURL(ref);
+        urls.push({
+          nom: file.name,
+          url: url
+        });
+      }
 
-async function uploadDocuments(files) {
-  const urls = [];
+      return urls;
+    }
 
-  if (!files || files.length === 0) return urls;
-
-  for (const file of files) {
-    const path = "docs/" + Date.now() + "_" + file.name;
-    const ref = storageRef(storage, path);
-
-    await uploadBytes(ref, file);
-    const url = await getDownloadURL(ref);
-
-    urls.push({
-      nom: file.name,
-      url
-    });
-  }
-
-  return urls;
-}
+    function calculVariation(prev, actuel) {
+      if (prev == null || isNaN(prev) || isNaN(actuel)) return "0 g";
+      const diff = actuel - prev;
+      return diff > 0 ? "+" + diff + " g" : diff + " g";
     }
 
     window.ajouterOiseau = async function () {
@@ -305,10 +326,18 @@ async function uploadDocuments(files) {
           return;
         }
 
-        setStatus("Upload...");
+        let photoURL = "";
+        let docsURL = [];
 
-        const photoURL = await uploadPhoto(photoFile);
-        const docsURL = await uploadDocuments(docsFiles);
+        if (photoFile) {
+          setStatus("Upload photo...");
+          photoURL = await uploadPhoto(photoFile);
+        }
+
+        if (docsFiles && docsFiles.length > 0) {
+          setStatus("Upload documents...");
+          docsURL = await uploadDocuments(docsFiles);
+        }
 
         oiseaux.push({
           nom,
@@ -339,15 +368,9 @@ async function uploadDocuments(files) {
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
-        alert("Erreur ajout oiseau: " + e.message);
+        alert("Erreur ajout oiseau : " + e.message);
       }
     };
-
-    function calculVariation(prev, actuel) {
-      if (prev == null || isNaN(prev) || isNaN(actuel)) return "0 g";
-      const diff = actuel - prev;
-      return diff > 0 ? "+" + diff + " g" : diff + " g";
-    }
 
     window.ajouterEncodage = async function () {
       try {
@@ -378,7 +401,6 @@ async function uploadDocuments(files) {
 
         const list = oiseaux[i].encodages;
         const prev = list.length ? list[list.length - 1].poidsActuel : null;
-
         enc.variation = calculVariation(prev, enc.poidsActuel);
 
         list.push(enc);
@@ -397,7 +419,7 @@ async function uploadDocuments(files) {
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
-        alert("Erreur encodage: " + e.message);
+        alert("Erreur encodage : " + e.message);
       }
     };
 
