@@ -6,66 +6,110 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  font-family: Arial;
-  background: #f7f4ec;
-  margin: 0;
-  padding: 10px;
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(180deg,#f7f4ec 0%,#efe6d2 100%);
+  margin:0;
+  padding:10px;
+  color:#2f2a20;
 }
 
-h1 { color:#6b4f12; }
+h1{
+  color:#6b4f12;
+  margin-top:0;
+}
 
-.status {
+.status{
   background:#eef6ff;
   border:1px solid #b9d6f2;
   padding:10px;
   border-radius:8px;
   margin-bottom:10px;
   font-weight:bold;
+  color:#1f4f7a;
 }
 
-.menu {
+.menu{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:10px;
   margin-bottom:10px;
 }
 
-button {
+.menu button{
   padding:12px;
   border:none;
   border-radius:10px;
   color:white;
   font-weight:bold;
   cursor:pointer;
+  font-size:16px;
 }
 
-#btnMenuAccueil {background:#2d6aa1;}
-#btnMenuOiseaux {background:#b88a1b;}
-#btnMenuEncodage {background:#2f7d32;}
-#btnMenuDocuments {background:#8a5a2b;}
+#btnMenuAccueil{background:#2d6aa1;}
+#btnMenuOiseaux{background:#b88a1b;}
+#btnMenuEncodage{background:#2f7d32;}
+#btnMenuDocuments{background:#8a5a2b;}
 
-.bloc {
+.bloc{
   background:white;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
   margin-bottom:10px;
+  border:1px solid #ddd;
 }
 
-input {
+input{
   width:100%;
   padding:10px;
   margin:5px 0;
+  box-sizing:border-box;
+  border:1px solid #cdbb8b;
+  border-radius:8px;
 }
 
-.hidden {display:none;}
-
-.bird {
-  padding:10px;
-  border:1px solid #ccc;
-  margin-top:5px;
+.btn-ajouter{
+  background:#b88a1b;
+  color:white;
+  border:none;
   border-radius:8px;
+  padding:10px;
+  font-weight:bold;
+  cursor:pointer;
+  margin-top:6px;
+}
+
+.hidden{display:none;}
+
+.bird{
+  padding:10px;
+  border:1px solid #d9c38b;
+  margin-top:8px;
+  border-radius:10px;
   background:#fffdfa;
+  cursor:pointer;
+}
+
+.bird:hover{
+  background:#f4e7c7;
+}
+
+.fiche{
+  margin-top:10px;
+  padding:12px;
+  border:1px solid #d9c38b;
+  border-radius:10px;
+  background:#fffdfa;
+}
+
+.fiche-ligne{
+  margin:6px 0;
+}
+
+@media (max-width:900px){
+  .menu{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
@@ -76,34 +120,42 @@ input {
 <div id="status" class="status">Connexion...</div>
 
 <div class="menu">
-<button onclick="show('accueil')">Accueil</button>
-<button onclick="show('oiseaux')">Oiseaux</button>
-<button onclick="show('encodage')">Encodage</button>
-<button onclick="show('documents')">Documents</button>
+  <button id="btnMenuAccueil" onclick="showSection('accueil')">Accueil</button>
+  <button id="btnMenuOiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+  <button id="btnMenuEncodage" onclick="showSection('encodage')">Encodage</button>
+  <button id="btnMenuDocuments" onclick="showSection('documents')">Documents</button>
 </div>
 
 <div id="accueil" class="bloc">
-<h2>Accueil</h2>
-Bienvenue dans ton application.
+  <h2>Accueil</h2>
+  <p>Bienvenue dans ton application.</p>
 </div>
 
 <div id="oiseaux" class="bloc hidden">
-<h2>Oiseaux</h2>
+  <h2>Oiseaux</h2>
 
-<input id="nom" placeholder="Nom">
-<input id="espece" placeholder="Espèce">
+  <input id="nom" placeholder="Nom">
+  <input id="espece" placeholder="Espèce">
+  <button class="btn-ajouter" onclick="ajouterOiseau()">Ajouter</button>
 
-<button onclick="ajouter()">Ajouter</button>
+  <h3>Recherche</h3>
+  <input id="recherche" placeholder="Rechercher un oiseau..." oninput="afficherListeOiseaux()">
 
-<div id="liste"></div>
+  <h3>Liste des oiseaux</h3>
+  <div id="liste"></div>
+
+  <h3>Fiche de l’oiseau</h3>
+  <div id="ficheOiseau">Clique sur un oiseau pour voir sa fiche.</div>
 </div>
 
 <div id="encodage" class="bloc hidden">
-<h2>Encodage</h2>
+  <h2>Encodage</h2>
+  <p>Étape suivante.</p>
 </div>
 
 <div id="documents" class="bloc hidden">
-<h2>Documents</h2>
+  <h2>Documents</h2>
+  <p>Étape suivante.</p>
 </div>
 
 <script type="module">
@@ -124,12 +176,21 @@ const db = getFirestore(app);
 const refDB = doc(db, "rapaces", "data");
 
 let oiseaux = [];
+let indexOiseauSelectionne = null;
 
 function setStatus(txt){
   document.getElementById("status").innerText = txt;
 }
 
-window.show = function(section){
+function normalizeText(text){
+  return (text || "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+window.showSection = function(section){
   document.getElementById("accueil").classList.add("hidden");
   document.getElementById("oiseaux").classList.add("hidden");
   document.getElementById("encodage").classList.add("hidden");
@@ -138,15 +199,52 @@ window.show = function(section){
   document.getElementById(section).classList.remove("hidden");
 };
 
-function afficher(){
-  document.getElementById("liste").innerHTML =
-    oiseaux.map(o => `
-      <div class="bird">
-        <b>${o.nom}</b><br>
-        ${o.espece}
-      </div>
-    `).join("");
+function afficherFiche(){
+  const fiche = document.getElementById("ficheOiseau");
+
+  if(indexOiseauSelectionne === null || !oiseaux[indexOiseauSelectionne]){
+    fiche.innerHTML = "Clique sur un oiseau pour voir sa fiche.";
+    return;
+  }
+
+  const o = oiseaux[indexOiseauSelectionne];
+
+  fiche.innerHTML = `
+    <div class="fiche">
+      <div class="fiche-ligne"><strong>Nom :</strong> ${o.nom || "-"}</div>
+      <div class="fiche-ligne"><strong>Espèce :</strong> ${o.espece || "-"}</div>
+    </div>
+  `;
 }
+
+window.ouvrirOiseau = function(index){
+  indexOiseauSelectionne = index;
+  afficherFiche();
+};
+
+window.afficherListeOiseaux = function(){
+  const q = normalizeText(document.getElementById("recherche").value);
+  const liste = document.getElementById("liste");
+
+  const filtres = oiseaux
+    .map((o, index) => ({ o, index }))
+    .filter(({ o }) => {
+      const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
+      return texte.includes(q);
+    });
+
+  if(filtres.length === 0){
+    liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
+    return;
+  }
+
+  liste.innerHTML = filtres.map(({ o, index }) => `
+    <div class="bird" onclick="ouvrirOiseau(${index})">
+      <strong>${o.nom || ""}</strong><br>
+      ${o.espece || ""}
+    </div>
+  `).join("");
+};
 
 async function charger(){
   try{
@@ -155,22 +253,34 @@ async function charger(){
 
     if(snap.exists()){
       const data = snap.data();
-      oiseaux = data.oiseaux || [];
+      oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
+    } else {
+      oiseaux = [];
     }
 
-    afficher();
+    afficherListeOiseaux();
+    afficherFiche();
     setStatus("Synchronisé ✅");
-
   }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
     alert("Erreur Firebase : " + e.message);
   }
 }
 
 async function sauver(){
-  await setDoc(refDB, { oiseaux });
+  try{
+    setStatus("Sauvegarde...");
+    await setDoc(refDB, { oiseaux }, { merge: true });
+    setStatus("Synchronisé ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur écriture Firebase : " + e.message);
+  }
 }
 
-window.ajouter = async function(){
+window.ajouterOiseau = async function(){
   const nom = document.getElementById("nom").value.trim();
   const espece = document.getElementById("espece").value.trim();
 
@@ -179,13 +289,13 @@ window.ajouter = async function(){
     return;
   }
 
-  oiseaux.push({nom, espece});
+  oiseaux.push({ nom, espece });
 
   await sauver();
-  afficher();
+  afficherListeOiseaux();
 
-  document.getElementById("nom").value="";
-  document.getElementById("espece").value="";
+  document.getElementById("nom").value = "";
+  document.getElementById("espece").value = "";
 };
 
 charger();
