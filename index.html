@@ -172,9 +172,12 @@
     };
 
     const app = initializeApp(config);
-    const db = getFirestore(app);
-    const storage = getStorage(app);
-    const refDB = doc(db, "rapaces", "data");
+const db = getFirestore(app);
+
+// bucket explicite
+const storage = getStorage(app, "gs://fiche-rapaces.firebasestorage.app");
+
+const refDB = doc(db, "rapaces", "data");
 
     let oiseaux = [];
 
@@ -254,24 +257,35 @@
     }
 
     async function uploadPhoto(file) {
-      if (!file) return "";
-      const ref = storageRef(storage, "photos/" + Date.now() + "_" + file.name);
-      await uploadBytes(ref, file);
-      return await getDownloadURL(ref);
-    }
+  if (!file) return "";
 
-    async function uploadDocuments(files) {
-      const urls = [];
-      for (const file of files) {
-        const ref = storageRef(storage, "docs/" + Date.now() + "_" + file.name);
-        await uploadBytes(ref, file);
-        const url = await getDownloadURL(ref);
-        urls.push({
-          nom: file.name,
-          url
-        });
-      }
-      return urls;
+  const path = "photos/" + Date.now() + "_" + file.name;
+  const ref = storageRef(storage, path);
+
+  await uploadBytes(ref, file);
+  return await getDownloadURL(ref);
+}
+
+async function uploadDocuments(files) {
+  const urls = [];
+
+  if (!files || files.length === 0) return urls;
+
+  for (const file of files) {
+    const path = "docs/" + Date.now() + "_" + file.name;
+    const ref = storageRef(storage, path);
+
+    await uploadBytes(ref, file);
+    const url = await getDownloadURL(ref);
+
+    urls.push({
+      nom: file.name,
+      url
+    });
+  }
+
+  return urls;
+}
     }
 
     window.ajouterOiseau = async function () {
