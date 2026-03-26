@@ -7,16 +7,10 @@
 
 <style>
 body{
-  font-family:Arial,sans-serif;
+  font-family:Arial;
   background:linear-gradient(180deg,#f7f4ec 0%,#efe6d2 100%);
   margin:0;
   padding:10px;
-  color:#2f2a20;
-}
-
-h1{
-  color:#6b4f12;
-  margin-top:0;
 }
 
 .status{
@@ -26,7 +20,6 @@ h1{
   border-radius:8px;
   margin-bottom:10px;
   font-weight:bold;
-  color:#1f4f7a;
 }
 
 .menu{
@@ -43,7 +36,6 @@ h1{
   color:white;
   font-weight:bold;
   cursor:pointer;
-  font-size:16px;
 }
 
 #btnMenuAccueil{background:#2d6aa1;}
@@ -54,87 +46,18 @@ h1{
 .bloc{
   background:white;
   padding:12px;
-  border-radius:12px;
+  border-radius:10px;
   margin-bottom:10px;
-  border:1px solid #ddd;
-}
-
-input, select, textarea{
-  width:100%;
-  padding:10px;
-  margin:5px 0;
-  box-sizing:border-box;
-  border:1px solid #cdbb8b;
-  border-radius:8px;
-}
-
-textarea{
-  min-height:80px;
-}
-
-.btn-ajouter{
-  background:#b88a1b;
-  color:white;
-  border:none;
-  border-radius:8px;
-  padding:10px;
-  font-weight:bold;
-  cursor:pointer;
-  margin-top:6px;
 }
 
 .hidden{display:none;}
 
-.bird{
-  padding:10px;
-  border:1px solid #d9c38b;
-  margin-top:8px;
-  border-radius:10px;
-  background:#fffdfa;
-  cursor:pointer;
-}
-
-.bird:hover{
-  background:#f4e7c7;
-}
-
-.fiche{
-  margin-top:10px;
-  padding:12px;
-  border:1px solid #d9c38b;
-  border-radius:10px;
-  background:#fffdfa;
-}
-
-.fiche-ligne{
-  margin:6px 0;
-}
-
-.enc{
-  background:#eef7ef;
-  border-left:5px solid #2f7d32;
-  border-radius:8px;
-  padding:10px;
-  margin-top:8px;
-}
-
 .doc{
   background:#f6efe7;
   border-left:5px solid #8a5a2b;
-  border-radius:8px;
   padding:10px;
   margin-top:8px;
-}
-
-.doc a{
-  color:#6b4f12;
-  font-weight:bold;
-}
-
-@media (max-width:900px){
-  .menu{
-    grid-template-columns:1fr;
-  }
+  border-radius:8px;
 }
 </style>
 </head>
@@ -145,64 +68,38 @@ textarea{
 <div id="status" class="status">Connexion...</div>
 
 <div class="menu">
-  <button id="btnMenuAccueil" onclick="showSection('accueil')">Accueil</button>
-  <button id="btnMenuOiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
-  <button id="btnMenuEncodage" onclick="showSection('encodage')">Encodage</button>
-  <button id="btnMenuDocuments" onclick="showSection('documents')">Documents</button>
+<button onclick="show('accueil')">Accueil</button>
+<button onclick="show('oiseaux')">Oiseaux</button>
+<button onclick="show('encodage')">Encodage</button>
+<button onclick="show('documents')">Documents</button>
 </div>
 
 <div id="accueil" class="bloc">
-  <h2>Accueil</h2>
-  <p>Bienvenue dans ton application.</p>
+Accueil
 </div>
 
 <div id="oiseaux" class="bloc hidden">
-  <h2>Oiseaux</h2>
-
-  <input id="nom" placeholder="Nom">
-  <input id="espece" placeholder="Espèce">
-  <button class="btn-ajouter" onclick="ajouterOiseau()">Ajouter</button>
-
-  <h3>Recherche</h3>
-  <input id="recherche" placeholder="Rechercher un oiseau..." oninput="afficherListeOiseaux()">
-
-  <h3>Liste des oiseaux</h3>
-  <div id="liste"></div>
-
-  <h3>Fiche de l’oiseau</h3>
-  <div id="ficheOiseau">Clique sur un oiseau pour voir sa fiche.</div>
+Oiseaux OK
 </div>
 
 <div id="encodage" class="bloc hidden">
-  <h2>Encodage</h2>
-
-  <select id="selectOiseau"></select>
-  <input id="dateEncodage" type="date">
-  <input id="poids" placeholder="Poids actuel">
-  <input id="nourriture" placeholder="Nourriture">
-  <input id="nombre" placeholder="Nombre donné">
-  <input id="poidsNourriture" placeholder="Poids nourriture">
-  <input id="exercice" placeholder="Exercice">
-  <textarea id="notes" placeholder="Notes"></textarea>
-
-  <button class="btn-ajouter" onclick="ajouterEncodage()">Ajouter l’encodage</button>
+Encodage OK
 </div>
 
+<!-- ✅ DOCUMENTS -->
 <div id="documents" class="bloc hidden">
-  <h2>Documents</h2>
+<h2>Documents</h2>
 
-  <input id="nomDocument" placeholder="Nom du document">
-  <input id="lienDocument" placeholder="Lien du document (https://...)">
+<input type="file" id="fichierDocument">
+<button onclick="uploadDocument()">Envoyer le document</button>
 
-  <button class="btn-ajouter" onclick="ajouterDocument()">Ajouter le document</button>
-
-  <h3>Liste des documents</h3>
-  <div id="listeDocuments"></div>
+<div id="listeDocuments"></div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -215,245 +112,80 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const refDB = doc(db, "rapaces", "data");
+const storage = getStorage(app);
+const refDB = doc(db,"rapaces","data");
 
-let oiseaux = [];
 let documents = [];
-let indexOiseauSelectionne = null;
 
-function setStatus(txt){
-  document.getElementById("status").innerText = txt;
+function setStatus(t){
+  document.getElementById("status").innerText = t;
 }
 
-function normalizeText(text){
-  return (text || "")
-    .toString()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+window.show = function(s){
+  ["accueil","oiseaux","encodage","documents"].forEach(id=>{
+    document.getElementById(id).classList.add("hidden");
+  });
+  document.getElementById(s).classList.remove("hidden");
 }
-
-window.showSection = function(section){
-  document.getElementById("accueil").classList.add("hidden");
-  document.getElementById("oiseaux").classList.add("hidden");
-  document.getElementById("encodage").classList.add("hidden");
-  document.getElementById("documents").classList.add("hidden");
-
-  document.getElementById(section).classList.remove("hidden");
-};
-
-function remplirSelectOiseaux(){
-  const s = document.getElementById("selectOiseau");
-
-  if(oiseaux.length === 0){
-    s.innerHTML = "<option value=''>Aucun oiseau</option>";
-    return;
-  }
-
-  s.innerHTML = oiseaux.map((o, index) => `
-    <option value="${index}">${o.nom}</option>
-  `).join("");
-}
-
-function afficherFiche(){
-  const fiche = document.getElementById("ficheOiseau");
-
-  if(indexOiseauSelectionne === null || !oiseaux[indexOiseauSelectionne]){
-    fiche.innerHTML = "Clique sur un oiseau pour voir sa fiche.";
-    return;
-  }
-
-  const o = oiseaux[indexOiseauSelectionne];
-  const encodages = Array.isArray(o.encodages) ? o.encodages : [];
-
-  fiche.innerHTML = `
-    <div class="fiche">
-      <div class="fiche-ligne"><strong>Nom :</strong> ${o.nom || "-"}</div>
-      <div class="fiche-ligne"><strong>Espèce :</strong> ${o.espece || "-"}</div>
-
-      <h3>Encodages</h3>
-      ${
-        encodages.length === 0
-          ? "<div class='enc'>Aucun encodage</div>"
-          : encodages.map(e => `
-              <div class="enc">
-                <div><strong>Date :</strong> ${e.date || "-"}</div>
-                <div><strong>Poids :</strong> ${e.poids || "-"}</div>
-                <div><strong>Nourriture :</strong> ${e.nourriture || "-"}</div>
-                <div><strong>Nombre :</strong> ${e.nombre || "-"}</div>
-                <div><strong>Poids nourriture :</strong> ${e.poidsNourriture || "-"}</div>
-                <div><strong>Exercice :</strong> ${e.exercice || "-"}</div>
-                <div><strong>Notes :</strong> ${e.notes || "-"}</div>
-              </div>
-            `).join("")
-      }
-    </div>
-  `;
-}
-
-window.ouvrirOiseau = function(index){
-  indexOiseauSelectionne = index;
-  afficherFiche();
-};
-
-window.afficherListeOiseaux = function(){
-  const q = normalizeText(document.getElementById("recherche").value);
-  const liste = document.getElementById("liste");
-
-  const filtres = oiseaux
-    .map((o, index) => ({ o, index }))
-    .filter(({ o }) => {
-      const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
-      return texte.includes(q);
-    });
-
-  if(filtres.length === 0){
-    liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
-    return;
-  }
-
-  liste.innerHTML = filtres.map(({ o, index }) => `
-    <div class="bird" onclick="ouvrirOiseau(${index})">
-      <strong>${o.nom || ""}</strong><br>
-      ${o.espece || ""}
-    </div>
-  `).join("");
-};
 
 function afficherDocuments(){
   const div = document.getElementById("listeDocuments");
 
   if(!documents.length){
-    div.innerHTML = "<div class='doc'>Aucun document.</div>";
+    div.innerHTML="Aucun document";
     return;
   }
 
-  div.innerHTML = documents.map(d => `
+  div.innerHTML = documents.map(d=>`
     <div class="doc">
-      <strong>${d.nom || "-"}</strong><br>
-      <a href="${d.lien}" target="_blank">${d.lien}</a>
+      <a href="${d.lien}" target="_blank">${d.nom}</a>
     </div>
   `).join("");
 }
 
 async function charger(){
-  try{
-    setStatus("Connexion...");
-    const snap = await getDoc(refDB);
+  const snap = await getDoc(refDB);
 
-    if(snap.exists()){
-      const data = snap.data();
-      oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
-      documents = Array.isArray(data.documents) ? data.documents : [];
-    } else {
-      oiseaux = [];
-      documents = [];
-    }
-
-    oiseaux = oiseaux.map(o => ({
-      nom: o.nom || "",
-      espece: o.espece || "",
-      encodages: Array.isArray(o.encodages) ? o.encodages : []
-    }));
-
-    afficherListeOiseaux();
-    afficherFiche();
-    remplirSelectOiseaux();
-    afficherDocuments();
-    setStatus("Synchronisé ✅");
-  }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur Firebase : " + e.message);
+  if(snap.exists()){
+    const data = snap.data();
+    documents = data.documents || [];
   }
+
+  afficherDocuments();
+  setStatus("Synchronisé ✅");
 }
 
 async function sauver(){
-  try{
-    setStatus("Sauvegarde...");
-    await setDoc(refDB, { oiseaux, documents }, { merge: true });
-    setStatus("Synchronisé ✅");
-  }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur écriture Firebase : " + e.message);
-  }
+  await setDoc(refDB,{documents},{merge:true});
 }
 
-window.ajouterOiseau = async function(){
-  const nom = document.getElementById("nom").value.trim();
-  const espece = document.getElementById("espece").value.trim();
+window.uploadDocument = async function(){
+  const file = document.getElementById("fichierDocument").files[0];
 
-  if(!nom){
-    alert("Nom obligatoire");
+  if(!file){
+    alert("Choisis un fichier");
     return;
   }
 
-  oiseaux.push({ nom, espece, encodages: [] });
+  setStatus("Upload...");
 
-  await sauver();
-  afficherListeOiseaux();
-  remplirSelectOiseaux();
+  const storageRef = ref(storage,"documents/"+Date.now()+"_"+file.name);
 
-  document.getElementById("nom").value = "";
-  document.getElementById("espece").value = "";
-};
+  await uploadBytes(storageRef,file);
+  const url = await getDownloadURL(storageRef);
 
-window.ajouterEncodage = async function(){
-  const index = document.getElementById("selectOiseau").value;
-
-  if(index === ""){
-    alert("Choisis un oiseau");
-    return;
-  }
-
-  const enc = {
-    date: document.getElementById("dateEncodage").value,
-    poids: document.getElementById("poids").value,
-    nourriture: document.getElementById("nourriture").value,
-    nombre: document.getElementById("nombre").value,
-    poidsNourriture: document.getElementById("poidsNourriture").value,
-    exercice: document.getElementById("exercice").value,
-    notes: document.getElementById("notes").value
-  };
-
-  if(!Array.isArray(oiseaux[index].encodages)){
-    oiseaux[index].encodages = [];
-  }
-
-  oiseaux[index].encodages.push(enc);
-
-  await sauver();
-
-  indexOiseauSelectionne = parseInt(index, 10);
-  afficherFiche();
-
-  document.getElementById("dateEncodage").value = "";
-  document.getElementById("poids").value = "";
-  document.getElementById("nourriture").value = "";
-  document.getElementById("nombre").value = "";
-  document.getElementById("poidsNourriture").value = "";
-  document.getElementById("exercice").value = "";
-  document.getElementById("notes").value = "";
-};
-
-window.ajouterDocument = async function(){
-  const nom = document.getElementById("nomDocument").value.trim();
-  const lien = document.getElementById("lienDocument").value.trim();
-
-  if(!nom || !lien){
-    alert("Nom et lien obligatoires");
-    return;
-  }
-
-  documents.push({ nom, lien });
+  documents.push({
+    nom:file.name,
+    lien:url
+  });
 
   await sauver();
   afficherDocuments();
 
-  document.getElementById("nomDocument").value = "";
-  document.getElementById("lienDocument").value = "";
-};
+  document.getElementById("fichierDocument").value="";
+
+  setStatus("Synchronisé ✅");
+}
 
 charger();
 </script>
