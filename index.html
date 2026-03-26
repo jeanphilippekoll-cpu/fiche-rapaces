@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>FICHE RAPACES</title>
+  <title>FICHE RAPACES V2</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -82,6 +82,19 @@
       padding: 10px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 5px;
+    }
+
+    .btn-edit {
+      background: #2d6aa1;
+    }
+
+    .btn-danger {
+      background: #b13a2f;
+    }
+
+    .btn-secondaire {
+      background: #7d7a72;
     }
 
     .hidden {
@@ -153,8 +166,31 @@
       height: 260px;
     }
 
+    .gain {
+      color: #218838;
+      font-weight: bold;
+    }
+
+    .perte {
+      color: #c0392b;
+      font-weight: bold;
+    }
+
+    .neutre {
+      color: #666;
+      font-weight: bold;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
     @media (max-width: 900px) {
-      .menu {
+      .menu,
+      .actions {
         grid-template-columns: 1fr;
       }
     }
@@ -162,7 +198,7 @@
 </head>
 <body>
 
-  <h1>🦅 FICHE RAPACES</h1>
+  <h1>🦅 FICHE RAPACES V2</h1>
   <div id="status" class="status">Connexion...</div>
 
   <div class="menu">
@@ -186,7 +222,8 @@
     <div>Photo :</div>
     <input type="file" id="photoOiseau" accept="image/*">
 
-    <button class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+    <button class="btn" id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
+    <button class="btn btn-secondaire" onclick="viderFormulaireOiseau()">Vider le formulaire</button>
 
     <h3>Recherche</h3>
     <input id="recherche" placeholder="Rechercher un oiseau..." oninput="afficherListeOiseaux()">
@@ -204,13 +241,27 @@
     <select id="selectOiseau"></select>
     <input id="dateEncodage" type="date">
     <input id="poids" placeholder="Poids actuel">
-    <input id="nourriture" placeholder="Nourriture">
+
+    <select id="nourriture">
+      <option value="">Choisir la nourriture</option>
+      <option value="Poussin">Poussin</option>
+      <option value="Caille">Caille</option>
+      <option value="Pigeon">Pigeon</option>
+      <option value="Rat">Rat</option>
+      <option value="Souris">Souris</option>
+      <option value="Lapin">Lapin</option>
+      <option value="Cou poulet">Cou poulet</option>
+      <option value="Poisson">Poisson</option>
+      <option value="Coeur">Coeur</option>
+    </select>
+
     <input id="nombre" placeholder="Nombre donné">
     <input id="poidsNourriture" placeholder="Poids nourriture">
     <input id="exercice" placeholder="Exercice">
     <textarea id="notes" placeholder="Notes"></textarea>
 
     <button class="btn" onclick="ajouterEncodage()">Ajouter l’encodage</button>
+    <button class="btn btn-secondaire" onclick="viderFormulaireEncodage()">Vider l’encodage</button>
   </div>
 
   <div id="documents" class="bloc hidden">
@@ -245,6 +296,7 @@
     let oiseaux = [];
     let documents = [];
     let indexOiseauSelectionne = null;
+    let indexEditionOiseau = null;
     let graph = null;
 
     function setStatus(txt) {
@@ -265,6 +317,35 @@
         const db = new Date(b.date || "1900-01-01").getTime();
         return da - db;
       });
+    }
+
+    function calculVariation(encodages, indexCourant) {
+      if (indexCourant === 0) return "0 g";
+      const precedent = parseFloat(encodages[indexCourant - 1].poids);
+      const actuel = parseFloat(encodages[indexCourant].poids);
+
+      if (isNaN(precedent) || isNaN(actuel)) return "0 g";
+
+      const diff = actuel - precedent;
+      if (diff > 0) return "+" + diff + " g";
+      if (diff < 0) return diff + " g";
+      return "0 g";
+    }
+
+    function variationClass(txt) {
+      if (!txt || txt === "0 g") return "neutre";
+      if (txt.startsWith("+")) return "gain";
+      if (txt.startsWith("-")) return "perte";
+      return "neutre";
+    }
+
+    function recalculerVariationsPourOiseau(indexOiseau) {
+      if (!oiseaux[indexOiseau] || !Array.isArray(oiseaux[indexOiseau].encodages)) return;
+      const tries = trierEncodages(oiseaux[indexOiseau].encodages);
+      tries.forEach((e, i) => {
+        e.variation = calculVariation(tries, i);
+      });
+      oiseaux[indexOiseau].encodages = tries;
     }
 
     window.showSection = function(section) {
@@ -341,6 +422,11 @@
           <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
           ${o.photo ? `<img class="photo" src="${o.photo}" alt="photo">` : ""}
 
+          <div class="actions">
+            <button class="btn btn-edit" onclick="modifierOiseau(${indexOiseauSelectionne})">Modifier l’oiseau</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau(${indexOiseauSelectionne})">Supprimer l’oiseau</button>
+          </div>
+
           <h3>Courbe de poids</h3>
           ${
             encodages.some(e => e.poids !== null && e.poids !== "" && !isNaN(parseFloat(e.poids)))
@@ -356,6 +442,7 @@
                   <div class="enc">
                     <div><strong>Date :</strong> ${e.date || "-"}</div>
                     <div><strong>Poids :</strong> ${e.poids || "-"}</div>
+                    <div><strong>Variation :</strong> <span class="${variationClass(e.variation)}">${e.variation || "0 g"}</span></div>
                     <div><strong>Nourriture :</strong> ${e.nourriture || "-"}</div>
                     <div><strong>Nombre :</strong> ${e.nombre || "-"}</div>
                     <div><strong>Poids nourriture :</strong> ${e.poidsNourriture || "-"}</div>
@@ -437,6 +524,8 @@
           encodages: Array.isArray(o.encodages) ? o.encodages : []
         }));
 
+        oiseaux.forEach((_, i) => recalculerVariationsPourOiseau(i));
+
         afficherListeOiseaux();
         afficherFiche();
         remplirSelectOiseaux();
@@ -467,7 +556,7 @@
       return await getDownloadURL(storageRef);
     }
 
-    window.ajouterOiseau = async function() {
+    window.ajouterOuModifierOiseau = async function() {
       const nom = document.getElementById("nom").value.trim();
       const espece = document.getElementById("espece").value.trim();
       const photoFile = document.getElementById("photoOiseau").files[0];
@@ -479,18 +568,32 @@
 
       try {
         let photo = "";
+        let encodages = [];
+
+        if (indexEditionOiseau !== null) {
+          photo = oiseaux[indexEditionOiseau].photo || "";
+          encodages = Array.isArray(oiseaux[indexEditionOiseau].encodages) ? oiseaux[indexEditionOiseau].encodages : [];
+        }
 
         if (photoFile) {
           setStatus("Upload photo...");
           photo = await uploadFile("photos/" + Date.now() + "_" + photoFile.name, photoFile);
         }
 
-        oiseaux.push({
+        const oiseau = {
           nom,
           espece,
           photo,
-          encodages: []
-        });
+          encodages
+        };
+
+        if (indexEditionOiseau !== null) {
+          oiseaux[indexEditionOiseau] = oiseau;
+          indexEditionOiseau = null;
+          document.getElementById("btnAjouterOiseau").innerText = "Ajouter l’oiseau";
+        } else {
+          oiseaux.push(oiseau);
+        }
 
         await sauver();
         afficherListeOiseaux();
@@ -504,6 +607,35 @@
         setStatus("Erreur ❌");
         alert("Erreur ajout oiseau : " + e.message);
       }
+    };
+
+    window.modifierOiseau = function(index) {
+      const o = oiseaux[index];
+      document.getElementById("nom").value = o.nom || "";
+      document.getElementById("espece").value = o.espece || "";
+      indexEditionOiseau = index;
+      document.getElementById("btnAjouterOiseau").innerText = "Enregistrer les modifications";
+      showSection("oiseaux");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.supprimerOiseau = async function(index) {
+      if (!confirm("Supprimer cet oiseau ?")) return;
+      oiseaux.splice(index, 1);
+      if (indexOiseauSelectionne === index) indexOiseauSelectionne = null;
+      if (indexEditionOiseau === index) indexEditionOiseau = null;
+      await sauver();
+      afficherListeOiseaux();
+      afficherFiche();
+      remplirSelectOiseaux();
+    };
+
+    window.viderFormulaireOiseau = function() {
+      document.getElementById("nom").value = "";
+      document.getElementById("espece").value = "";
+      document.getElementById("photoOiseau").value = "";
+      indexEditionOiseau = null;
+      document.getElementById("btnAjouterOiseau").innerText = "Ajouter l’oiseau";
     };
 
     window.ajouterEncodage = async function() {
@@ -521,7 +653,8 @@
         nombre: document.getElementById("nombre").value,
         poidsNourriture: document.getElementById("poidsNourriture").value,
         exercice: document.getElementById("exercice").value,
-        notes: document.getElementById("notes").value
+        notes: document.getElementById("notes").value,
+        variation: "0 g"
       };
 
       if (!Array.isArray(oiseaux[index].encodages)) {
@@ -529,12 +662,23 @@
       }
 
       oiseaux[index].encodages.push(enc);
+      recalculerVariationsPourOiseau(parseInt(index, 10));
 
       await sauver();
 
       indexOiseauSelectionne = parseInt(index, 10);
       afficherFiche();
 
+      document.getElementById("dateEncodage").value = "";
+      document.getElementById("poids").value = "";
+      document.getElementById("nourriture").value = "";
+      document.getElementById("nombre").value = "";
+      document.getElementById("poidsNourriture").value = "";
+      document.getElementById("exercice").value = "";
+      document.getElementById("notes").value = "";
+    };
+
+    window.viderFormulaireEncodage = function() {
       document.getElementById("dateEncodage").value = "";
       document.getElementById("poids").value = "";
       document.getElementById("nourriture").value = "";
