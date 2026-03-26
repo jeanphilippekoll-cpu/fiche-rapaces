@@ -10,6 +10,8 @@ body { font-family: Arial; background:#f5f2e8; padding:20px; }
 input, select, button { width:100%; padding:10px; margin:5px 0; }
 button { background:#b88a1b; color:white; border:none; }
 .card { background:white; padding:10px; margin-top:10px; border-radius:10px; }
+.enc { background:#eee; padding:8px; margin-top:5px; border-radius:6px; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 </style>
 </head>
 
@@ -18,10 +20,39 @@ button { background:#b88a1b; color:white; border:none; }
 <h1>🦅 FICHE RAPACES</h1>
 <div id="status">Connexion...</div>
 
-<h2>Ajouter un oiseau</h2>
+<h2>Oiseau</h2>
 <input id="nom" placeholder="Nom">
 <input id="espece" placeholder="Espèce">
-<button onclick="ajouter()">Ajouter</button>
+<button onclick="ajouterOiseau()">Ajouter</button>
+
+<h2>Encodage</h2>
+<select id="selectOiseau"></select>
+<input id="date" type="date">
+
+<div class="grid">
+<input id="poidsDepart" placeholder="Poids départ">
+<input id="poidsActuel" placeholder="Poids actuel">
+</div>
+
+<select id="nourriture">
+<option value="">Nourriture</option>
+<option>Poussins</option>
+<option>Cailles</option>
+<option>Rat</option>
+<option>Souris</option>
+<option>Lapins</option>
+<option>Pigeon</option>
+</select>
+
+<div class="grid">
+<input id="nombre" placeholder="Nombre">
+<input id="poidsNourriture" placeholder="Poids nourriture">
+</div>
+
+<input id="exercice" placeholder="Exercice">
+<input id="notes" placeholder="Notes">
+
+<button onclick="ajouterEncodage()">Ajouter encodage</button>
 
 <h2>Liste</h2>
 <div id="liste"></div>
@@ -34,8 +65,6 @@ const config = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
   authDomain: "fiche-rapaces.firebaseapp.com",
   projectId: "fiche-rapaces",
-  storageBucket: "fiche-rapaces.firebasestorage.app",
-  messagingSenderId: "881543403206",
   appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
 };
 
@@ -48,43 +77,78 @@ let oiseaux = [];
 function setStatus(t){ document.getElementById("status").innerText = t; }
 
 async function charger(){
-  try{
-    const snap = await getDoc(ref);
-    if(snap.exists()) oiseaux = snap.data().oiseaux || [];
-    afficher();
-    setStatus("OK ✅");
-  }catch(e){
-    alert("Erreur lecture: "+e.message);
-  }
+  const snap = await getDoc(ref);
+  if(snap.exists()) oiseaux = snap.data().oiseaux || [];
+  afficher();
+  remplirSelect();
+  setStatus("OK ✅");
 }
 
 async function sauver(){
-  try{
-    await setDoc(ref, { oiseaux });
-    setStatus("Sauvé ✅");
-  }catch(e){
-    alert("Erreur écriture: "+e.message);
-  }
+  await setDoc(ref, { oiseaux });
+}
+
+function remplirSelect(){
+  const s = document.getElementById("selectOiseau");
+  s.innerHTML = oiseaux.map((o,i)=>`<option value="${i}">${o.nom}</option>`).join("");
+}
+
+window.ajouterOiseau = async function(){
+  const nom = document.getElementById("nom").value;
+  const espece = document.getElementById("espece").value;
+
+  oiseaux.push({nom, espece, encodages:[]});
+  await sauver();
+  afficher();
+  remplirSelect();
+}
+
+function calculVariation(prev, actuel){
+  if(prev==null) return "0 g";
+  let diff = actuel - prev;
+  return diff>0 ? "+"+diff+" g" : diff+" g";
+}
+
+window.ajouterEncodage = async function(){
+  const i = document.getElementById("selectOiseau").value;
+
+  let enc = {
+    date: document.getElementById("date").value,
+    poidsDepart: parseFloat(document.getElementById("poidsDepart").value),
+    poidsActuel: parseFloat(document.getElementById("poidsActuel").value),
+    nourriture: document.getElementById("nourriture").value,
+    nombre: document.getElementById("nombre").value,
+    poidsNourriture: document.getElementById("poidsNourriture").value,
+    exercice: document.getElementById("exercice").value,
+    notes: document.getElementById("notes").value
+  };
+
+  let list = oiseaux[i].encodages;
+  let prev = list.length ? list[list.length-1].poidsActuel : null;
+
+  enc.variation = calculVariation(prev, enc.poidsActuel);
+
+  list.push(enc);
+
+  await sauver();
+  afficher();
 }
 
 function afficher(){
   const div = document.getElementById("liste");
   div.innerHTML = "";
 
-  oiseaux.forEach(o => {
-    div.innerHTML += `<div class="card">${o.nom} - ${o.espece}</div>`;
+  oiseaux.forEach(o=>{
+    div.innerHTML += `
+    <div class="card">
+      <strong>${o.nom}</strong> (${o.espece})
+      ${o.encodages.map(e=>`
+        <div class="enc">
+          ${e.date} - ${e.poidsActuel}g (${e.variation})
+        </div>
+      `).join("")}
+    </div>`;
   });
-}
-
-window.ajouter = async function(){
-  const nom = document.getElementById("nom").value;
-  const espece = document.getElementById("espece").value;
-
-  if(!nom){ alert("Nom obligatoire"); return; }
-
-  oiseaux.push({nom, espece});
-  await sauver();
-  afficher();
 }
 
 charger();
