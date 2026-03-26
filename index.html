@@ -9,14 +9,14 @@
   <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="FICHE RAPACES">
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#c8a84e">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
-      background: #000;
-      color: #ffd700;
+      background: linear-gradient(180deg, #f8f4e8 0%, #efe4c8 100%);
+      color: #2f2a20;
       font-family: Arial, sans-serif;
       padding: 20px;
       margin: 0;
@@ -24,15 +24,16 @@
 
     h1, h2, h3 {
       margin-top: 0;
-      color: #ffd700;
+      color: #7b5a14;
     }
 
     .bloc {
-      background: #111;
-      border: 1px solid #5a4a00;
-      border-radius: 12px;
+      background: #fffdf8;
+      border: 1px solid #d9c38b;
+      border-radius: 16px;
       padding: 16px;
       margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(80, 60, 20, 0.08);
     }
 
     input, select, button, textarea {
@@ -40,19 +41,19 @@
       box-sizing: border-box;
       padding: 12px;
       margin: 6px 0;
-      border-radius: 8px;
-      border: 1px solid #555;
+      border-radius: 10px;
+      border: 1px solid #cdbb8b;
       font-size: 16px;
     }
 
     input, select, textarea {
-      background: #f2f2f2;
-      color: #000;
+      background: #fff;
+      color: #2f2a20;
     }
 
     button {
-      background: #ffd700;
-      color: #000;
+      background: #b88a1b;
+      color: #fff;
       font-weight: bold;
       cursor: pointer;
       border: none;
@@ -63,73 +64,74 @@
     }
 
     .btn-danger {
-      background: #a40000;
+      background: #b13a2f;
       color: #fff;
     }
 
     .btn-secondaire {
-      background: #444;
+      background: #7d7a72;
       color: #fff;
     }
 
     .btn-export {
-      background: #0a6d0a;
+      background: #3d8650;
       color: #fff;
     }
 
     .card {
-      border: 1px solid #ffd700;
-      border-radius: 12px;
+      border: 1px solid #d9c38b;
+      border-radius: 16px;
       padding: 14px;
       margin-top: 14px;
-      background: #0d0d0d;
+      background: #fffefb;
+      box-shadow: 0 4px 12px rgba(80, 60, 20, 0.08);
     }
 
     .card img {
-      max-width: 140px;
-      max-height: 140px;
+      max-width: 160px;
+      max-height: 160px;
       display: block;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 10px;
       object-fit: cover;
-      border: 1px solid #444;
+      border: 1px solid #d8c49a;
     }
 
     .ligne {
       margin: 4px 0;
-      color: #fff2b3;
+      color: #4a402f;
     }
 
     .titre-oiseau {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
       margin-bottom: 10px;
-      color: #ffd700;
+      color: #7b5a14;
     }
 
     .historique {
       margin-top: 14px;
-      border-top: 1px solid #444;
+      border-top: 1px solid #e5d6b3;
       padding-top: 10px;
     }
 
     .encodage {
-      background: #161616;
-      border: 1px solid #333;
-      border-radius: 10px;
+      background: #fbf7ee;
+      border: 1px solid #e2d3ae;
+      border-radius: 12px;
       padding: 10px;
       margin-top: 8px;
     }
 
     .vide {
-      color: #ccc;
+      color: #7a7465;
       font-style: italic;
       margin-top: 10px;
     }
 
     .petit {
       font-size: 14px;
-      color: #ccc;
+      color: #7a7465;
     }
 
     .grid-2 {
@@ -146,40 +148,40 @@
 
     .date-badge {
       display: inline-block;
-      background: #2a2a2a;
-      color: #ffd700;
+      background: #f3e5b8;
+      color: #6e5314;
       padding: 6px 10px;
       border-radius: 20px;
       margin: 4px 4px 4px 0;
       font-size: 14px;
-      border: 1px solid #5a4a00;
+      border: 1px solid #d2b973;
     }
 
     .variation-plus {
-      color: #53d769;
+      color: #23874c;
       font-weight: bold;
     }
 
     .variation-moins {
-      color: #ff6b6b;
+      color: #c0392b;
       font-weight: bold;
     }
 
     .variation-neutre {
-      color: #ddd;
+      color: #666;
       font-weight: bold;
     }
 
     .doc-item {
-      background: #1b1b1b;
-      border: 1px solid #333;
+      background: #f9f5ea;
+      border: 1px solid #e2d3ae;
       border-radius: 8px;
       padding: 8px;
       margin-top: 6px;
     }
 
     .doc-link {
-      color: #9fd3ff;
+      color: #2c6aa6;
       text-decoration: underline;
       cursor: pointer;
       word-break: break-all;
@@ -205,7 +207,11 @@
 
   <div class="bloc">
     <h2>Ajouter ou modifier un oiseau</h2>
-    <input id="nomOiseau" placeholder="Nom de l’oiseau">
+
+    <div class="grid-2">
+      <input id="nomOiseau" placeholder="Nom de l’oiseau">
+      <input id="especeOiseau" placeholder="Espèce">
+    </div>
 
     <div class="grid-2">
       <select id="sexeOiseau">
@@ -228,7 +234,7 @@
 
     <button id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
     <button class="btn-secondaire" type="button" onclick="viderFormulaireOiseau()">Vider le formulaire oiseau</button>
-    <div class="petit">Documents : privilégie de petits fichiers. Les gros dossiers ne sont pas adaptés au stockage local.</div>
+    <div class="petit">Documents : préfère de petits fichiers pour éviter de saturer le stockage local.</div>
   </div>
 
   <div class="bloc">
@@ -390,6 +396,7 @@
           <div class="card">
             <div class="titre-oiseau">${oiseau.nom || "Sans nom"}</div>
             ${oiseau.photo ? `<img src="${oiseau.photo}" alt="Photo de ${oiseau.nom}">` : ""}
+            <div class="ligne"><strong>Espèce :</strong> ${oiseau.espece || "-"}</div>
             <div class="ligne"><strong>Sexe :</strong> ${oiseau.sexe || "-"}</div>
             <div class="ligne"><strong>Date de naissance :</strong> ${formatDate(oiseau.dateNaissance)}</div>
             <div class="ligne"><strong>Numéro CITES :</strong> ${oiseau.numeroCites || "-"}</div>
@@ -466,6 +473,7 @@
 
     async function ajouterOuModifierOiseau() {
       const nom = document.getElementById("nomOiseau").value.trim();
+      const espece = document.getElementById("especeOiseau").value.trim();
       const sexe = document.getElementById("sexeOiseau").value;
       const dateNaissance = document.getElementById("dateNaissanceOiseau").value;
       const numeroCites = document.getElementById("numeroCitesOiseau").value.trim();
@@ -512,6 +520,7 @@
 
         const oiseau = {
           nom,
+          espece,
           sexe,
           dateNaissance,
           numeroCites,
@@ -540,6 +549,7 @@
     function modifierOiseau(index) {
       const oiseau = oiseaux[index];
       document.getElementById("nomOiseau").value = oiseau.nom || "";
+      document.getElementById("especeOiseau").value = oiseau.espece || "";
       document.getElementById("sexeOiseau").value = oiseau.sexe || "";
       document.getElementById("dateNaissanceOiseau").value = oiseau.dateNaissance || "";
       document.getElementById("numeroCitesOiseau").value = oiseau.numeroCites || "";
@@ -633,6 +643,7 @@
 
     function viderFormulaireOiseau() {
       document.getElementById("nomOiseau").value = "";
+      document.getElementById("especeOiseau").value = "";
       document.getElementById("sexeOiseau").value = "";
       document.getElementById("dateNaissanceOiseau").value = "";
       document.getElementById("numeroCitesOiseau").value = "";
@@ -763,6 +774,7 @@
     function exportCSV() {
       let lignes = [[
         "Nom oiseau",
+        "Espèce",
         "Sexe",
         "Date naissance",
         "Numero CITES",
@@ -784,6 +796,7 @@
         if (!oiseau.encodages || oiseau.encodages.length === 0) {
           lignes.push([
             oiseau.nom || "",
+            oiseau.espece || "",
             oiseau.sexe || "",
             oiseau.dateNaissance || "",
             oiseau.numeroCites || "",
@@ -804,6 +817,7 @@
           oiseau.encodages.forEach(e => {
             lignes.push([
               oiseau.nom || "",
+              oiseau.espece || "",
               oiseau.sexe || "",
               oiseau.dateNaissance || "",
               oiseau.numeroCites || "",
