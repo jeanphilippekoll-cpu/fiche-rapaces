@@ -118,6 +118,19 @@ textarea{
   margin-top:8px;
 }
 
+.doc{
+  background:#f6efe7;
+  border-left:5px solid #8a5a2b;
+  border-radius:8px;
+  padding:10px;
+  margin-top:8px;
+}
+
+.doc a{
+  color:#6b4f12;
+  font-weight:bold;
+}
+
 @media (max-width:900px){
   .menu{
     grid-template-columns:1fr;
@@ -177,7 +190,14 @@ textarea{
 
 <div id="documents" class="bloc hidden">
   <h2>Documents</h2>
-  <p>Étape suivante.</p>
+
+  <input id="nomDocument" placeholder="Nom du document">
+  <input id="lienDocument" placeholder="Lien du document (https://...)">
+
+  <button class="btn-ajouter" onclick="ajouterDocument()">Ajouter le document</button>
+
+  <h3>Liste des documents</h3>
+  <div id="listeDocuments"></div>
 </div>
 
 <script type="module">
@@ -198,6 +218,7 @@ const db = getFirestore(app);
 const refDB = doc(db, "rapaces", "data");
 
 let oiseaux = [];
+let documents = [];
 let indexOiseauSelectionne = null;
 
 function setStatus(txt){
@@ -299,6 +320,22 @@ window.afficherListeOiseaux = function(){
   `).join("");
 };
 
+function afficherDocuments(){
+  const div = document.getElementById("listeDocuments");
+
+  if(!documents.length){
+    div.innerHTML = "<div class='doc'>Aucun document.</div>";
+    return;
+  }
+
+  div.innerHTML = documents.map(d => `
+    <div class="doc">
+      <strong>${d.nom || "-"}</strong><br>
+      <a href="${d.lien}" target="_blank">${d.lien}</a>
+    </div>
+  `).join("");
+}
+
 async function charger(){
   try{
     setStatus("Connexion...");
@@ -307,11 +344,12 @@ async function charger(){
     if(snap.exists()){
       const data = snap.data();
       oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
+      documents = Array.isArray(data.documents) ? data.documents : [];
     } else {
       oiseaux = [];
+      documents = [];
     }
 
-    // normalisation
     oiseaux = oiseaux.map(o => ({
       nom: o.nom || "",
       espece: o.espece || "",
@@ -321,6 +359,7 @@ async function charger(){
     afficherListeOiseaux();
     afficherFiche();
     remplirSelectOiseaux();
+    afficherDocuments();
     setStatus("Synchronisé ✅");
   }catch(e){
     console.error(e);
@@ -332,7 +371,7 @@ async function charger(){
 async function sauver(){
   try{
     setStatus("Sauvegarde...");
-    await setDoc(refDB, { oiseaux }, { merge: true });
+    await setDoc(refDB, { oiseaux, documents }, { merge: true });
     setStatus("Synchronisé ✅");
   }catch(e){
     console.error(e);
@@ -396,6 +435,24 @@ window.ajouterEncodage = async function(){
   document.getElementById("poidsNourriture").value = "";
   document.getElementById("exercice").value = "";
   document.getElementById("notes").value = "";
+};
+
+window.ajouterDocument = async function(){
+  const nom = document.getElementById("nomDocument").value.trim();
+  const lien = document.getElementById("lienDocument").value.trim();
+
+  if(!nom || !lien){
+    alert("Nom et lien obligatoires");
+    return;
+  }
+
+  documents.push({ nom, lien });
+
+  await sauver();
+  afficherDocuments();
+
+  document.getElementById("nomDocument").value = "";
+  document.getElementById("lienDocument").value = "";
 };
 
 charger();
