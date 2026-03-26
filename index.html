@@ -222,6 +222,9 @@
     <div>Photo :</div>
     <input type="file" id="photoOiseau" accept="image/*">
 
+    <div>Fichier / document de l’oiseau :</div>
+    <input type="file" id="documentOiseau">
+
     <button class="btn" id="btnAjouterOiseau" onclick="ajouterOuModifierOiseau()">Ajouter l’oiseau</button>
     <button class="btn btn-secondaire" onclick="viderFormulaireOiseau()">Vider le formulaire</button>
 
@@ -422,6 +425,12 @@
           <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
           ${o.photo ? `<img class="photo" src="${o.photo}" alt="photo">` : ""}
 
+          ${
+            o.documentUrl
+              ? `<div class="doc"><a href="${o.documentUrl}" target="_blank">${o.documentNom || "Document de l’oiseau"}</a></div>`
+              : ""
+          }
+
           <div class="actions">
             <button class="btn btn-edit" onclick="modifierOiseau(${indexOiseauSelectionne})">Modifier l’oiseau</button>
             <button class="btn btn-danger" onclick="supprimerOiseau(${indexOiseauSelectionne})">Supprimer l’oiseau</button>
@@ -521,6 +530,8 @@
           nom: o.nom || "",
           espece: o.espece || "",
           photo: o.photo || "",
+          documentUrl: o.documentUrl || "",
+          documentNom: o.documentNom || "",
           encodages: Array.isArray(o.encodages) ? o.encodages : []
         }));
 
@@ -560,6 +571,7 @@
       const nom = document.getElementById("nom").value.trim();
       const espece = document.getElementById("espece").value.trim();
       const photoFile = document.getElementById("photoOiseau").files[0];
+      const documentFile = document.getElementById("documentOiseau").files[0];
 
       if (!nom) {
         alert("Nom obligatoire");
@@ -568,10 +580,14 @@
 
       try {
         let photo = "";
+        let documentUrl = "";
+        let documentNom = "";
         let encodages = [];
 
         if (indexEditionOiseau !== null) {
           photo = oiseaux[indexEditionOiseau].photo || "";
+          documentUrl = oiseaux[indexEditionOiseau].documentUrl || "";
+          documentNom = oiseaux[indexEditionOiseau].documentNom || "";
           encodages = Array.isArray(oiseaux[indexEditionOiseau].encodages) ? oiseaux[indexEditionOiseau].encodages : [];
         }
 
@@ -580,10 +596,18 @@
           photo = await uploadFile("photos/" + Date.now() + "_" + photoFile.name, photoFile);
         }
 
+        if (documentFile) {
+          setStatus("Upload document oiseau...");
+          documentUrl = await uploadFile("docs-oiseaux/" + Date.now() + "_" + documentFile.name, documentFile);
+          documentNom = documentFile.name;
+        }
+
         const oiseau = {
           nom,
           espece,
           photo,
+          documentUrl,
+          documentNom,
           encodages
         };
 
@@ -602,6 +626,7 @@
         document.getElementById("nom").value = "";
         document.getElementById("espece").value = "";
         document.getElementById("photoOiseau").value = "";
+        document.getElementById("documentOiseau").value = "";
       } catch (e) {
         console.error(e);
         setStatus("Erreur ❌");
@@ -634,6 +659,7 @@
       document.getElementById("nom").value = "";
       document.getElementById("espece").value = "";
       document.getElementById("photoOiseau").value = "";
+      document.getElementById("documentOiseau").value = "";
       indexEditionOiseau = null;
       document.getElementById("btnAjouterOiseau").innerText = "Ajouter l’oiseau";
     };
