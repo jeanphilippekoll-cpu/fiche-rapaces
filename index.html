@@ -59,13 +59,17 @@ h1{
   border:1px solid #ddd;
 }
 
-input{
+input, select, textarea{
   width:100%;
   padding:10px;
   margin:5px 0;
   box-sizing:border-box;
   border:1px solid #cdbb8b;
   border-radius:8px;
+}
+
+textarea{
+  min-height:80px;
 }
 
 .btn-ajouter{
@@ -104,6 +108,14 @@ input{
 
 .fiche-ligne{
   margin:6px 0;
+}
+
+.enc{
+  background:#eef7ef;
+  border-left:5px solid #2f7d32;
+  border-radius:8px;
+  padding:10px;
+  margin-top:8px;
 }
 
 @media (max-width:900px){
@@ -150,7 +162,17 @@ input{
 
 <div id="encodage" class="bloc hidden">
   <h2>Encodage</h2>
-  <p>Étape suivante.</p>
+
+  <select id="selectOiseau"></select>
+  <input id="dateEncodage" type="date">
+  <input id="poids" placeholder="Poids actuel">
+  <input id="nourriture" placeholder="Nourriture">
+  <input id="nombre" placeholder="Nombre donné">
+  <input id="poidsNourriture" placeholder="Poids nourriture">
+  <input id="exercice" placeholder="Exercice">
+  <textarea id="notes" placeholder="Notes"></textarea>
+
+  <button class="btn-ajouter" onclick="ajouterEncodage()">Ajouter l’encodage</button>
 </div>
 
 <div id="documents" class="bloc hidden">
@@ -199,6 +221,19 @@ window.showSection = function(section){
   document.getElementById(section).classList.remove("hidden");
 };
 
+function remplirSelectOiseaux(){
+  const s = document.getElementById("selectOiseau");
+
+  if(oiseaux.length === 0){
+    s.innerHTML = "<option value=''>Aucun oiseau</option>";
+    return;
+  }
+
+  s.innerHTML = oiseaux.map((o, index) => `
+    <option value="${index}">${o.nom}</option>
+  `).join("");
+}
+
 function afficherFiche(){
   const fiche = document.getElementById("ficheOiseau");
 
@@ -208,11 +243,29 @@ function afficherFiche(){
   }
 
   const o = oiseaux[indexOiseauSelectionne];
+  const encodages = Array.isArray(o.encodages) ? o.encodages : [];
 
   fiche.innerHTML = `
     <div class="fiche">
       <div class="fiche-ligne"><strong>Nom :</strong> ${o.nom || "-"}</div>
       <div class="fiche-ligne"><strong>Espèce :</strong> ${o.espece || "-"}</div>
+
+      <h3>Encodages</h3>
+      ${
+        encodages.length === 0
+          ? "<div class='enc'>Aucun encodage</div>"
+          : encodages.map(e => `
+              <div class="enc">
+                <div><strong>Date :</strong> ${e.date || "-"}</div>
+                <div><strong>Poids :</strong> ${e.poids || "-"}</div>
+                <div><strong>Nourriture :</strong> ${e.nourriture || "-"}</div>
+                <div><strong>Nombre :</strong> ${e.nombre || "-"}</div>
+                <div><strong>Poids nourriture :</strong> ${e.poidsNourriture || "-"}</div>
+                <div><strong>Exercice :</strong> ${e.exercice || "-"}</div>
+                <div><strong>Notes :</strong> ${e.notes || "-"}</div>
+              </div>
+            `).join("")
+      }
     </div>
   `;
 }
@@ -258,8 +311,16 @@ async function charger(){
       oiseaux = [];
     }
 
+    // normalisation
+    oiseaux = oiseaux.map(o => ({
+      nom: o.nom || "",
+      espece: o.espece || "",
+      encodages: Array.isArray(o.encodages) ? o.encodages : []
+    }));
+
     afficherListeOiseaux();
     afficherFiche();
+    remplirSelectOiseaux();
     setStatus("Synchronisé ✅");
   }catch(e){
     console.error(e);
@@ -289,13 +350,52 @@ window.ajouterOiseau = async function(){
     return;
   }
 
-  oiseaux.push({ nom, espece });
+  oiseaux.push({ nom, espece, encodages: [] });
 
   await sauver();
   afficherListeOiseaux();
+  remplirSelectOiseaux();
 
   document.getElementById("nom").value = "";
   document.getElementById("espece").value = "";
+};
+
+window.ajouterEncodage = async function(){
+  const index = document.getElementById("selectOiseau").value;
+
+  if(index === ""){
+    alert("Choisis un oiseau");
+    return;
+  }
+
+  const enc = {
+    date: document.getElementById("dateEncodage").value,
+    poids: document.getElementById("poids").value,
+    nourriture: document.getElementById("nourriture").value,
+    nombre: document.getElementById("nombre").value,
+    poidsNourriture: document.getElementById("poidsNourriture").value,
+    exercice: document.getElementById("exercice").value,
+    notes: document.getElementById("notes").value
+  };
+
+  if(!Array.isArray(oiseaux[index].encodages)){
+    oiseaux[index].encodages = [];
+  }
+
+  oiseaux[index].encodages.push(enc);
+
+  await sauver();
+
+  indexOiseauSelectionne = parseInt(index, 10);
+  afficherFiche();
+
+  document.getElementById("dateEncodage").value = "";
+  document.getElementById("poids").value = "";
+  document.getElementById("nourriture").value = "";
+  document.getElementById("nombre").value = "";
+  document.getElementById("poidsNourriture").value = "";
+  document.getElementById("exercice").value = "";
+  document.getElementById("notes").value = "";
 };
 
 charger();
