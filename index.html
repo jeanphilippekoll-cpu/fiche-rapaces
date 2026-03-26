@@ -74,22 +74,50 @@ const ref = doc(db, "rapaces", "data");
 
 let oiseaux = [];
 
-function setStatus(t){ document.getElementById("status").innerText = t; }
+function setStatus(t){
+  document.getElementById("status").innerText = t;
+}
 
 async function charger(){
-  const snap = await getDoc(ref);
-  if(snap.exists()) oiseaux = snap.data().oiseaux || [];
-  afficher();
-  remplirSelect();
-  setStatus("OK ✅");
+  try{
+    setStatus("Connexion...");
+    const snap = await getDoc(ref);
+
+    if(snap.exists()){
+      oiseaux = snap.data().oiseaux || [];
+    } else {
+      oiseaux = [];
+    }
+
+    afficher();
+    remplirSelect();
+
+    setStatus("Synchronisé ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur lecture Firebase: " + e.message);
+  }
 }
 
 async function sauver(){
-  await setDoc(ref, { oiseaux });
+  try{
+    setStatus("Sauvegarde...");
+    await setDoc(ref, { oiseaux });
+    setStatus("Synchronisé ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur écriture Firebase: " + e.message);
+  }
 }
 
 function remplirSelect(){
   const s = document.getElementById("selectOiseau");
+  if(oiseaux.length === 0){
+    s.innerHTML = '<option>Aucun oiseau</option>';
+    return;
+  }
   s.innerHTML = oiseaux.map((o,i)=>`<option value="${i}">${o.nom}</option>`).join("");
 }
 
@@ -97,20 +125,31 @@ window.ajouterOiseau = async function(){
   const nom = document.getElementById("nom").value;
   const espece = document.getElementById("espece").value;
 
+  if(!nom){
+    alert("Nom obligatoire");
+    return;
+  }
+
   oiseaux.push({nom, espece, encodages:[]});
+
   await sauver();
   afficher();
   remplirSelect();
 }
 
 function calculVariation(prev, actuel){
-  if(prev==null) return "0 g";
+  if(prev == null) return "0 g";
   let diff = actuel - prev;
-  return diff>0 ? "+"+diff+" g" : diff+" g";
+  return diff > 0 ? "+" + diff + " g" : diff + " g";
 }
 
 window.ajouterEncodage = async function(){
   const i = document.getElementById("selectOiseau").value;
+
+  if(i === "" || oiseaux.length === 0){
+    alert("Choisis un oiseau");
+    return;
+  }
 
   let enc = {
     date: document.getElementById("date").value,
@@ -144,7 +183,7 @@ function afficher(){
       <strong>${o.nom}</strong> (${o.espece})
       ${o.encodages.map(e=>`
         <div class="enc">
-          ${e.date} - ${e.poidsActuel}g (${e.variation})
+          ${e.date || "-"} - ${e.poidsActuel || "-"} g (${e.variation})
         </div>
       `).join("")}
     </div>`;
