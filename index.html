@@ -17,6 +17,16 @@
       color: #6b4f12;
     }
 
+    .status {
+      background: #eef6ff;
+      border: 1px solid #b9d6f2;
+      color: #1f4f7a;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
     .menu {
       display: grid;
       grid-template-columns: repeat(4,1fr);
@@ -30,6 +40,7 @@
       border-radius: 10px;
       color: white;
       font-weight: bold;
+      cursor: pointer;
     }
 
     #btnMenuAccueil { background:#2d6aa1; }
@@ -42,22 +53,25 @@
       padding: 10px;
       border-radius: 10px;
       margin-bottom: 10px;
+      border: 1px solid #ddd;
     }
 
     input, select {
       width: 100%;
       padding: 8px;
       margin: 5px 0;
+      box-sizing: border-box;
     }
 
     .hidden { display:none; }
 
     .bird {
-      padding:10px;
-      border:1px solid #ccc;
-      margin-top:5px;
-      border-radius:8px;
-      cursor:pointer;
+      padding: 10px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #fffdfa;
     }
   </style>
 </head>
@@ -65,6 +79,7 @@
 <body>
 
 <h1>🦅 FICHE RAPACES</h1>
+<div id="status" class="status">Connexion...</div>
 
 <div class="menu">
   <button id="btnMenuAccueil" onclick="show('accueil')">Accueil</button>
@@ -73,13 +88,11 @@
   <button id="btnMenuDocuments" onclick="show('documents')">Documents</button>
 </div>
 
-<!-- ACCUEIL -->
 <div id="accueil" class="bloc">
   <h2>Accueil</h2>
   <p>Bienvenue dans ton application.</p>
 </div>
 
-<!-- OISEAUX -->
 <div id="oiseaux" class="bloc hidden">
   <h2>Oiseaux</h2>
 
@@ -91,48 +104,110 @@
   <div id="liste"></div>
 </div>
 
-<!-- ENCODAGE -->
 <div id="encodage" class="bloc hidden">
   <h2>Encodage</h2>
   <p>Fonction en cours</p>
 </div>
 
-<!-- DOCUMENTS -->
 <div id="documents" class="bloc hidden">
   <h2>Documents</h2>
   <p>Fonction en cours</p>
 </div>
 
-<script>
-let oiseaux = []
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-function show(section){
-  document.getElementById("accueil").classList.add("hidden")
-  document.getElementById("oiseaux").classList.add("hidden")
-  document.getElementById("encodage").classList.add("hidden")
-  document.getElementById("documents").classList.add("hidden")
+const firebaseConfig = {
+  apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+  authDomain: "fiche-rapaces.firebaseapp.com",
+  projectId: "fiche-rapaces",
+  storageBucket: "fiche-rapaces.firebasestorage.app",
+  messagingSenderId: "881543403206",
+  appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
+};
 
-  document.getElementById(section).classList.remove("hidden")
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const refDB = doc(db, "rapaces", "data");
+
+let oiseaux = [];
+
+function setStatus(txt) {
+  document.getElementById("status").innerText = txt;
 }
 
-function ajouter(){
-  let nom = document.getElementById("nom").value
-  let espece = document.getElementById("espece").value
-
-  oiseaux.push({nom, espece})
-  afficher()
-}
+window.show = function(section){
+  document.getElementById("accueil").classList.add("hidden");
+  document.getElementById("oiseaux").classList.add("hidden");
+  document.getElementById("encodage").classList.add("hidden");
+  document.getElementById("documents").classList.add("hidden");
+  document.getElementById(section).classList.remove("hidden");
+};
 
 function afficher(){
-  let div = document.getElementById("liste")
+  let div = document.getElementById("liste");
 
   div.innerHTML = oiseaux.map(o => `
     <div class="bird">
-      <b>${o.nom}</b><br>
-      ${o.espece}
+      <b>${o.nom || ""}</b><br>
+      ${o.espece || ""}
     </div>
-  `).join("")
+  `).join("");
 }
+
+async function charger(){
+  try{
+    setStatus("Connexion...");
+    const snap = await getDoc(refDB);
+
+    if(snap.exists()){
+      const data = snap.data();
+      oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
+    } else {
+      oiseaux = [];
+    }
+
+    afficher();
+    setStatus("Synchronisé ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur lecture Firebase : " + e.message);
+  }
+}
+
+async function sauver(){
+  try{
+    setStatus("Sauvegarde...");
+    await setDoc(refDB, { oiseaux }, { merge: true });
+    setStatus("Synchronisé ✅");
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur écriture Firebase : " + e.message);
+  }
+}
+
+window.ajouter = async function(){
+  let nom = document.getElementById("nom").value.trim();
+  let espece = document.getElementById("espece").value.trim();
+
+  if(!nom){
+    alert("Nom obligatoire");
+    return;
+  }
+
+  oiseaux.push({ nom, espece });
+
+  await sauver();
+  afficher();
+
+  document.getElementById("nom").value = "";
+  document.getElementById("espece").value = "";
+};
+
+charger();
 </script>
 
 </body>
