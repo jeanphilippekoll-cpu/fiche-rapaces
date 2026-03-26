@@ -7,15 +7,11 @@
 
 <style>
 body { font-family: Arial; background:#f5f2e8; padding:20px; }
-input, select, button { width:100%; padding:10px; margin:5px 0; box-sizing:border-box; }
+input, select, button { width:100%; padding:10px; margin:5px 0; }
 button { background:#b88a1b; color:white; border:none; }
 .card { background:white; padding:10px; margin-top:10px; border-radius:10px; }
 .enc { background:#eee; padding:8px; margin-top:5px; border-radius:6px; }
-.grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-
-@media (max-width: 700px){
-  .grid { grid-template-columns:1fr; }
-}
+img { max-width:100%; border-radius:10px; margin-top:10px; }
 </style>
 </head>
 
@@ -27,36 +23,14 @@ button { background:#b88a1b; color:white; border:none; }
 <h2>Oiseau</h2>
 <input id="nom" placeholder="Nom">
 <input id="espece" placeholder="Espèce">
+
+📸 Photo :
+<input type="file" id="photo">
+
+📄 Documents :
+<input type="file" id="docs" multiple>
+
 <button onclick="ajouterOiseau()">Ajouter</button>
-
-<h2>Encodage</h2>
-<select id="selectOiseau"></select>
-<input id="date" type="date">
-
-<div class="grid">
-  <input id="poidsDepart" placeholder="Poids départ">
-  <input id="poidsActuel" placeholder="Poids actuel">
-</div>
-
-<select id="nourriture">
-  <option value="">Nourriture</option>
-  <option>Poussins</option>
-  <option>Cailles</option>
-  <option>Rat</option>
-  <option>Souris</option>
-  <option>Lapins</option>
-  <option>Pigeon</option>
-</select>
-
-<div class="grid">
-  <input id="nombre" placeholder="Nombre">
-  <input id="poidsNourriture" placeholder="Poids nourriture">
-</div>
-
-<input id="exercice" placeholder="Exercice">
-<input id="notes" placeholder="Notes">
-
-<button onclick="ajouterEncodage()">Ajouter encodage</button>
 
 <h2>Liste</h2>
 <div id="liste"></div>
@@ -64,6 +38,7 @@ button { background:#b88a1b; color:white; border:none; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
 const config = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -74,7 +49,9 @@ const config = {
 
 const app = initializeApp(config);
 const db = getFirestore(app);
-const ref = doc(db, "rapaces", "data");
+const storage = getStorage(app);
+
+const refDB = doc(db, "rapaces", "data");
 
 let oiseaux = [];
 
@@ -82,158 +59,84 @@ function setStatus(t){
   document.getElementById("status").innerText = t;
 }
 
-function normaliserDonnees() {
-  if (!Array.isArray(oiseaux)) {
-    oiseaux = [];
-  }
-
-  oiseaux = oiseaux.map(o => ({
-    nom: o?.nom || "",
-    espece: o?.espece || "",
-    encodages: Array.isArray(o?.encodages) ? o.encodages : []
-  }));
-}
-
 async function charger(){
-  try{
-    setStatus("Connexion...");
-    const snap = await getDoc(ref);
+  setStatus("Connexion...");
+  const snap = await getDoc(refDB);
 
-    if(snap.exists()){
-      oiseaux = snap.data().oiseaux || [];
-    } else {
-      oiseaux = [];
-    }
-
-    normaliserDonnees();
-    afficher();
-    remplirSelect();
-
-    setStatus("Synchronisé ✅");
-  }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur lecture Firebase: " + e.message);
+  if(snap.exists()){
+    oiseaux = snap.data().oiseaux || [];
   }
+
+  afficher();
+  setStatus("Synchronisé ✅");
 }
 
 async function sauver(){
-  try{
-    normaliserDonnees();
-    setStatus("Sauvegarde...");
-    await setDoc(ref, { oiseaux });
-    setStatus("Synchronisé ✅");
-  }catch(e){
-    console.error(e);
-    setStatus("Erreur ❌");
-    alert("Erreur écriture Firebase: " + e.message);
-  }
-}
-
-function remplirSelect(){
-  const s = document.getElementById("selectOiseau");
-
-  if(oiseaux.length === 0){
-    s.innerHTML = '<option value="">Aucun oiseau</option>';
-    return;
-  }
-
-  s.innerHTML = oiseaux.map((o,i)=>`<option value="${i}">${o.nom}</option>`).join("");
+  await setDoc(refDB, { oiseaux });
 }
 
 window.ajouterOiseau = async function(){
-  const nom = document.getElementById("nom").value.trim();
-  const espece = document.getElementById("espece").value.trim();
+  try{
+    setStatus("Upload...");
 
-  if(!nom){
-    alert("Nom obligatoire");
-    return;
+    const nom = document.getElementById("nom").value;
+    const espece = document.getElementById("espece").value;
+
+    const photoFile = document.getElementById("photo").files[0];
+    const docsFiles = document.getElementById("docs").files;
+
+    let photoURL = "";
+    let docsURL = [];
+
+    // 📸 upload photo
+    if(photoFile){
+      const refPhoto = sRef(storage, "photos/" + Date.now());
+      await uploadBytes(refPhoto, photoFile);
+      photoURL = await getDownloadURL(refPhoto);
+    }
+
+    // 📄 upload docs
+    for(let file of docsFiles){
+      const refDoc = sRef(storage, "docs/" + Date.now() + "_" + file.name);
+      await uploadBytes(refDoc, file);
+      const url = await getDownloadURL(refDoc);
+      docsURL.push(url);
+    }
+
+    oiseaux.push({
+      nom,
+      espece,
+      photo: photoURL,
+      documents: docsURL
+    });
+
+    await sauver();
+    afficher();
+
+    setStatus("Synchronisé ✅");
+
+  }catch(e){
+    console.error(e);
+    setStatus("Erreur ❌");
+    alert("Erreur upload : " + e.message);
   }
-
-  oiseaux.push({
-    nom,
-    espece,
-    encodages:[]
-  });
-
-  await sauver();
-  afficher();
-  remplirSelect();
-
-  document.getElementById("nom").value = "";
-  document.getElementById("espece").value = "";
-}
-
-function calculVariation(prev, actuel){
-  if(prev == null || isNaN(prev) || isNaN(actuel)) return "0 g";
-  let diff = actuel - prev;
-  return diff > 0 ? "+" + diff + " g" : diff + " g";
-}
-
-window.ajouterEncodage = async function(){
-  const i = document.getElementById("selectOiseau").value;
-
-  if(i === "" || oiseaux.length === 0){
-    alert("Choisis un oiseau");
-    return;
-  }
-
-  const poidsDepart = parseFloat(document.getElementById("poidsDepart").value);
-  const poidsActuel = parseFloat(document.getElementById("poidsActuel").value);
-
-  let enc = {
-    date: document.getElementById("date").value,
-    poidsDepart: isNaN(poidsDepart) ? null : poidsDepart,
-    poidsActuel: isNaN(poidsActuel) ? null : poidsActuel,
-    nourriture: document.getElementById("nourriture").value,
-    nombre: document.getElementById("nombre").value,
-    poidsNourriture: document.getElementById("poidsNourriture").value,
-    exercice: document.getElementById("exercice").value,
-    notes: document.getElementById("notes").value
-  };
-
-  if(!Array.isArray(oiseaux[i].encodages)){
-    oiseaux[i].encodages = [];
-  }
-
-  let list = oiseaux[i].encodages;
-  let prev = list.length ? list[list.length-1].poidsActuel : null;
-
-  enc.variation = calculVariation(prev, enc.poidsActuel);
-
-  list.push(enc);
-
-  await sauver();
-  afficher();
-
-  document.getElementById("date").value = "";
-  document.getElementById("poidsDepart").value = "";
-  document.getElementById("poidsActuel").value = "";
-  document.getElementById("nourriture").value = "";
-  document.getElementById("nombre").value = "";
-  document.getElementById("poidsNourriture").value = "";
-  document.getElementById("exercice").value = "";
-  document.getElementById("notes").value = "";
 }
 
 function afficher(){
   const div = document.getElementById("liste");
   div.innerHTML = "";
 
-  oiseaux.forEach(o => {
-    const encodages = Array.isArray(o.encodages) ? o.encodages : [];
-
+  oiseaux.forEach(o=>{
     div.innerHTML += `
       <div class="card">
-        <strong>${o.nom || "-"}</strong> (${o.espece || "-"})
+        <strong>${o.nom}</strong> (${o.espece})
+
+        ${o.photo ? `<img src="${o.photo}">` : ""}
+
         ${
-          encodages.length === 0
-            ? `<div class="enc">Aucun encodage</div>`
-            : encodages.map(e => `
-                <div class="enc">
-                  ${e.date || "-"} - ${e.poidsActuel ?? "-"} g (${e.variation || "0 g"})
-                </div>
-              `).join("")
+          o.documents
+            ? o.documents.map(d=>`<a href="${d}" target="_blank">📄 Document</a><br>`).join("")
+            : ""
         }
       </div>
     `;
