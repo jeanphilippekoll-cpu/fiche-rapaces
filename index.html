@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <title>FICHE RAPACES</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     body {
@@ -143,6 +144,15 @@
       text-decoration: underline;
     }
 
+    .chart-box {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 10px;
+      margin-top: 10px;
+      height: 260px;
+    }
+
     @media (max-width: 900px) {
       .menu {
         grid-template-columns: 1fr;
@@ -235,6 +245,7 @@
     let oiseaux = [];
     let documents = [];
     let indexOiseauSelectionne = null;
+    let graph = null;
 
     function setStatus(txt) {
       document.getElementById("status").innerText = txt;
@@ -246,6 +257,14 @@
         .toLowerCase()
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function trierEncodages(encodages) {
+      return [...encodages].sort((a, b) => {
+        const da = new Date(a.date || "1900-01-01").getTime();
+        const db = new Date(b.date || "1900-01-01").getTime();
+        return da - db;
+      });
     }
 
     window.showSection = function(section) {
@@ -269,6 +288,42 @@
       ).join("");
     }
 
+    function dessinerCourbe(encodages) {
+      const canvas = document.getElementById("courbePoids");
+      if (!canvas) return;
+
+      if (graph) {
+        graph.destroy();
+      }
+
+      const tries = trierEncodages(encodages).filter(e =>
+        e.poids !== null &&
+        e.poids !== "" &&
+        !isNaN(parseFloat(e.poids))
+      );
+
+      if (tries.length === 0) return;
+
+      const labels = tries.map(e => e.date || "-");
+      const data = tries.map(e => parseFloat(e.poids));
+
+      graph = new Chart(canvas, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [{
+            label: "Poids",
+            data,
+            tension: 0.2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+
     function afficherFiche() {
       const fiche = document.getElementById("ficheOiseau");
 
@@ -278,13 +333,20 @@
       }
 
       const o = oiseaux[indexOiseauSelectionne];
-      const encodages = Array.isArray(o.encodages) ? o.encodages : [];
+      const encodages = trierEncodages(Array.isArray(o.encodages) ? o.encodages : []);
 
       fiche.innerHTML = `
         <div class="fiche">
           <div><strong>Nom :</strong> ${o.nom || "-"}</div>
           <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
           ${o.photo ? `<img class="photo" src="${o.photo}" alt="photo">` : ""}
+
+          <h3>Courbe de poids</h3>
+          ${
+            encodages.some(e => e.poids !== null && e.poids !== "" && !isNaN(parseFloat(e.poids)))
+              ? `<div class="chart-box"><canvas id="courbePoids"></canvas></div>`
+              : `<div class="enc">Ajoute au moins un poids pour voir la courbe.</div>`
+          }
 
           <h3>Encodages</h3>
           ${
@@ -304,6 +366,10 @@
           }
         </div>
       `;
+
+      setTimeout(() => {
+        dessinerCourbe(encodages);
+      }, 50);
     }
 
     window.ouvrirOiseau = function(index) {
