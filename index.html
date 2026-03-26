@@ -2,10 +2,9 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>FICHE RAPACES</title>
+<title>FICHE RAPACES PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- ICON -->
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 
@@ -13,24 +12,27 @@
 
 <style>
 body{
-  font-family:Arial;
-  background:linear-gradient(#f7f4ec,#efe6d2);
-  padding:10px;
+font-family:Arial;
+background:linear-gradient(#f7f4ec,#efe6d2);
+margin:0;
+padding:10px;
 }
 
 .hidden{display:none}
 
 .menu{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:10px;
+margin-bottom:10px;
 }
 
 .menu button{
-  padding:10px;
-  color:white;
-  border:none;
-  border-radius:8px;
+padding:12px;
+border:none;
+border-radius:10px;
+color:white;
+font-weight:bold;
 }
 
 #btnMenuAccueil{background:#2d6aa1;}
@@ -39,46 +41,54 @@ body{
 #btnMenuDocuments{background:#8a5a2b;}
 
 .bloc{
-  background:white;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
+background:white;
+padding:12px;
+border-radius:12px;
+margin-bottom:10px;
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+margin:5px 0;
+border-radius:8px;
+border:1px solid #ccc;
 }
 
 .bird{
-  padding:10px;
-  margin-top:5px;
-  border-radius:8px;
-  background:#fff;
-  cursor:pointer;
+padding:10px;
+border-radius:10px;
+margin-top:6px;
+background:#fffdfa;
+cursor:pointer;
 }
 
 .enc{
-  background:#eef7ef;
-  border-left:5px solid #2f7d32;
-  padding:8px;
-  margin-top:5px;
+background:#eef7ef;
+border-left:5px solid #2f7d32;
+padding:10px;
+margin-top:8px;
 }
 
 .doc{
-  background:#f6efe7;
-  border-left:5px solid #8a5a2b;
-  padding:8px;
-  margin-top:5px;
+background:#f6efe7;
+border-left:5px solid #8a5a2b;
+padding:10px;
+margin-top:8px;
 }
 
-.gain{color:green}
-.perte{color:red}
+.gain{color:green;font-weight:bold;}
+.perte{color:red;font-weight:bold;}
 
 .lock{
-  position:fixed;
-  inset:0;
-  background:black;
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
+position:fixed;
+inset:0;
+background:black;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
 }
 </style>
 </head>
@@ -104,17 +114,21 @@ body{
 <div id="accueil" class="bloc">Accueil</div>
 
 <div id="oiseaux" class="bloc hidden">
+
 <input id="nom" placeholder="Nom">
 <input id="espece" placeholder="Espèce">
 <input id="photo" type="file">
 <input id="docOiseau" type="file">
+
 <button onclick="addBird()">Ajouter</button>
 
 <div id="liste"></div>
 <div id="fiche"></div>
+
 </div>
 
 <div id="encodage" class="bloc hidden">
+
 <select id="sel"></select>
 <input id="date" type="date">
 <input id="poids" placeholder="Poids">
@@ -132,13 +146,18 @@ body{
 </select>
 
 <input id="nb" placeholder="Nombre">
+
 <button onclick="addEnc()">Ajouter</button>
+
 </div>
 
 <div id="documents" class="bloc hidden">
+
 <input type="file" id="fileDoc">
 <button onclick="addDoc()">Ajouter document</button>
+
 <div id="docs"></div>
+
 </div>
 
 <script type="module">
@@ -163,8 +182,8 @@ let oiseaux=[];
 let documents=[];
 
 function couleur(i){
-const c=["#2d6aa1","#b88a1b","#2f7d32","#8a5a2b","#6a2da1"];
-return c[i%5];
+const c=["#2d6aa1","#b88a1b","#2f7d32","#8a5a2b","#6a2da1","#a12d6a"];
+return c[i%c.length];
 }
 
 window.unlock=function(){
@@ -189,17 +208,18 @@ return await getDownloadURL(r);
 }
 
 window.addBird=async function(){
-let nom=document.getElementById("nom").value;
-let espece=document.getElementById("espece").value;
-let photoF=document.getElementById("photo").files[0];
-let docF=document.getElementById("docOiseau").files[0];
+let nom=nomInput.value;
+let espece=especeInput.value;
+let photoF=photo.files[0];
+let docF=docOiseau.files[0];
 
-let photo="",docu="";
+let photoURL="",docURL="";
 
-if(photoF) photo=await upload(photoF,"photo/"+Date.now());
-if(docF) docu=await upload(docF,"doc/"+Date.now());
+if(photoF) photoURL=await upload(photoF,"photo/"+Date.now());
+if(docF) docURL=await upload(docF,"doc/"+Date.now());
 
-oiseaux.push({nom,espece,photo,doc:docu,enc:[]});
+oiseaux.push({nom,espece,photo:photoURL,doc:docURL,enc:[]});
+
 await save();
 render();
 }
@@ -211,16 +231,18 @@ document.getElementById("fiche").innerHTML=`
 <div style="border-top:5px solid ${couleur(i)}">
 <h3>${o.nom}</h3>
 <img src="${o.photo||""}" width="150">
+
 ${o.doc?`<a href="${o.doc}" target="_blank">Document</a>`:""}
 
 <button onclick="delBird(${i})">Supprimer</button>
 
 ${o.enc.map((e,j)=>`
 <div class="enc">
-${e.date} ${e.poids}g
+${e.date} ${e.poids}g 
 <span class="${e.var>0?'gain':'perte'}">${e.var}g</span>
 <button onclick="delEnc(${i},${j})">X</button>
-</div>`).join("")}
+</div>
+`).join("")}
 </div>
 `;
 
@@ -228,14 +250,15 @@ draw(o.enc);
 }
 
 window.addEnc=async function(){
-let i=document.getElementById("sel").value;
-let p=parseFloat(document.getElementById("poids").value);
-let arr=oiseaux[i].enc;
+let i=sel.value;
+let p=parseFloat(poids.value);
 
+let arr=oiseaux[i].enc;
 let prev=arr.length?arr[arr.length-1].poids:0;
 let diff=p-prev;
 
 arr.push({date:date.value,poids:p,var:diff});
+
 await save();
 openBird(i);
 }
@@ -259,13 +282,14 @@ if(!c){
 document.getElementById("fiche").innerHTML+="<canvas id='chart'></canvas>";
 c=document.getElementById("chart");
 }
-new Chart(c,{type:"line",
+new Chart(c,{
+type:"line",
 data:{labels:enc.map(e=>e.date),datasets:[{data:enc.map(e=>e.poids)}]}
 });
 }
 
 window.addDoc=async function(){
-let f=document.getElementById("fileDoc").files[0];
+let f=fileDoc.files[0];
 if(!f)return;
 
 let url=await upload(f,"docs/"+Date.now());
@@ -282,21 +306,22 @@ renderDocs();
 }
 
 function renderDocs(){
-document.getElementById("docs").innerHTML=documents.map((d,i)=>`
+docs.innerHTML=documents.map((d,i)=>`
 <div class="doc">
 <a href="${d.lien}" target="_blank">${d.nom}</a>
 <button onclick="delDoc(${i})">X</button>
-</div>
-`).join("");
+</div>`).join("");
 }
 
 function render(){
-document.getElementById("liste").innerHTML=oiseaux.map((o,i)=>
+liste.innerHTML=oiseaux.map((o,i)=>
 `<div class="bird" onclick="openBird(${i})"
-style="border-left:5px solid ${couleur(i)}">${o.nom}</div>`).join("");
+style="border-left:5px solid ${couleur(i)}">${o.nom}</div>`
+).join("");
 
-document.getElementById("sel").innerHTML=oiseaux.map((o,i)=>
-`<option value="${i}">${o.nom}</option>`).join("");
+sel.innerHTML=oiseaux.map((o,i)=>
+`<option value="${i}">${o.nom}</option>`
+).join("");
 
 renderDocs();
 }
@@ -318,5 +343,6 @@ await setDoc(refDB,{oiseaux,documents},{merge:true});
 load();
 
 </script>
+
 </body>
 </html>
