@@ -8,256 +8,146 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #f7f4ec 0%, #efe6d2 100%);
-      margin: 0;
-      padding: 10px;
-      color: #2f2a20;
-    }
+ <style>
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(180deg,#f5f1e6,#e8dcc2);
+  margin: 0;
+  padding: 10px;
+  color: #2f2a20;
+}
 
-    h1, h2, h3 {
-      color: #6b4f12;
-      margin-top: 0;
-    }
+/* TITRES */
+h1,h2,h3{
+  color:#5c4310;
+}
 
-    .status {
-      background: #eef6ff;
-      border: 1px solid #b9d6f2;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      font-weight: bold;
-      color: #1f4f7a;
-    }
+/* STATUS */
+.status{
+  background:#eef6ff;
+  border:1px solid #b9d6f2;
+  padding:10px;
+  border-radius:10px;
+  font-weight:bold;
+}
 
-    .menu {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 10px;
-    }
+/* MENU */
+.menu{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
 
-    .menu button {
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-    }
+.menu button{
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 4px 10px rgba(0,0,0,0.2);
+}
 
-    #btnMenuAccueil { background: #2d6aa1; }
-    #btnMenuOiseaux { background: #b88a1b; }
-    #btnMenuEncodage { background: #2f7d32; }
-    #btnMenuDocuments { background: #8a5a2b; }
+/* BLOCS */
+.bloc{
+  background:white;
+  padding:12px;
+  border-radius:14px;
+  margin-top:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
 
-    .bloc {
-      background: white;
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-    }
+/* INPUT */
+input,select,textarea{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border-radius:10px;
+  border:1px solid #cdbb8b;
+}
 
-    input, select, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      box-sizing: border-box;
-      border: 1px solid #cdbb8b;
-      border-radius: 8px;
-      font-size: 15px;
-    }
+/* BOUTONS */
+.btn{
+  background:#b88a1b;
+  color:white;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
 
-    textarea {
-      min-height: 80px;
-    }
+.btn-danger{background:#c0392b;}
+.btn-edit{background:#2d6aa1;}
+.btn-export{background:#2f7d32;}
+.btn-secondaire{background:#777;}
 
-    .btn {
-      background: #b88a1b;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      padding: 10px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 5px;
-    }
+/* 🦅 OISEAUX */
+.bird{
+  padding:12px;
+  border-radius:12px;
+  margin-top:8px;
+  background:white;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  transition:0.2s;
+}
 
-    .btn-edit {
-      background: #2d6aa1;
-    }
+.bird:hover{
+  transform:scale(1.02);
+}
 
-    .btn-danger {
-      background: #b13a2f;
-    }
+/* FICHE */
+.fiche{
+  border-radius:14px;
+  padding:14px;
+  margin-top:10px;
+  background:#fffdfa;
+  box-shadow:0 6px 20px rgba(0,0,0,0.1);
+}
 
-    .btn-secondaire {
-      background: #7d7a72;
-    }
+/* PHOTO */
+.photo{
+  max-width:220px;
+  border-radius:12px;
+  margin-top:10px;
+}
 
-    .btn-export {
-      background: #2f7d32;
-    }
+/* ENCODAGE */
+.enc{
+  border-left:5px solid #2f7d32;
+  background:#eef7ef;
+  padding:10px;
+  margin-top:8px;
+  border-radius:10px;
+}
 
-    .hidden {
-      display: none;
-    }
+/* DOCUMENT */
+.doc{
+  border-left:5px solid #8a5a2b;
+  background:#f6efe7;
+  padding:10px;
+  margin-top:8px;
+  border-radius:10px;
+}
 
-    .bird {
-      padding: 10px;
-      border: 1px solid #d9c38b;
-      border-radius: 10px;
-      margin-top: 6px;
-      background: #fffdfa;
-      cursor: pointer;
-    }
+/* ALERTES */
+.alert-low{background:#ffe5e5;color:#a92d24;}
+.alert-high{background:#fff3cd;color:#8a5a00;}
+.alert-ok{background:#e6f7ec;color:#1f6b2d;}
 
-    .bird:hover {
-      background: #f4e7c7;
-    }
+/* ACTIONS */
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
 
-    .fiche {
-      margin-top: 10px;
-      padding: 12px;
-      border: 1px solid #d9c38b;
-      border-radius: 10px;
-      background: #fffdfa;
-    }
-
-    .photo {
-      max-width: 220px;
-      max-height: 220px;
-      border-radius: 10px;
-      margin-top: 10px;
-      display: block;
-      object-fit: cover;
-      border: 1px solid #d9c38b;
-    }
-
-    .enc {
-      background: #eef7ef;
-      border-left: 5px solid #2f7d32;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 8px;
-    }
-
-    .doc {
-      background: #f6efe7;
-      border-left: 5px solid #8a5a2b;
-      border-radius: 8px;
-      padding: 10px;
-      margin-top: 8px;
-    }
-
-    .doc a {
-      color: #6b4f12;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    .doc a:hover {
-      text-decoration: underline;
-    }
-
-    .chart-box {
-      background: white;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      margin-top: 10px;
-      height: 260px;
-    }
-
-    .gain {
-      color: #218838;
-      font-weight: bold;
-    }
-
-    .perte {
-      color: #c0392b;
-      font-weight: bold;
-    }
-
-    .neutre {
-      color: #666;
-      font-weight: bold;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .alert-box {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
-
-    .alert-low {
-      background: #fff1f0;
-      border: 1px solid #f1a6a0;
-      color: #a92d24;
-    }
-
-    .alert-high {
-      background: #fff8e6;
-      border: 1px solid #e7c36a;
-      color: #8a5a00;
-    }
-
-    .alert-ok {
-      background: #eef7ef;
-      border: 1px solid #9ed1a3;
-      color: #1f6b2d;
-    }
-
-    .lock-screen {
-      position: fixed;
-      inset: 0;
-      background: rgba(35, 28, 18, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 20px;
-    }
-
-    .lock-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fffdfa;
-      border-radius: 16px;
-      padding: 20px;
-      border: 1px solid #d9c38b;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    }
-
-    .lock-card h2 {
-      margin-bottom: 10px;
-    }
-
-    .lock-error {
-      color: #b13a2f;
-      font-weight: bold;
-      min-height: 22px;
-    }
-
-    @media (max-width: 900px) {
-      .menu,
-      .actions {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+/* VARIATION */
+.gain{color:#2ecc71;}
+.perte{color:#e74c3c;}
+.neutre{color:#777;}
+</style>
 </head>
 <body>
 
@@ -387,18 +277,22 @@
       document.getElementById("status").innerText = txt;
     }
 
-    function getCouleur(index){
-      const couleurs = [
-        "#2d6aa1",
-        "#b88a1b",
-        "#2f7d32",
-        "#8a5a2b",
-        "#6a2da1",
-        "#a12d6a",
-        "#1b8a7a"
-      ];
-      return couleurs[index % couleurs.length];
+    function getCouleur(index, oiseau=null){
+  if(oiseau){
+    const enc = trierEncodages(oiseau.encodages || []);
+    if(enc.length){
+      const poids = parseFloat(enc[enc.length-1].poids);
+      if(oiseau.alerteBasse && poids < oiseau.alerteBasse) return "#e74c3c"; // rouge
+      if(oiseau.alerteHaute && poids > oiseau.alerteHaute) return "#f39c12"; // orange
     }
+  }
+
+  const couleurs = [
+    "#2d6aa1","#b88a1b","#2f7d32","#8a5a2b",
+    "#6a2da1","#a12d6a","#1b8a7a"
+  ];
+  return couleurs[index % couleurs.length];
+}
 
     function normalizeText(text) {
       return (text || "")
@@ -611,7 +505,8 @@
 
                     <div class="actions">
                       <button class="btn btn-edit" onclick="modifierEncodage(${indexOiseauSelectionne}, ${i})">Modifier</button>
-                      <button class="btn btn-danger" onclick="supprimerEncodage(${indexOiseauSelectionne}, ${i})">Supprimer</button>
+                      <div class="fiche"
+     style="border-top:8px solid ${getCouleur(indexOiseauSelectionne,o)}">
                     </div>
                   </div>
                 `).join("")
@@ -645,14 +540,16 @@
         return;
       }
 
-      liste.innerHTML = filtres.map(({ o, index }) => `
-        <div class="bird" onclick="ouvrirOiseau(${index})"
-             style="border-left:6px solid ${getCouleur(index)}">
-          <strong>${o.nom || ""}</strong><br>
-          ${o.espece || ""}
-        </div>
-      `).join("");
-    };
+     liste.innerHTML = filtres.map(({ o, index }) => `
+  <div class="bird"
+       onclick="ouvrirOiseau(${index})"
+       style="border-left:8px solid ${getCouleur(index,o)};">
+       
+    <strong style="font-size:18px">${o.nom || ""}</strong><br>
+    <span style="color:#777">${o.espece || ""}</span>
+
+  <div class="fiche"
+     style="border-top:8px solid ${getCouleur(indexOiseauSelectionne,o)}">
 
     function afficherDocuments() {
       const div = document.getElementById("listeDocuments");
