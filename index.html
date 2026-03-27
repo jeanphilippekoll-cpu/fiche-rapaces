@@ -708,6 +708,91 @@
       buildDashboard();
       renderResumeJour();
     });
+    let planning = {};
+
+function getSemaine(date){
+  const d = new Date(date);
+  const day = d.getDay() || 7;
+  d.setDate(d.getDate() - day + 1);
+  return d;
+}
+
+function formatDate(d){
+  return d.toISOString().split("T")[0];
+}
+
+window.afficherNourrissage = function(){
+  const div = document.getElementById("tableauNourrissage");
+  const date = document.getElementById("dateSemaine").value || formatDate(new Date());
+
+  const debut = getSemaine(date);
+  let jours = [];
+
+  for(let i=0;i<7;i++){
+    let d = new Date(debut);
+    d.setDate(debut.getDate()+i);
+    jours.push(formatDate(d));
+  }
+
+  let html = "<table border='1' style='width:100%;background:white'>";
+  html += "<tr><th>Oiseau</th>";
+
+  jours.forEach(j=>{
+    html += `<th>${j}</th>`;
+  });
+
+  html += "</tr>";
+
+  oiseaux.forEach((o,i)=>{
+    html += `<tr><td><b>${o.nom}</b></td>`;
+
+    jours.forEach(j=>{
+      const val = planning?.[i]?.[j] || "";
+
+      html += `
+      <td>
+        <input 
+          value="${val}" 
+          onchange="updatePlanning(${i},'${j}',this.value)"
+          placeholder="Nourriture">
+      </td>`;
+    });
+
+    html += "</tr>";
+  });
+
+  html += "</table>";
+  div.innerHTML = html;
+
+  afficherDashboard(jours);
+}
+
+window.updatePlanning = function(i, date, val){
+  if(!planning[i]) planning[i] = {};
+  planning[i][date] = val;
+  sauver();
+}
+
+function afficherDashboard(jours){
+  let total = 0;
+
+  jours.forEach(j=>{
+    oiseaux.forEach((o,i)=>{
+      if(planning?.[i]?.[j]) total++;
+    });
+  });
+
+  document.getElementById("dashboard").innerHTML = `
+    <div class="bloc">
+      <b>Oiseaux :</b> ${oiseaux.length}<br>
+      <b>Nourrissages prévus :</b> ${total}
+    </div>
+  `;
+}
+
+window.imprimerNourrissage = function(){
+  window.print();
+}
 
     charger();
   </script>
