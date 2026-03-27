@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>TABLEAU DE NOURRISSAGE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<link rel="icon" href="icon.png">
+<meta name="theme-color" content="#000000">
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(180deg,#f5f1e6,#e8dcc2);
+  margin:0;
+  padding:10px;
+}
+
+h1 { color:#5c4310; }
+
+.bloc {
+  background:white;
+  padding:12px;
+  border-radius:14px;
+  margin-bottom:10px;
+}
+
+.actions {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:8px;
+}
+
+.btn {
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.btn-retour { background:#2d6aa1; }
+.btn-secondaire { background:#777; }
+.btn-export { background:#2f7d32; }
+
+.dashboard {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.card {
+  background:#fffdfa;
+  border-left:6px solid #b88a1b;
+  padding:12px;
+  border-radius:12px;
+}
+
+.table-wrap {
+  overflow-x:auto;
+}
+
+table {
+  border-collapse:collapse;
+  width:100%;
+  min-width:1200px;
+}
+
+th,td {
+  border:1px solid #ccc;
+  padding:6px;
+}
+
+th { background:#efe2be; }
+
+select,input,textarea {
+  width:100%;
+  padding:5px;
+  margin-top:4px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🍽️ TABLEAU DE NOURRISSAGE</h1>
+
+<div class="bloc">
+  <div class="actions">
+    <button class="btn btn-retour" onclick="window.location.href='index.html'">⬅ Retour</button>
+    <button class="btn btn-secondaire" onclick="changerSemaine(-7)">⬅ Semaine</button>
+    <button class="btn btn-secondaire" onclick="changerSemaine(7)">Semaine ➡</button>
+    <button class="btn btn-export" onclick="window.print()">🖨 Imprimer</button>
+  </div>
+</div>
+
+<div class="bloc">
+  <h2>Dashboard</h2>
+  <div id="dashboard" class="dashboard"></div>
+</div>
+
+<div class="bloc">
+  <h2>Semaine</h2>
+  <input type="date" id="dateSemaine" onchange="render()">
+  <div class="table-wrap">
+    <table id="tableau"></table>
+  </div>
+</div>
+
+<script>
+let oiseaux = JSON.parse(localStorage.getItem("rapaces_oiseaux")||"[]");
+let planning = JSON.parse(localStorage.getItem("planning")||"{}");
+
+const jours = ["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
+
+function getWeek(date){
+  let d=new Date(date);
+  let day=d.getDay();
+  let diff=d.getDate()-day+(day===0?-6:1);
+  let monday=new Date(d.setDate(diff));
+  let res=[];
+  for(let i=0;i<7;i++){
+    let tmp=new Date(monday);
+    tmp.setDate(monday.getDate()+i);
+    res.push(tmp.toISOString().split("T")[0]);
+  }
+  return res;
+}
+
+function render(){
+  let date=document.getElementById("dateSemaine").value;
+  let week=getWeek(date||new Date());
+
+  let html="<tr><th>Oiseau</th>";
+  week.forEach((d,i)=>html+=`<th>${jours[i]}<br>${d}</th>`);
+  html+="</tr>";
+
+  oiseaux.forEach((o,i)=>{
+    html+=`<tr><td>${o.nom}</td>`;
+    week.forEach(d=>{
+      let key=i+"_"+d;
+      let val=planning[key]||"";
+      html+=`<td>
+        <input value="${val}" onchange="save(${i},'${d}',this.value)">
+      </td>`;
+    });
+    html+="</tr>";
+  });
+
+  document.getElementById("tableau").innerHTML=html;
+
+  document.getElementById("dashboard").innerHTML=`
+    <div class="card"><h3>Oiseaux</h3>${oiseaux.length}</div>
+    <div class="card"><h3>Cases</h3>${Object.keys(planning).length}</div>
+  `;
+}
+
+function save(i,d,val){
+  planning[i+"_"+d]=val;
+  localStorage.setItem("planning",JSON.stringify(planning));
+}
+
+function changerSemaine(n){
+  let d=new Date(document.getElementById("dateSemaine").value||new Date());
+  d.setDate(d.getDate()+n);
+  document.getElementById("dateSemaine").value=d.toISOString().split("T")[0];
+  render();
+}
+
+document.getElementById("dateSemaine").value=new Date().toISOString().split("T")[0];
+render();
+</script>
+
+</body>
+</html>
