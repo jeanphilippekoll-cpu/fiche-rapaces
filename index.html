@@ -6,15 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Rapaces">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#000000">
 
-<link rel="apple-touch-icon" href="icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Rapaces">
-
-<link rel="manifest" href="manifest.json">
-
-<meta name="theme-color" content="#000000">
-  
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
@@ -342,6 +339,19 @@
       document.getElementById("status").innerText = txt;
     }
 
+    function saveLocalData() {
+      localStorage.setItem("rapaces_oiseaux", JSON.stringify(oiseaux));
+      localStorage.setItem("rapaces_documents", JSON.stringify(documents));
+    }
+
+    function loadLocalData() {
+      const oiseauxLocal = localStorage.getItem("rapaces_oiseaux");
+      const documentsLocal = localStorage.getItem("rapaces_documents");
+
+      oiseaux = oiseauxLocal ? JSON.parse(oiseauxLocal) : [];
+      documents = documentsLocal ? JSON.parse(documentsLocal) : [];
+    }
+
     function getCouleur(index, oiseau = null) {
       if (oiseau) {
         const enc = trierEncodages(oiseau.encodages || []);
@@ -428,6 +438,26 @@
       }
 
       return null;
+    }
+
+    function normaliserDonnees() {
+      oiseaux = (Array.isArray(oiseaux) ? oiseaux : []).map(o => ({
+        nom: o.nom || "",
+        espece: o.espece || "",
+        photo: o.photo || "",
+        documentUrl: o.documentUrl || "",
+        documentNom: o.documentNom || "",
+        alerteBasse: o.alerteBasse || "",
+        alerteHaute: o.alerteHaute || "",
+        encodages: Array.isArray(o.encodages) ? o.encodages : []
+      }));
+
+      documents = (Array.isArray(documents) ? documents : []).map(d => ({
+        nom: d.nom || "",
+        lien: d.lien || ""
+      }));
+
+      oiseaux.forEach((_, i) => recalculerVariationsPourOiseau(i));
     }
 
     window.unlockApp = function() {
@@ -637,45 +667,46 @@
           const data = snap.data();
           oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
           documents = Array.isArray(data.documents) ? data.documents : [];
+          saveLocalData();
+          normaliserDonnees();
+          afficherListeOiseaux();
+          afficherFiche();
+          remplirSelectOiseaux();
+          afficherDocuments();
+          setStatus("Synchronisé ✅");
         } else {
           oiseaux = [];
           documents = [];
+          saveLocalData();
+          normaliserDonnees();
+          afficherListeOiseaux();
+          afficherFiche();
+          remplirSelectOiseaux();
+          afficherDocuments();
+          setStatus("Synchronisé ✅");
         }
-
-        oiseaux = oiseaux.map(o => ({
-          nom: o.nom || "",
-          espece: o.espece || "",
-          photo: o.photo || "",
-          documentUrl: o.documentUrl || "",
-          documentNom: o.documentNom || "",
-          alerteBasse: o.alerteBasse || "",
-          alerteHaute: o.alerteHaute || "",
-          encodages: Array.isArray(o.encodages) ? o.encodages : []
-        }));
-
-        oiseaux.forEach((_, i) => recalculerVariationsPourOiseau(i));
-
+      } catch (e) {
+        console.error(e);
+        loadLocalData();
+        normaliserDonnees();
         afficherListeOiseaux();
         afficherFiche();
         remplirSelectOiseaux();
         afficherDocuments();
-        setStatus("Synchronisé ✅");
-      } catch (e) {
-        console.error(e);
-        setStatus("Erreur ❌");
-        alert("Erreur Firebase : " + e.message);
+        setStatus("Mode hors ligne ⚠️");
       }
     }
 
     async function sauver() {
+      saveLocalData();
+
       try {
         setStatus("Sauvegarde...");
         await setDoc(refDB, { oiseaux, documents }, { merge: true });
         setStatus("Synchronisé ✅");
       } catch (e) {
         console.error(e);
-        setStatus("Erreur ❌");
-        alert("Erreur écriture Firebase : " + e.message);
+        setStatus("Mode hors ligne ⚠️");
       }
     }
 
@@ -747,8 +778,8 @@
         viderFormulaireOiseau();
       } catch (e) {
         console.error(e);
-        setStatus("Erreur ❌");
-        alert("Erreur ajout oiseau : " + e.message);
+        alert("L’ajout de photo ou document nécessite internet.");
+        setStatus("Mode hors ligne ⚠️");
       }
     };
 
@@ -887,8 +918,8 @@
         setStatus("Synchronisé ✅");
       } catch (e) {
         console.error(e);
-        setStatus("Erreur ❌");
-        alert("Erreur upload document : " + e.message);
+        alert("L’envoi de document nécessite internet.");
+        setStatus("Mode hors ligne ⚠️");
       }
     };
 
@@ -1019,6 +1050,16 @@
     };
 
     charger();
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js")
+          .then(() => console.log("Service Worker actif"))
+          .catch((err) => console.error("Erreur Service Worker :", err));
+      });
+    }
   </script>
 </body>
 </html>
