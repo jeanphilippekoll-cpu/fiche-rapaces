@@ -1,4 +1,4 @@
-const CACHE_NAME = "rapaces-v5";
+const CACHE_NAME = "Rapaces-V10";
 
 const urlsToCache = [
   "/fiche-rapaces/",
