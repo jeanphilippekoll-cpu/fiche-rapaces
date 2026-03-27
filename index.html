@@ -616,44 +616,64 @@
       afficherFiche();
     };
 
-    window.afficherListeOiseaux = function() {
-      const q = normalizeText(document.getElementById("recherche").value);
-      const liste = document.getElementById("liste");
+   window.afficherListeOiseaux = function() {
+  const q = normalizeText(document.getElementById("recherche").value);
+  const liste = document.getElementById("liste");
 
-      const filtres = oiseaux
-        .map((o, index) => ({ o, index }))
-        .filter(({ o }) => {
-          const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
-          return texte.includes(q);
-        });
+  const filtres = oiseaux
+    .map((o, index) => ({ o, index }))
+    .filter(({ o }) => {
+      const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
+      return texte.includes(q);
+    });
 
-      if (filtres.length === 0) {
-        liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
-        return;
-      }
+  if (filtres.length === 0) {
+    liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
+    return;
+  }
 
-      liste.innerHTML = filtres.map(({ o, index }) => `
-        <div class="bird" onclick="ouvrirOiseau(${index})">
-          <strong>${o.nom || ""}</strong><br>
-          ${o.espece || ""}
-        </div>
-      `).join("");
-    };
+  liste.innerHTML = filtres.map(({ o, index }) => `
+    <div class="bird"
+         onclick="ouvrirOiseau(${index})"
+         style="border-left:8px solid ${getCouleur(index)} !important;">
+      <strong>${o.nom || ""}</strong><br>
+      ${o.espece || ""}
+    </div>
+  `).join("");
+};
 
     function afficherDocuments() {
-      const div = document.getElementById("listeDocuments");
+  const div = document.getElementById("listeDocuments");
 
-      if (!documents.length) {
-        div.innerHTML = "<div class='doc'>Aucun document.</div>";
-        return;
-      }
+  if (!documents.length) {
+    div.innerHTML = "<div class='doc'>Aucun document.</div>";
+    return;
+  }
 
-      div.innerHTML = documents.map(d => `
-        <div class="doc">
-          <a href="${d.lien}" target="_blank">${d.nom}</a>
-        </div>
-      `).join("");
-    }
+  div.innerHTML = "";
+
+  documents.forEach((d, i) => {
+    const bloc = document.createElement("div");
+    bloc.className = "doc";
+
+    bloc.innerHTML = `
+      <a href="${d.lien}" target="_blank">${d.nom}</a>
+      <div class="actions">
+        <button class="btn btn-danger">Supprimer</button>
+      </div>
+    `;
+
+    bloc.querySelector("button").onclick = async () => {
+      if (!confirm("Supprimer ce document ?")) return;
+
+      documents.splice(i, 1);
+      await sauver();
+      afficherDocuments();
+    };
+
+    div.appendChild(bloc);
+  });
+}
 
     async function charger() {
       try {
