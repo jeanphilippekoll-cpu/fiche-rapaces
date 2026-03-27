@@ -1,26 +1,17 @@
-const CACHE_NAME = "Rapaces-V6";
+const CACHE_NAME = "rapaces-app-v10";
 
 const urlsToCache = [
-  "/fiche-rapaces/",
-  "/fiche-rapaces/index.html",
-  "/fiche-rapaces/tableau-nourrissage.html",
-  "/fiche-rapaces/icon.png",
-  "/fiche-rapaces/manifest.json"
-];
-
-const CACHE_NAME = "Rapaces-V6";
-
-const urlsToCache = [
-  "/fiche-rapaces/",
-  "/fiche-rapaces/index.html",
-  "/fiche-rapaces/tableau-nourrissage.html",
-  "/fiche-rapaces/icon.png",
-  "/fiche-rapaces/manifest.json"
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./icon.png"
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(urlsToCache);
+    })
   );
   self.skipWaiting();
 });
@@ -42,6 +33,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   event.respondWith(
-    caches.match(event.request).then((response) => response || fetch(event.request))
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });
