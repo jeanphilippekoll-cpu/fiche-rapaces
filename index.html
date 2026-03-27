@@ -563,7 +563,7 @@ input,select,textarea{
         <div class="doc">
           <a href="${d.lien}" target="_blank">${d.nom}</a>
           <div class="actions">
-            <button class="btn btn-danger" onclick="supprimerDocument(${i})">Supprimer</button>
+          <button class="btn btn-edit" onclick="modifierEncodage(${indexOiseauSelectionne}, ${i})">Modifier</button>
           </div>
         </div>
       `).join("");
