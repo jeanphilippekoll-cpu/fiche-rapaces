@@ -1,10 +1,10 @@
 {
   "name": "Fiche Rapaces",
   "short_name": "Rapaces",
-  "start_url": "/fiche-rapaces/index.html"
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#000000",
+  "background_color": "#f4eadb",
+  "theme_color": "#f4eadb",
   "icons": [
     {
       "src": "icon.png",
