@@ -1,11 +1,11 @@
 const CACHE_NAME = "rapaces-v5";
 
 const urlsToCache = [
-  "./",
-  "./index.html",
-  "./tableau-nourrissage.html",
-  "./icon.png",
-  "./manifest.json"
+  "/fiche-rapaces/",
+  "/fiche-rapaces/index.html",
+  "/fiche-rapaces/tableau-nourrissage.html",
+  "/fiche-rapaces/icon.png",
+  "/fiche-rapaces/manifest.json"
 ];
 
 self.addEventListener("install", (event) => {
