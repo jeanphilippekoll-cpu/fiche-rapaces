@@ -2,722 +2,784 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>TABLEAU DE NOURRISSAGE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link rel="icon" href="icon.png">
-  <link rel="apple-touch-icon" href="icon.png">
-  <meta name="theme-color" content="#000000">
-
+  <title>Fiche Rapaces</title>
+  <meta name="theme-color" content="#f4eadb" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon.png" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #f5f1e6, #e8dcc2);
-      margin: 0;
-      padding: 10px;
-      color: #2f2a20;
+    :root{
+      --creme:#f4eadb;
+      --creme-fonce:#e8dcc8;
+      --blanc:#fffdf9;
+      --brun:#5c4632;
+      --brun-clair:#7a6048;
+      --vert:#7b9b6a;
+      --vert-fonce:#5f7c50;
+      --bordure:#d8c9b2;
+      --ombre:0 8px 20px rgba(0,0,0,0.08);
+      --danger:#b85c5c;
     }
 
-    h1, h2, h3 {
-      color: #5c4310;
-      margin-top: 0;
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(to bottom, var(--creme), #f9f3ea);
+      color:var(--brun);
     }
 
-    .status {
-      background: #eef6ff;
-      border: 1px solid #b9d6f2;
-      padding: 10px;
-      border-radius: 10px;
-      font-weight: bold;
-      margin-bottom: 10px;
+    .app{
+      max-width:1200px;
+      margin:0 auto;
+      padding:20px;
     }
 
-    .bloc {
-      background: white;
-      padding: 12px;
-      border-radius: 14px;
-      margin-bottom: 10px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    .header{
+      background:var(--blanc);
+      border:1px solid var(--bordure);
+      border-radius:20px;
+      box-shadow:var(--ombre);
+      padding:20px;
+      margin-bottom:20px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:15px;
+      align-items:center;
+      justify-content:space-between;
     }
 
-    .btn {
-      background: #b88a1b;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-weight: bold;
-      cursor: pointer;
-      margin: 4px 0;
+    .title-wrap h1{
+      margin:0;
+      font-size:2rem;
+      color:var(--brun);
     }
 
-    .btn-secondaire { background: #777; }
-    .btn-export { background: #2f7d32; }
-    .btn-retour { background: #2d6aa1; }
-
-    .actions {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin-top: 8px;
+    .title-wrap p{
+      margin:8px 0 0;
+      color:var(--brun-clair);
     }
 
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(5,1fr);
-      gap: 10px;
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
     }
 
-    .card {
-      background: #fffdfa;
-      border-left: 6px solid #b88a1b;
-      border-radius: 12px;
-      padding: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    .nav button{
+      border:none;
+      background:var(--creme-fonce);
+      color:var(--brun);
+      padding:12px 16px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:bold;
+      transition:0.2s;
     }
 
-    .card h3 {
-      margin: 0 0 8px 0;
-      font-size: 16px;
-      color: #5c4310;
+    .nav button:hover{
+      background:#ddceb8;
     }
 
-    .card .big {
-      font-size: 28px;
-      font-weight: bold;
+    .nav button.active{
+      background:var(--vert);
+      color:white;
     }
 
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
-      gap: 8px;
-      align-items: end;
+    .card{
+      background:var(--blanc);
+      border:1px solid var(--bordure);
+      border-radius:20px;
+      box-shadow:var(--ombre);
+      padding:20px;
+      margin-bottom:20px;
     }
 
-    label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 4px;
+    .section{
+      display:none;
     }
 
-    input, select, textarea {
-      width: 100%;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #cdbb8b;
-      box-sizing: border-box;
-      font-size: 14px;
-      background: #fffefb;
+    .section.active{
+      display:block;
     }
 
-    .table-wrap {
-      overflow-x: auto;
-      margin-top: 10px;
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+      gap:16px;
     }
 
-    table {
-      border-collapse: collapse;
-      min-width: 1400px;
-      width: 100%;
-      background: white;
+    .mini-card{
+      background:#fffaf3;
+      border:1px solid var(--bordure);
+      border-radius:16px;
+      padding:16px;
     }
 
-    th, td {
-      border: 1px solid #d7c7a0;
-      vertical-align: top;
-      padding: 8px;
+    h2,h3{
+      margin-top:0;
     }
 
-    th {
-      background: #efe2be;
-      color: #5c4310;
-      text-align: center;
-      position: sticky;
-      top: 0;
-      z-index: 1;
+    label{
+      display:block;
+      margin-bottom:6px;
+      font-weight:bold;
     }
 
-    .oiseau-col {
-      min-width: 180px;
-      background: #fffdfa;
-      font-weight: bold;
+    input, textarea, select{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--bordure);
+      border-radius:12px;
+      background:white;
+      color:var(--brun);
+      margin-bottom:12px;
+      font-size:1rem;
     }
 
-    .jour-header {
-      min-width: 165px;
+    textarea{
+      min-height:100px;
+      resize:vertical;
     }
 
-    .cell-bloc {
-      display: grid;
-      gap: 6px;
+    .row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
     }
 
-    .cell-small {
-      font-size: 12px;
-      color: #666;
+    .btn{
+      border:none;
+      background:var(--vert);
+      color:white;
+      padding:12px 16px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:bold;
     }
 
-    .resume-jour {
-      background: #f6efe7;
-      border-left: 5px solid #8a5a2b;
-      border-radius: 10px;
-      padding: 10px;
-      margin-top: 10px;
+    .btn:hover{
+      background:var(--vert-fonce);
     }
 
-    .resume-line {
-      margin: 6px 0;
+    .btn-secondary{
+      background:var(--creme-fonce);
+      color:var(--brun);
     }
 
-    .hidden {
-      display: none;
+    .btn-danger{
+      background:var(--danger);
+      color:white;
     }
 
-    .lock-screen {
-      position: fixed;
-      inset: 0;
-      background: rgba(35, 28, 18, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 20px;
+    .table-wrap{
+      overflow-x:auto;
     }
 
-    .lock-card {
-      width: 100%;
-      max-width: 420px;
-      background: #fffdfa;
-      border-radius: 16px;
-      padding: 20px;
-      border: 1px solid #d9c38b;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:white;
+      border-radius:14px;
+      overflow:hidden;
     }
 
-    .lock-error {
-      color: #b13a2f;
-      font-weight: bold;
-      min-height: 22px;
-      margin-top: 8px;
+    th, td{
+      border:1px solid var(--bordure);
+      padding:10px;
+      text-align:left;
+      vertical-align:top;
     }
 
-    @media (max-width: 1000px) {
-      .dashboard,
-      .actions,
-      .toolbar {
-        grid-template-columns: 1fr;
+    th{
+      background:#efe2d0;
+    }
+
+    .doc-item, .bird-item{
+      background:#fffaf3;
+      border:1px solid var(--bordure);
+      border-radius:14px;
+      padding:14px;
+      margin-bottom:10px;
+    }
+
+    .muted{
+      color:var(--brun-clair);
+      font-size:0.95rem;
+    }
+
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:15px;
+    }
+
+    .badge{
+      display:inline-block;
+      background:#efe2d0;
+      color:var(--brun);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:0.9rem;
+      margin-top:8px;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:20px;
+    }
+
+    .pin-box{
+      width:100%;
+      max-width:420px;
+      background:var(--blanc);
+      border-radius:20px;
+      box-shadow:var(--ombre);
+      border:1px solid var(--bordure);
+      padding:25px;
+      text-align:center;
+    }
+
+    .pin-box h2{
+      margin-bottom:10px;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    .footer-note{
+      text-align:center;
+      color:var(--brun-clair);
+      font-size:0.9rem;
+      margin-top:20px;
+    }
+
+    @media (max-width: 700px){
+      .row{
+        grid-template-columns:1fr;
       }
     }
-    .menu {
-  grid-template-columns: repeat(5,1fr) !important;
-}
-
-#btnMenuNourrissage {
-  background: #6a2da1;
-}
   </style>
 </head>
 <body>
-
-  <div id="lockScreen" class="lock-screen">
-    <div class="lock-card">
-      <h2>🔒 Accès protégé</h2>
-      <p>Entre le code pour ouvrir le tableau de nourrissage.</p>
-      <input id="pinInput" type="password" inputmode="numeric" placeholder="Code de sécurité">
-      <button class="btn" onclick="unlockApp()">Ouvrir</button>
-      <div id="lockError" class="lock-error"></div>
+  <div id="pinOverlay" class="overlay">
+    <div class="pin-box">
+      <h2>Accès sécurisé</h2>
+      <p>Entrez le code PIN pour ouvrir l'application.</p>
+      <input type="password" id="pinInput" placeholder="Code PIN" inputmode="numeric" />
+      <button class="btn" onclick="verifierPIN()">Entrer</button>
+      <p id="pinError" style="color:#b85c5c; margin-top:12px;"></p>
     </div>
   </div>
 
-  <h1>🍽️ TABLEAU DE NOURRISSAGE</h1>
-  <div id="status" class="status">Connexion...</div>
-
-  <div class="bloc">
-    <div class="actions">
-      <button class="btn btn-retour" onclick="window.location.href='index.html'">⬅ Retour à l’application</button>
-      <button class="btn btn-secondaire" onclick="changerSemaine(-7)">⬅ Semaine précédente</button>
-      <button class="btn btn-secondaire" onclick="changerSemaine(7)">Semaine suivante ➡</button>
-      <button class="btn btn-export" onclick="imprimerTableau()">🖨 Imprimer</button>
-    </div>
-  </div>
-
-  <div class="bloc">
-    <h2>Tableau de bord</h2>
-    <div id="dashboard" class="dashboard"></div>
-  </div>
-
-  <div class="bloc">
-    <h2>Semaine de nourrissage</h2>
-    <div class="toolbar">
-      <div>
-        <label for="dateSemaine">Choisir une date dans la semaine</label>
-        <input type="date" id="dateSemaine">
+  <div class="app hidden" id="appContent">
+    <div class="header">
+      <div class="title-wrap">
+        <h1>Fiche Rapaces</h1>
+        <p>Accueil, encodage, oiseaux, documents et tableau nourrissage dans une seule app.</p>
       </div>
-      <div>
-        <label>Semaine affichée</label>
-        <input id="libelleSemaine" readonly>
-      </div>
-      <div>
-        <label>Résumé du jour choisi</label>
-        <input id="dateResumeJour" type="date">
-      </div>
-      <div>
-        <label>&nbsp;</label>
-        <button class="btn" onclick="renderAll()">Actualiser</button>
+
+      <div class="nav">
+        <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
+        <button id="btn-encodage" onclick="showSection('encodage')">Encodage</button>
+        <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+        <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+        <button id="btn-nourrissage" onclick="showSection('nourrissage')">Tableau nourrissage</button>
       </div>
     </div>
 
-    <div class="table-wrap">
-      <table id="tableauNourrissage"></table>
-    </div>
+    <section id="section-accueil" class="section active card">
+      <h2>Accueil</h2>
+      <div class="grid">
+        <div class="mini-card">
+          <h3>Vue rapide</h3>
+          <p>Utilise les boutons du haut pour naviguer entre les différentes parties de l’application.</p>
+          <span class="badge" id="resumeOiseaux">0 oiseau</span>
+          <span class="badge" id="resumeDocs">0 document</span>
+          <span class="badge" id="resumeNourrissage">0 ligne nourrissage</span>
+        </div>
+        <div class="mini-card">
+          <h3>Fonctions incluses</h3>
+          <p>Encodage rapide, fiches oiseaux, suivi documentaire, tableau nourrissage, sauvegarde locale sur l’appareil.</p>
+        </div>
+        <div class="mini-card">
+          <h3>Sauvegarde</h3>
+          <p>Les données sont enregistrées automatiquement dans l’appareil avec le navigateur.</p>
+          <button class="btn btn-secondary" onclick="exporterDonnees()">Exporter les données</button>
+        </div>
+      </div>
+    </section>
 
-    <div id="resumeJour" class="resume-jour"></div>
+    <section id="section-encodage" class="section card">
+      <h2>Encodage</h2>
+      <div class="top-actions">
+        <button class="btn" onclick="ajouterEncodage()">Ajouter une fiche</button>
+        <button class="btn btn-secondary" onclick="viderFormulaireEncodage()">Vider le formulaire</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="encDate" />
+
+          <label>Nom de l’oiseau</label>
+          <input type="text" id="encNom" placeholder="Ex : Buse, Faucon, Hibou..." />
+
+          <label>Espèce</label>
+          <input type="text" id="encEspece" placeholder="Espèce" />
+
+          <label>Poids</label>
+          <input type="text" id="encPoids" placeholder="Ex : 1,2 kg" />
+        </div>
+
+        <div>
+          <label>État général</label>
+          <input type="text" id="encEtat" placeholder="Ex : très bon, calme, fatigué..." />
+
+          <label>Lieu</label>
+          <input type="text" id="encLieu" placeholder="Lieu" />
+
+          <label>Observations</label>
+          <textarea id="encObs" placeholder="Observations..."></textarea>
+        </div>
+      </div>
+
+      <div id="listeEncodage"></div>
+    </section>
+
+    <section id="section-oiseaux" class="section card">
+      <h2>Oiseaux</h2>
+
+      <div class="top-actions">
+        <button class="btn" onclick="ajouterOiseau()">Ajouter un oiseau</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Nom</label>
+          <input type="text" id="oiseauNom" placeholder="Nom de l'oiseau" />
+
+          <label>Espèce</label>
+          <input type="text" id="oiseauEspece" placeholder="Espèce" />
+
+          <label>Sexe</label>
+          <select id="oiseauSexe">
+            <option value="">Choisir</option>
+            <option>Mâle</option>
+            <option>Femelle</option>
+            <option>Inconnu</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Année / âge</label>
+          <input type="text" id="oiseauAge" placeholder="Âge ou année" />
+
+          <label>Particularités</label>
+          <input type="text" id="oiseauParticularites" placeholder="Signes particuliers" />
+
+          <label>Notes</label>
+          <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+        </div>
+      </div>
+
+      <div id="listeOiseaux"></div>
+    </section>
+
+    <section id="section-documents" class="section card">
+      <h2>Documents</h2>
+
+      <div class="top-actions">
+        <button class="btn" onclick="ajouterDocument()">Ajouter un document</button>
+      </div>
+
+      <label>Titre</label>
+      <input type="text" id="docTitre" placeholder="Titre du document" />
+
+      <label>Type</label>
+      <input type="text" id="docType" placeholder="Ex : certificat, facture, suivi, autorisation..." />
+
+      <label>Description</label>
+      <textarea id="docDescription" placeholder="Description du document"></textarea>
+
+      <div id="listeDocuments"></div>
+    </section>
+
+    <section id="section-nourrissage" class="section card">
+      <h2>Tableau nourrissage</h2>
+
+      <div class="top-actions">
+        <button class="btn" onclick="ajouterLigneNourrissage()">Ajouter une ligne</button>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Date</label>
+          <input type="date" id="nDate" />
+
+          <label>Oiseau</label>
+          <input type="text" id="nOiseau" placeholder="Nom de l’oiseau" />
+
+          <label>Nourriture</label>
+          <input type="text" id="nNourriture" placeholder="Type de nourriture" />
+        </div>
+
+        <div>
+          <label>Quantité</label>
+          <input type="text" id="nQuantite" placeholder="Ex : 120 g" />
+
+          <label>Heure</label>
+          <input type="time" id="nHeure" />
+
+          <label>Remarques</label>
+          <textarea id="nRemarques" placeholder="Remarques"></textarea>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Heure</th>
+              <th>Oiseau</th>
+              <th>Nourriture</th>
+              <th>Quantité</th>
+              <th>Remarques</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="tableNourrissageBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Fiche Rapaces - version claire crème
+    </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+  <script>
+    const PIN_CODE = "0212";
 
-    const APP_PIN = "0212";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
-      authDomain: "fiche-rapaces.firebaseapp.com",
-      projectId: "fiche-rapaces",
-      storageBucket: "fiche-rapaces.firebasestorage.app",
-      messagingSenderId: "881543403206",
-      appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
+    let appData = {
+      encodages: [],
+      oiseaux: [],
+      documents: [],
+      nourrissage: []
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const refRapaces = doc(db, "rapaces", "data");
-    const refPlanning = doc(db, "rapaces", "planning_nourrissage");
-
-    let oiseaux = [];
-    let planning = {};
-
-    const joursNoms = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-    const optionsNourriture = [
-      "",
-      "Poussin",
-      "Caille",
-      "Pigeon",
-      "Rat",
-      "Souris",
-      "Lapin",
-      "Cou poulet",
-      "Poisson",
-      "Coeur"
-    ];
-
-    function setStatus(txt) {
-      document.getElementById("status").innerText = txt;
-    }
-
-    function saveLocalData() {
-      localStorage.setItem("rapaces_oiseaux", JSON.stringify(oiseaux));
-      localStorage.setItem("rapaces_planning", JSON.stringify(planning));
-    }
-
-    function loadLocalData() {
-      oiseaux = JSON.parse(localStorage.getItem("rapaces_oiseaux") || "[]");
-      planning = JSON.parse(localStorage.getItem("rapaces_planning") || "{}");
-    }
-
-    function startOfWeek(date) {
-      const d = new Date(date);
-      const day = d.getDay();
-      const diff = day === 0 ? -6 : 1 - day;
-      d.setDate(d.getDate() + diff);
-      d.setHours(0, 0, 0, 0);
-      return d;
-    }
-
-    function formatISO(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-
-    function formatFR(dateIso) {
-      if (!dateIso) return "-";
-      const d = new Date(dateIso);
-      return d.toLocaleDateString("fr-BE");
-    }
-
-    function getWeekDates(anyDateString) {
-      const base = anyDateString ? new Date(anyDateString) : new Date();
-      const monday = startOfWeek(base);
-      const dates = [];
-
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        dates.push({
-          iso: formatISO(d),
-          label: joursNoms[i],
-          fr: d.toLocaleDateString("fr-BE")
-        });
-      }
-
-      return dates;
-    }
-
-    function getWeekKey(anyDateString) {
-      return getWeekDates(anyDateString)[0].iso;
-    }
-
-    function getBirdKey(index, bird) {
-      return `${index}__${(bird.nom || "").trim()}`;
-    }
-
-    function getPlanningCell(weekKey, birdKey, dateIso) {
-      if (!planning[weekKey]) planning[weekKey] = {};
-      if (!planning[weekKey][birdKey]) planning[weekKey][birdKey] = {};
-      if (!planning[weekKey][birdKey][dateIso]) {
-        planning[weekKey][birdKey][dateIso] = {
-          nourriture: "",
-          quantite: "",
-          poids: "",
-          notes: ""
-        };
-      }
-      return planning[weekKey][birdKey][dateIso];
-    }
-
-    function getAlertePoids(oiseau) {
-      const encodages = Array.isArray(oiseau.encodages) ? [...oiseau.encodages] : [];
-      encodages.sort((a, b) => new Date(a.date || "1900-01-01") - new Date(b.date || "1900-01-01"));
-      if (!encodages.length) return false;
-
-      const dernier = encodages[encodages.length - 1];
-      const poids = parseFloat(dernier.poids);
-      const basse = parseFloat(oiseau.alerteBasse);
-      const haute = parseFloat(oiseau.alerteHaute);
-
-      if (isNaN(poids)) return false;
-      if (!isNaN(basse) && poids < basse) return true;
-      if (!isNaN(haute) && poids > haute) return true;
-      return false;
-    }
-
-    function buildDashboard() {
-      const dashboard = document.getElementById("dashboard");
-      const weekKey = getWeekKey(document.getElementById("dateSemaine").value);
-      const dates = getWeekDates(document.getElementById("dateSemaine").value);
-      const dateResume = document.getElementById("dateResumeJour").value || dates[0].iso;
-
-      let totalCasesRempliesSemaine = 0;
-      let totalJourChoisi = 0;
-      let totalAlertes = 0;
-
-      oiseaux.forEach((o, i) => {
-        const birdKey = getBirdKey(i, o);
-
-        dates.forEach(j => {
-          const cell = getPlanningCell(weekKey, birdKey, j.iso);
-          if (cell.nourriture || cell.quantite || cell.poids || cell.notes) {
-            totalCasesRempliesSemaine++;
-          }
-        });
-
-        const c = getPlanningCell(weekKey, birdKey, dateResume);
-        if (c.nourriture || c.quantite || c.poids || c.notes) {
-          totalJourChoisi++;
-        }
-
-        if (getAlertePoids(o)) totalAlertes++;
-      });
-
-      dashboard.innerHTML = `
-        <div class="card">
-          <h3>Total oiseaux</h3>
-          <div class="big">${oiseaux.length}</div>
-        </div>
-        <div class="card">
-          <h3>Cases remplies cette semaine</h3>
-          <div class="big">${totalCasesRempliesSemaine}</div>
-        </div>
-        <div class="card">
-          <h3>Nourrissages prévus le ${formatFR(dateResume)}</h3>
-          <div class="big">${totalJourChoisi}</div>
-        </div>
-        <div class="card">
-          <h3>Oiseaux avec alerte poids</h3>
-          <div class="big">${totalAlertes}</div>
-        </div>
-      `;
-    }
-
-    function renderResumeJour() {
-      const div = document.getElementById("resumeJour");
-      const weekKey = getWeekKey(document.getElementById("dateSemaine").value);
-      const dateResume = document.getElementById("dateResumeJour").value;
-      const lignes = [];
-
-      oiseaux.forEach((o, i) => {
-        const birdKey = getBirdKey(i, o);
-        const cell = getPlanningCell(weekKey, birdKey, dateResume);
-
-        if (cell.nourriture || cell.quantite || cell.poids || cell.notes) {
-          lignes.push(`
-            <div class="resume-line">
-              <strong>${o.nom || "Oiseau"}</strong> :
-              ${cell.nourriture || "-"}
-              ${cell.quantite ? " | Quantité : " + cell.quantite : ""}
-              ${cell.poids ? " | Poids : " + cell.poids : ""}
-              ${cell.notes ? " | Notes : " + cell.notes : ""}
-            </div>
-          `);
-        }
-      });
-
-      div.innerHTML = `
-        <h3>Résumé du ${formatFR(dateResume)}</h3>
-        ${lignes.length ? lignes.join("") : "<div>Aucun nourrissage encodé pour ce jour.</div>"}
-      `;
-    }
-
-    function renderTable() {
-      const table = document.getElementById("tableauNourrissage");
-      const dateValue = document.getElementById("dateSemaine").value;
-      const dates = getWeekDates(dateValue);
-      const weekKey = getWeekKey(dateValue);
-
-      document.getElementById("libelleSemaine").value =
-        `${dates[0].label} ${dates[0].fr} au ${dates[6].label} ${dates[6].fr}`;
-
-      let html = `
-        <thead>
-          <tr>
-            <th class="oiseau-col">Oiseau</th>
-            ${dates.map(j => `<th class="jour-header">${j.label}<br>${j.fr}</th>`).join("")}
-          </tr>
-        </thead>
-        <tbody>
-      `;
-
-      oiseaux.forEach((o, index) => {
-        const birdKey = getBirdKey(index, o);
-
-        html += `<tr>`;
-        html += `<td class="oiseau-col">${o.nom || "-"}<br><span style="font-size:12px;color:#666;">${o.espece || ""}</span></td>`;
-
-        dates.forEach(j => {
-          const cell = getPlanningCell(weekKey, birdKey, j.iso);
-
-          html += `
-            <td>
-              <div class="cell-bloc">
-                <select onchange="updatePlanning(${index}, '${j.iso}', 'nourriture', this.value)">
-                  ${optionsNourriture.map(opt => `
-                    <option value="${opt}" ${cell.nourriture === opt ? "selected" : ""}>${opt || "Nourriture"}</option>
-                  `).join("")}
-                </select>
-
-                <input
-                  type="text"
-                  placeholder="Quantité / nombre"
-                  value="${cell.quantite || ""}"
-                  onchange="updatePlanning(${index}, '${j.iso}', 'quantite', this.value)"
-                >
-
-                <input
-                  type="text"
-                  placeholder="Poids à donner"
-                  value="${cell.poids || ""}"
-                  onchange="updatePlanning(${index}, '${j.iso}', 'poids', this.value)"
-                >
-
-                <textarea
-                  placeholder="Notes"
-                  onchange="updatePlanning(${index}, '${j.iso}', 'notes', this.value)"
-                >${cell.notes || ""}</textarea>
-
-                <div class="cell-small">Enregistrement automatique</div>
-              </div>
-            </td>
-          `;
-        });
-
-        html += `</tr>`;
-      });
-
-      html += `</tbody>`;
-      table.innerHTML = html;
-    }
-
-    window.updatePlanning = async function(indexOiseau, dateIso, champ, valeur) {
-      const weekKey = getWeekKey(document.getElementById("dateSemaine").value);
-      const bird = oiseaux[indexOiseau];
-      const birdKey = getBirdKey(indexOiseau, bird);
-
-      const cell = getPlanningCell(weekKey, birdKey, dateIso);
-      cell[champ] = valeur;
-
-      saveLocalData();
-
-      try {
-        setStatus("Sauvegarde...");
-        await setDoc(refPlanning, { planning }, { merge: true });
-        setStatus("Synchronisé ✅");
-      } catch (e) {
-        console.error(e);
-        setStatus("Mode hors ligne ⚠️");
-      }
-
-      buildDashboard();
-      renderResumeJour();
-    };
-
-    window.changerSemaine = function(nbJours) {
-      const actuel = document.getElementById("dateSemaine").value
-        ? new Date(document.getElementById("dateSemaine").value)
-        : new Date();
-
-      actuel.setDate(actuel.getDate() + nbJours);
-      const iso = formatISO(actuel);
-
-      document.getElementById("dateSemaine").value = iso;
-      document.getElementById("dateResumeJour").value = iso;
-      renderAll();
-    };
-
-    window.imprimerTableau = function() {
-      const dates = getWeekDates(document.getElementById("dateSemaine").value);
-      const weekKey = getWeekKey(document.getElementById("dateSemaine").value);
-
-      let html = `
-        <html>
-        <head>
-          <title>Impression tableau de nourrissage</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #5c4310; }
-            table { border-collapse: collapse; width: 100%; font-size: 12px; }
-            th, td { border: 1px solid #999; padding: 6px; vertical-align: top; }
-            th { background: #efe2be; }
-          </style>
-        </head>
-        <body>
-          <h1>Tableau de nourrissage</h1>
-          <div>Semaine du ${dates[0].fr} au ${dates[6].fr}</div>
-          <br>
-          <table>
-            <thead>
-              <tr>
-                <th>Oiseau</th>
-                ${dates.map(j => `<th>${j.label}<br>${j.fr}</th>`).join("")}
-              </tr>
-            </thead>
-            <tbody>
-      `;
-
-      oiseaux.forEach((o, index) => {
-        const birdKey = getBirdKey(index, o);
-        html += `<tr>`;
-        html += `<td><strong>${o.nom || "-"}</strong><br>${o.espece || ""}</td>`;
-
-        dates.forEach(j => {
-          const cell = getPlanningCell(weekKey, birdKey, j.iso);
-          html += `
-            <td>
-              ${cell.nourriture || "-"}<br>
-              ${cell.quantite ? "Quantité : " + cell.quantite + "<br>" : ""}
-              ${cell.poids ? "Poids : " + cell.poids + "<br>" : ""}
-              ${cell.notes ? "Notes : " + cell.notes : ""}
-            </td>
-          `;
-        });
-
-        html += `</tr>`;
-      });
-
-      html += `
-            </tbody>
-          </table>
-        </body>
-        </html>
-      `;
-
-      const w = window.open("", "_blank");
-      w.document.write(html);
-      w.document.close();
-      w.focus();
-      w.print();
-    };
-
-    function renderAll() {
-      renderTable();
-      buildDashboard();
-      renderResumeJour();
-    }
-
-    async function charger() {
-      try {
-        setStatus("Connexion...");
-        const [snapRapaces, snapPlanning] = await Promise.all([
-          getDoc(refRapaces),
-          getDoc(refPlanning)
-        ]);
-
-        if (snapRapaces.exists()) {
-          const data = snapRapaces.data();
-          oiseaux = Array.isArray(data.oiseaux) ? data.oiseaux : [];
-        } else {
-          oiseaux = [];
-        }
-
-        if (snapPlanning.exists()) {
-          const dataPlan = snapPlanning.data();
-          planning = dataPlan.planning || {};
-        } else {
-          planning = {};
-        }
-
-        saveLocalData();
-        renderAll();
-        setStatus("Synchronisé ✅");
-      } catch (e) {
-        console.error(e);
-        loadLocalData();
-        renderAll();
-        setStatus("Mode hors ligne ⚠️");
-      }
-    }
-
-    window.unlockApp = function() {
-      const pin = document.getElementById("pinInput").value;
-      const err = document.getElementById("lockError");
-
-      if (pin === APP_PIN) {
-        document.getElementById("lockScreen").style.display = "none";
-        err.innerText = "";
+    function verifierPIN() {
+      const pinInput = document.getElementById("pinInput");
+      const pinError = document.getElementById("pinError");
+
+      if (pinInput.value === PIN_CODE) {
+        sessionStorage.setItem("rapaces_pin_ok", "oui");
+        document.getElementById("pinOverlay").classList.add("hidden");
+        document.getElementById("appContent").classList.remove("hidden");
+        pinError.textContent = "";
       } else {
-        err.innerText = "Code incorrect.";
+        pinError.textContent = "Code incorrect.";
       }
-    };
+    }
 
-    document.getElementById("pinInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") window.unlockApp();
+    function chargerPIN() {
+      const ok = sessionStorage.getItem("rapaces_pin_ok");
+      if (ok === "oui") {
+        document.getElementById("pinOverlay").classList.add("hidden");
+        document.getElementById("appContent").classList.remove("hidden");
+      }
+    }
+
+    function showSection(section) {
+      document.querySelectorAll(".section").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".nav button").forEach(el => el.classList.remove("active"));
+
+      document.getElementById("section-" + section).classList.add("active");
+      document.getElementById("btn-" + section).classList.add("active");
+    }
+
+    function sauvegarder() {
+      localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
+      mettreResumeAJour();
+    }
+
+    function chargerDonnees() {
+      const data = localStorage.getItem("ficheRapacesData");
+      if (data) {
+        appData = JSON.parse(data);
+      }
+      afficherEncodages();
+      afficherOiseaux();
+      afficherDocuments();
+      afficherNourrissage();
+      mettreResumeAJour();
+    }
+
+    function mettreResumeAJour() {
+      document.getElementById("resumeOiseaux").textContent = appData.oiseaux.length + (appData.oiseaux.length > 1 ? " oiseaux" : " oiseau");
+      document.getElementById("resumeDocs").textContent = appData.documents.length + (appData.documents.length > 1 ? " documents" : " document");
+      document.getElementById("resumeNourrissage").textContent = appData.nourrissage.length + " ligne" + (appData.nourrissage.length > 1 ? "s nourrissage" : " nourrissage");
+    }
+
+    function ajouterEncodage() {
+      const item = {
+        date: document.getElementById("encDate").value,
+        nom: document.getElementById("encNom").value,
+        espece: document.getElementById("encEspece").value,
+        poids: document.getElementById("encPoids").value,
+        etat: document.getElementById("encEtat").value,
+        lieu: document.getElementById("encLieu").value,
+        observations: document.getElementById("encObs").value
+      };
+
+      if (!item.nom) {
+        alert("Veuillez entrer le nom de l’oiseau.");
+        return;
+      }
+
+      appData.encodages.unshift(item);
+      sauvegarder();
+      afficherEncodages();
+      viderFormulaireEncodage();
+    }
+
+    function viderFormulaireEncodage() {
+      document.getElementById("encDate").value = "";
+      document.getElementById("encNom").value = "";
+      document.getElementById("encEspece").value = "";
+      document.getElementById("encPoids").value = "";
+      document.getElementById("encEtat").value = "";
+      document.getElementById("encLieu").value = "";
+      document.getElementById("encObs").value = "";
+    }
+
+    function afficherEncodages() {
+      const liste = document.getElementById("listeEncodage");
+      liste.innerHTML = "";
+
+      if (appData.encodages.length === 0) {
+        liste.innerHTML = '<p class="muted">Aucune fiche encodée.</p>';
+        return;
+      }
+
+      appData.encodages.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "doc-item";
+        div.innerHTML = `
+          <strong>${item.nom}</strong><br>
+          <span class="muted">${item.date || "-"} | ${item.espece || "-"} | ${item.poids || "-"}</span>
+          <p><strong>État :</strong> ${item.etat || "-"}</p>
+          <p><strong>Lieu :</strong> ${item.lieu || "-"}</p>
+          <p><strong>Observations :</strong> ${item.observations || "-"}</p>
+          <button class="btn btn-danger" onclick="supprimerEncodage(${index})">Supprimer</button>
+        `;
+        liste.appendChild(div);
+      });
+    }
+
+    function supprimerEncodage(index) {
+      appData.encodages.splice(index, 1);
+      sauvegarder();
+      afficherEncodages();
+    }
+
+    function ajouterOiseau() {
+      const item = {
+        nom: document.getElementById("oiseauNom").value,
+        espece: document.getElementById("oiseauEspece").value,
+        sexe: document.getElementById("oiseauSexe").value,
+        age: document.getElementById("oiseauAge").value,
+        particularites: document.getElementById("oiseauParticularites").value,
+        notes: document.getElementById("oiseauNotes").value
+      };
+
+      if (!item.nom) {
+        alert("Veuillez entrer un nom.");
+        return;
+      }
+
+      appData.oiseaux.unshift(item);
+      sauvegarder();
+      afficherOiseaux();
+
+      document.getElementById("oiseauNom").value = "";
+      document.getElementById("oiseauEspece").value = "";
+      document.getElementById("oiseauSexe").value = "";
+      document.getElementById("oiseauAge").value = "";
+      document.getElementById("oiseauParticularites").value = "";
+      document.getElementById("oiseauNotes").value = "";
+    }
+
+    function afficherOiseaux() {
+      const liste = document.getElementById("listeOiseaux");
+      liste.innerHTML = "";
+
+      if (appData.oiseaux.length === 0) {
+        liste.innerHTML = '<p class="muted">Aucun oiseau enregistré.</p>';
+        return;
+      }
+
+      appData.oiseaux.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "bird-item";
+        div.innerHTML = `
+          <strong>${item.nom}</strong><br>
+          <span class="muted">${item.espece || "-"} | ${item.sexe || "-"} | ${item.age || "-"}</span>
+          <p><strong>Particularités :</strong> ${item.particularites || "-"}</p>
+          <p><strong>Notes :</strong> ${item.notes || "-"}</p>
+          <button class="btn btn-danger" onclick="supprimerOiseau(${index})">Supprimer</button>
+        `;
+        liste.appendChild(div);
+      });
+    }
+
+    function supprimerOiseau(index) {
+      appData.oiseaux.splice(index, 1);
+      sauvegarder();
+      afficherOiseaux();
+    }
+
+    function ajouterDocument() {
+      const item = {
+        titre: document.getElementById("docTitre").value,
+        type: document.getElementById("docType").value,
+        description: document.getElementById("docDescription").value
+      };
+
+      if (!item.titre) {
+        alert("Veuillez entrer un titre.");
+        return;
+      }
+
+      appData.documents.unshift(item);
+      sauvegarder();
+      afficherDocuments();
+
+      document.getElementById("docTitre").value = "";
+      document.getElementById("docType").value = "";
+      document.getElementById("docDescription").value = "";
+    }
+
+    function afficherDocuments() {
+      const liste = document.getElementById("listeDocuments");
+      liste.innerHTML = "";
+
+      if (appData.documents.length === 0) {
+        liste.innerHTML = '<p class="muted">Aucun document enregistré.</p>';
+        return;
+      }
+
+      appData.documents.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "doc-item";
+        div.innerHTML = `
+          <strong>${item.titre}</strong><br>
+          <span class="muted">${item.type || "-"}</span>
+          <p>${item.description || "-"}</p>
+          <button class="btn btn-danger" onclick="supprimerDocument(${index})">Supprimer</button>
+        `;
+        liste.appendChild(div);
+      });
+    }
+
+    function supprimerDocument(index) {
+      appData.documents.splice(index, 1);
+      sauvegarder();
+      afficherDocuments();
+    }
+
+    function ajouterLigneNourrissage() {
+      const item = {
+        date: document.getElementById("nDate").value,
+        heure: document.getElementById("nHeure").value,
+        oiseau: document.getElementById("nOiseau").value,
+        nourriture: document.getElementById("nNourriture").value,
+        quantite: document.getElementById("nQuantite").value,
+        remarques: document.getElementById("nRemarques").value
+      };
+
+      if (!item.oiseau) {
+        alert("Veuillez entrer le nom de l’oiseau.");
+        return;
+      }
+
+      appData.nourrissage.unshift(item);
+      sauvegarder();
+      afficherNourrissage();
+
+      document.getElementById("nDate").value = "";
+      document.getElementById("nHeure").value = "";
+      document.getElementById("nOiseau").value = "";
+      document.getElementById("nNourriture").value = "";
+      document.getElementById("nQuantite").value = "";
+      document.getElementById("nRemarques").value = "";
+    }
+
+    function afficherNourrissage() {
+      const body = document.getElementById("tableNourrissageBody");
+      body.innerHTML = "";
+
+      if (appData.nourrissage.length === 0) {
+        body.innerHTML = `<tr><td colspan="7" class="muted">Aucune donnée de nourrissage.</td></tr>`;
+        return;
+      }
+
+      appData.nourrissage.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${item.date || "-"}</td>
+          <td>${item.heure || "-"}</td>
+          <td>${item.oiseau || "-"}</td>
+          <td>${item.nourriture || "-"}</td>
+          <td>${item.quantite || "-"}</td>
+          <td>${item.remarques || "-"}</td>
+          <td><button class="btn btn-danger" onclick="supprimerNourrissage(${index})">Supprimer</button></td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function supprimerNourrissage(index) {
+      appData.nourrissage.splice(index, 1);
+      sauvegarder();
+      afficherNourrissage();
+    }
+
+    function exporterDonnees() {
+      const contenu = JSON.stringify(appData, null, 2);
+      const blob = new Blob([contenu], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "fiche-rapaces-donnees.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((err) => {
+          console.log("Service Worker non enregistré :", err);
+        });
+      });
+    }
+
+    chargerPIN();
+    chargerDonnees();
+
+    document.getElementById("pinInput").addEventListener("keypress", function(e){
+      if (e.key === "Enter") verifierPIN();
     });
-
-    const today = new Date();
-    const todayIso = formatISO(today);
-    document.getElementById("dateSemaine").value = todayIso;
-    document.getElementById("dateResumeJour").value = todayIso;
-
-    document.getElementById("dateSemaine").addEventListener("change", renderAll);
-    document.getElementById("dateResumeJour").addEventListener("change", () => {
-      buildDashboard();
-      renderResumeJour();
-    });
-
-    charger();
   </script>
-</div>
 </body>
 </html>
