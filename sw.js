@@ -8,6 +8,16 @@ const urlsToCache = [
   "/fiche-rapaces/manifest.json"
 ];
 
+const CACHE_NAME = "Rapaces-V6";
+
+const urlsToCache = [
+  "/fiche-rapaces/",
+  "/fiche-rapaces/index.html",
+  "/fiche-rapaces/tableau-nourrissage.html",
+  "/fiche-rapaces/icon.png",
+  "/fiche-rapaces/manifest.json"
+];
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
