@@ -387,6 +387,19 @@
       document.getElementById("status").innerText = txt;
     }
 
+    function getCouleur(index){
+      const couleurs = [
+        "#2d6aa1",
+        "#b88a1b",
+        "#2f7d32",
+        "#8a5a2b",
+        "#6a2da1",
+        "#a12d6a",
+        "#1b8a7a"
+      ];
+      return couleurs[index % couleurs.length];
+    }
+
     function normalizeText(text) {
       return (text || "")
         .toString()
@@ -546,7 +559,7 @@
       const alerte = getAlertePoids(o);
 
       fiche.innerHTML = `
-        <div class="fiche">
+        <div class="fiche" style="border-top:6px solid ${getCouleur(indexOiseauSelectionne)}">
           <div><strong>Nom :</strong> ${o.nom || "-"}</div>
           <div><strong>Espèce :</strong> ${o.espece || "-"}</div>
           <div><strong>Alerte basse :</strong> ${o.alerteBasse || "-"}</div>
@@ -616,64 +629,48 @@
       afficherFiche();
     };
 
-   window.afficherListeOiseaux = function() {
-  const q = normalizeText(document.getElementById("recherche").value);
-  const liste = document.getElementById("liste");
+    window.afficherListeOiseaux = function() {
+      const q = normalizeText(document.getElementById("recherche").value);
+      const liste = document.getElementById("liste");
 
-  const filtres = oiseaux
-    .map((o, index) => ({ o, index }))
-    .filter(({ o }) => {
-      const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
-      return texte.includes(q);
-    });
+      const filtres = oiseaux
+        .map((o, index) => ({ o, index }))
+        .filter(({ o }) => {
+          const texte = normalizeText((o.nom || "") + " " + (o.espece || ""));
+          return texte.includes(q);
+        });
 
-  if (filtres.length === 0) {
-    liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
-    return;
-  }
+      if (filtres.length === 0) {
+        liste.innerHTML = "<div class='bird'>Aucun oiseau trouvé.</div>";
+        return;
+      }
 
-  liste.innerHTML = filtres.map(({ o, index }) => `
-    <div class="bird"
-         onclick="ouvrirOiseau(${index})"
-         style="border-left:8px solid ${getCouleur(index)} !important;">
-      <strong>${o.nom || ""}</strong><br>
-      ${o.espece || ""}
-    </div>
-  `).join("");
-};
-
-    function afficherDocuments() {
-  const div = document.getElementById("listeDocuments");
-
-  if (!documents.length) {
-    div.innerHTML = "<div class='doc'>Aucun document.</div>";
-    return;
-  }
-
-  div.innerHTML = "";
-
-  documents.forEach((d, i) => {
-    const bloc = document.createElement("div");
-    bloc.className = "doc";
-
-    bloc.innerHTML = `
-      <a href="${d.lien}" target="_blank">${d.nom}</a>
-      <div class="actions">
-        <button class="btn btn-danger">Supprimer</button>
-      </div>
-    `;
-
-    bloc.querySelector("button").onclick = async () => {
-      if (!confirm("Supprimer ce document ?")) return;
-
-      documents.splice(i, 1);
-      await sauver();
-      afficherDocuments();
+      liste.innerHTML = filtres.map(({ o, index }) => `
+        <div class="bird" onclick="ouvrirOiseau(${index})"
+             style="border-left:6px solid ${getCouleur(index)}">
+          <strong>${o.nom || ""}</strong><br>
+          ${o.espece || ""}
+        </div>
+      `).join("");
     };
 
-    div.appendChild(bloc);
-  });
-}
+    function afficherDocuments() {
+      const div = document.getElementById("listeDocuments");
+
+      if (!documents.length) {
+        div.innerHTML = "<div class='doc'>Aucun document.</div>";
+        return;
+      }
+
+      div.innerHTML = documents.map((d, i) => `
+        <div class="doc">
+          <a href="${d.lien}" target="_blank">${d.nom}</a>
+          <div class="actions">
+            <button class="btn btn-danger" onclick="supprimerDocument(${i})">Supprimer</button>
+          </div>
+        </div>
+      `).join("");
+    }
 
     async function charger() {
       try {
@@ -937,6 +934,15 @@
         setStatus("Erreur ❌");
         alert("Erreur upload document : " + e.message);
       }
+    };
+
+    window.supprimerDocument = async function(index){
+      if (!confirm("Supprimer ce document ?")) return;
+
+      documents.splice(index, 1);
+
+      await sauver();
+      afficherDocuments();
     };
 
     window.exportPDF = function(index) {
