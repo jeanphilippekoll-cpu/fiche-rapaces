@@ -360,6 +360,7 @@
         <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
         <button id="btn-documents" onclick="showSection('documents')">Documents</button>
         <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
+        <button id="btn-stock" onclick="showSection('stock')">Stock nourriture</button>
       </div>
     </div>
 
@@ -546,8 +547,8 @@
           <select id="nNourriture"></select>
         </div>
         <div>
-          <label>Quantité (g)</label>
-          <input type="number" id="nQuantite" placeholder="Quantité en grammes">
+          <label>Quantité</label>
+          <input type="number" id="nQuantite" placeholder="Nombre de pièces">
 
           <label>Remarques</label>
           <textarea id="nRemarques" placeholder="Remarques"></textarea>
@@ -589,13 +590,44 @@
               <th>Heure</th>
               <th>Oiseau</th>
               <th>Nourriture</th>
-              <th>Quantité (g)</th>
+              <th>Quantité</th>
               <th>Remarques</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody id="tableNourrissageBody"></tbody>
         </table>
+      </div>
+    </section>
+
+    <section id="section-stock" class="section">
+      <h2>Stock nourriture</h2>
+
+      <div class="grid-2">
+        <div>
+          <label>Poussin - stock actuel</label>
+          <input type="number" id="stockPoussin" placeholder="Nombre de pièces">
+
+          <label>Sous caille - stock actuel</label>
+          <input type="number" id="stockSousCaille" placeholder="Nombre de pièces">
+
+          <label>Pigeon - stock actuel</label>
+          <input type="number" id="stockPigeon" placeholder="Nombre de pièces">
+
+          <label>Lapin - stock actuel</label>
+          <input type="number" id="stockLapin" placeholder="Nombre de pièces">
+
+          <label>Poisson - stock actuel</label>
+          <input type="number" id="stockPoisson" placeholder="Nombre de pièces">
+
+          <div class="top-actions">
+            <button class="btn" onclick="enregistrerStock()">Enregistrer le stock</button>
+          </div>
+        </div>
+
+        <div>
+          <div id="resumeStock" class="stats-grid"></div>
+        </div>
       </div>
     </section>
 
@@ -647,7 +679,14 @@
       encodages: [],
       oiseaux: [],
       documents: [],
-      nourrissage: []
+      nourrissage: [],
+      stock: {
+        poussin: 0,
+        sousCaille: 0,
+        pigeon: 0,
+        lapin: 0,
+        poisson: 0
+      }
     };
 
     let currentUserId = null;
@@ -699,6 +738,15 @@
       if (!appData.oiseaux) appData.oiseaux = [];
       if (!appData.documents) appData.documents = [];
       if (!appData.nourrissage) appData.nourrissage = [];
+      if (!appData.stock) {
+        appData.stock = {
+          poussin: 0,
+          sousCaille: 0,
+          pigeon: 0,
+          lapin: 0,
+          poisson: 0
+        };
+      }
 
       appData.oiseaux = appData.oiseaux.map(o => ({
         id: o.id || makeId(),
@@ -745,6 +793,14 @@
         quantite: n.quantite || "",
         remarques: n.remarques || ""
       }));
+
+      appData.stock = {
+        poussin: Number(appData.stock.poussin || 0),
+        sousCaille: Number(appData.stock.sousCaille || 0),
+        pigeon: Number(appData.stock.pigeon || 0),
+        lapin: Number(appData.stock.lapin || 0),
+        poisson: Number(appData.stock.poisson || 0)
+      };
     }
 
     async function saveToFirebase() {
@@ -756,6 +812,7 @@
           oiseaux: appData.oiseaux,
           documents: appData.documents,
           nourrissage: appData.nourrissage,
+          stock: appData.stock,
           updatedAt: Date.now()
         });
       } catch (e) {
@@ -770,6 +827,7 @@
       populateFoodSelects();
       afficherStatsNourrissage();
       afficherCalendrierNourrissage();
+      afficherStock();
       saveToFirebase();
     }
 
@@ -784,6 +842,7 @@
       afficherNourrissage();
       afficherStatsNourrissage();
       afficherCalendrierNourrissage();
+      afficherStock();
     }
 
     async function chargerDonnees() {
@@ -1504,17 +1563,17 @@
         <div class="card-mini">
           <h4>Total du dernier jour</h4>
           <p><strong>${latestDay ? formatDateFR(latestDay) : "-"}</strong></p>
-          <p>${latestDay ? totalsByDay[latestDay] : 0} g</p>
+          <p>${latestDay ? totalsByDay[latestDay] : 0} pièce(s)</p>
         </div>
         <div class="card-mini">
           <h4>Total de la dernière semaine</h4>
           <p><strong>${safeText(latestWeek || "-")}</strong></p>
-          <p>${latestWeek ? totalsByWeek[latestWeek] : 0} g</p>
+          <p>${latestWeek ? totalsByWeek[latestWeek] : 0} pièce(s)</p>
         </div>
         <div class="card-mini">
           <h4>Total du dernier mois</h4>
           <p><strong>${safeText(latestMonth || "-")}</strong></p>
-          <p>${latestMonth ? totalsByMonth[latestMonth] : 0} g</p>
+          <p>${latestMonth ? totalsByMonth[latestMonth] : 0} pièce(s)</p>
         </div>
       `;
       wrap.innerHTML = html;
@@ -1557,7 +1616,7 @@
                 <div style="margin-bottom:6px;">
                   <span class="calendar-day">${safeText(formatDateFR(date))}</span>
                   <strong>${safeText(n.nourriture)}</strong><br>
-                  ${safeText(n.quantite || "-")} g
+                  ${safeText(n.quantite || "-")} pièce(s)
                 </div>
               `).join("")
             : `<span class="calendar-day">${safeText(formatDateFR(date))}</span><span class="muted">-</span>`;
@@ -1568,6 +1627,80 @@
         tr.innerHTML = html;
         body.appendChild(tr);
       });
+    }
+
+    function enregistrerStock() {
+      appData.stock.poussin = Number(document.getElementById("stockPoussin").value || 0);
+      appData.stock.sousCaille = Number(document.getElementById("stockSousCaille").value || 0);
+      appData.stock.pigeon = Number(document.getElementById("stockPigeon").value || 0);
+      appData.stock.lapin = Number(document.getElementById("stockLapin").value || 0);
+      appData.stock.poisson = Number(document.getElementById("stockPoisson").value || 0);
+
+      sauvegarder();
+      afficherStock();
+    }
+
+    function remplirFormStock() {
+      document.getElementById("stockPoussin").value = appData.stock?.poussin || 0;
+      document.getElementById("stockSousCaille").value = appData.stock?.sousCaille || 0;
+      document.getElementById("stockPigeon").value = appData.stock?.pigeon || 0;
+      document.getElementById("stockLapin").value = appData.stock?.lapin || 0;
+      document.getElementById("stockPoisson").value = appData.stock?.poisson || 0;
+    }
+
+    function calculerUtilisationNourriture() {
+      const today = getTodayStr();
+      const currentWeek = getWeekKey(today);
+      const currentMonth = getMonthKey(today);
+
+      const result = {
+        "Poussin": { jour: 0, semaine: 0, mois: 0 },
+        "Sous caille": { jour: 0, semaine: 0, mois: 0 },
+        "Pigeon": { jour: 0, semaine: 0, mois: 0 },
+        "Lapin": { jour: 0, semaine: 0, mois: 0 },
+        "Poisson": { jour: 0, semaine: 0, mois: 0 }
+      };
+
+      appData.nourrissage.forEach(n => {
+        const q = Number(n.quantite || 0);
+        const food = n.nourriture;
+        if (!result[food]) return;
+
+        if (n.date === today) result[food].jour += q;
+        if (getWeekKey(n.date) === currentWeek) result[food].semaine += q;
+        if (getMonthKey(n.date) === currentMonth) result[food].mois += q;
+      });
+
+      return result;
+    }
+
+    function afficherStock() {
+      remplirFormStock();
+
+      const usage = calculerUtilisationNourriture();
+      const stocks = [
+        { nom: "Poussin", cle: "poussin" },
+        { nom: "Sous caille", cle: "sousCaille" },
+        { nom: "Pigeon", cle: "pigeon" },
+        { nom: "Lapin", cle: "lapin" },
+        { nom: "Poisson", cle: "poisson" }
+      ];
+
+      document.getElementById("resumeStock").innerHTML = stocks.map(item => {
+        const stockActuel = Number(appData.stock?.[item.cle] || 0);
+        const u = usage[item.nom] || { jour: 0, semaine: 0, mois: 0 };
+
+        return `
+          <div class="card-mini">
+            <h3>${item.nom}</h3>
+            <p><strong>Stock actuel :</strong> ${stockActuel} pièce(s)</p>
+            <p><strong>Utilisé aujourd’hui :</strong> ${u.jour} pièce(s)</p>
+            <p><strong>Utilisé cette semaine :</strong> ${u.semaine} pièce(s)</p>
+            <p><strong>Utilisé ce mois :</strong> ${u.mois} pièce(s)</p>
+            <p><strong>Stock restant théorique :</strong> ${stockActuel - u.mois} pièce(s)</p>
+          </div>
+        `;
+      }).join("");
     }
 
     function exporterJSON() {
@@ -1692,7 +1825,7 @@
             <td>${safeText(n.heure || "-")}</td>
             <td>${safeText(n.oiseau)}</td>
             <td>${safeText(n.nourriture)}</td>
-            <td>${safeText(n.quantite || "-")} g</td>
+            <td>${safeText(n.quantite || "-")} pièce(s)</td>
             <td>${safeText(n.remarques || "-")}</td>
           </tr>
         `).join("");
@@ -1712,9 +1845,9 @@
         }
       });
 
-      const dayHtml = Object.keys(totalsByDay).sort().map(k => `<li>${safeText(formatDateFR(k))} : ${totalsByDay[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
-      const weekHtml = Object.keys(totalsByWeek).sort().map(k => `<li>${safeText(k)} : ${totalsByWeek[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
-      const monthHtml = Object.keys(totalsByMonth).sort().map(k => `<li>${safeText(k)} : ${totalsByMonth[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
+      const dayHtml = Object.keys(totalsByDay).sort().map(k => `<li>${safeText(formatDateFR(k))} : ${totalsByDay[k]} pièce(s)</li>`).join("") || "<li>Aucune donnée</li>";
+      const weekHtml = Object.keys(totalsByWeek).sort().map(k => `<li>${safeText(k)} : ${totalsByWeek[k]} pièce(s)</li>`).join("") || "<li>Aucune donnée</li>";
+      const monthHtml = Object.keys(totalsByMonth).sort().map(k => `<li>${safeText(k)} : ${totalsByMonth[k]} pièce(s)</li>`).join("") || "<li>Aucune donnée</li>";
 
       const html = `
         <div class="print-page">
@@ -1834,6 +1967,7 @@
     window.supprimerFichierDocument = supprimerFichierDocument;
     window.ajouterLigneNourrissage = ajouterLigneNourrissage;
     window.supprimerNourrissage = supprimerNourrissage;
+    window.enregistrerStock = enregistrerStock;
     window.exporterJSON = exporterJSON;
     window.importerJSON = importerJSON;
     window.imprimerFicheOiseau = imprimerFicheOiseau;
