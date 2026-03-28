@@ -7,12 +7,11 @@
   <meta name="theme-color" content="#f4eadb" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/png" href="icon.png" />
- 
   <style>
     :root{
       --creme:#f4eadb;
       --creme-2:#efe2d0;
-      --creme-3:#e4d4be;
+      --creme-3:#fffaf3;
       --fond:#fcf8f2;
       --blanc:#fffdf9;
       --brun:#4f3d2d;
@@ -34,13 +33,13 @@
       color:var(--brun);
     }
 
+    .hidden{display:none !important;}
+
     .app{
       max-width:1280px;
       margin:0 auto;
       padding:18px;
     }
-
-    .hidden{display:none !important;}
 
     .overlay{
       position:fixed;
@@ -112,11 +111,11 @@
     }
 
     .btn:hover{background:var(--vert-2)}
-    .btn-secondary{background:var(--creme-3); color:var(--brun)}
-    .btn-secondary:hover{background:#d9c6ad}
-    .btn-danger{background:var(--rouge); color:white}
+    .btn-secondary{background:#dcc7ab;color:var(--brun)}
+    .btn-secondary:hover{background:#cfb694}
+    .btn-danger{background:var(--rouge);color:white}
     .btn-danger:hover{background:#9f4f4f}
-    .btn-blue{background:var(--bleu); color:white}
+    .btn-blue{background:var(--bleu);color:white}
     .btn-blue:hover{background:#58799f}
 
     .section{
@@ -176,11 +175,24 @@
       display:flex;
       flex-wrap:wrap;
       gap:10px;
+      margin-top:14px;
       margin-bottom:14px;
     }
 
-    .muted{color:var(--brun-2); font-size:0.95rem}
-    .badge{
+    .small-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+
+    .muted{
+      color:var(--brun-2);
+      font-size:0.95rem;
+    }
+
+    .badge,
+    .pill{
       display:inline-block;
       background:var(--creme-2);
       border-radius:999px;
@@ -216,7 +228,9 @@
       vertical-align:top;
     }
 
-    th{background:var(--creme-2)}
+    th{
+      background:var(--creme-2);
+    }
 
     .calendar-table{
       min-width:1100px;
@@ -244,30 +258,13 @@
     }
 
     .thumb{
-      max-width:160px;
-      max-height:120px;
+      max-width:180px;
+      max-height:140px;
       border-radius:10px;
       border:1px solid var(--bord);
       display:block;
       margin-top:8px;
       object-fit:cover;
-    }
-
-    .pill{
-      display:inline-block;
-      padding:4px 8px;
-      font-size:12px;
-      border-radius:999px;
-      background:var(--creme-2);
-      margin-right:6px;
-      margin-top:6px;
-    }
-
-    .small-actions{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
     }
 
     .stats-grid{
@@ -277,23 +274,63 @@
       margin-top:14px;
     }
 
+    canvas.weight-canvas{
+      width:100%;
+      max-width:100%;
+      background:white;
+      border:1px solid var(--bord);
+      border-radius:14px;
+      display:block;
+    }
+
     .footer-note{
       text-align:center;
       color:var(--brun-2);
       padding:10px 0 30px;
     }
 
-    canvas{
-      background:white;
-      border:1px solid var(--bord);
-      border-radius:14px;
-      padding:8px;
-      max-width:100%;
+    #printArea{
+      display:none;
     }
 
     @media (max-width: 860px){
       .grid-2{
         grid-template-columns:1fr;
+      }
+    }
+
+    @media print{
+      body *{
+        visibility:hidden !important;
+      }
+      #printArea, #printArea *{
+        visibility:visible !important;
+      }
+      #printArea{
+        display:block !important;
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        background:white;
+        color:black;
+        padding:20px;
+      }
+      .print-page{
+        page-break-after:always;
+        margin-bottom:20px;
+      }
+      .print-page:last-child{
+        page-break-after:auto;
+      }
+      .print-table{
+        width:100%;
+        border-collapse:collapse;
+      }
+      .print-table th,
+      .print-table td{
+        border:1px solid #000;
+        padding:6px;
       }
     }
   </style>
@@ -347,8 +384,8 @@
         <div class="card-mini">
           <h3>Exports PDF</h3>
           <div class="small-actions">
-            <button class="btn btn-secondary" onclick="exporterPDFNourrissage()">PDF nourrissage</button>
-            <button class="btn btn-secondary" onclick="exporterPDFTousOiseaux()">PDF fiches oiseaux</button>
+            <button class="btn btn-secondary" onclick="imprimerNourrissagePDF()">PDF nourrissage</button>
+            <button class="btn btn-secondary" onclick="imprimerToutesFichesOiseaux()">PDF fiches oiseaux</button>
           </div>
         </div>
       </div>
@@ -383,7 +420,7 @@
           <label>Observations</label>
           <textarea id="encObs" placeholder="Observations"></textarea>
 
-          <div class="top-actions" style="margin-top:14px;">
+          <div class="top-actions">
             <button class="btn" onclick="ajouterEncodage()">Ajouter une fiche</button>
             <button class="btn btn-secondary" onclick="viderFormulaireEncodage()">Vider</button>
           </div>
@@ -400,6 +437,12 @@
         <div>
           <label>Nom</label>
           <input type="text" id="oiseauNom" placeholder="Nom de l’oiseau">
+
+          <label>Numéro d’ID</label>
+          <input type="text" id="oiseauIdNumber" placeholder="Numéro d’identification">
+
+          <label>Numéro CITES</label>
+          <input type="text" id="oiseauCites" placeholder="Numéro CITES">
 
           <label>Espèce</label>
           <input type="text" id="oiseauEspece" placeholder="Espèce">
@@ -419,56 +462,27 @@
           <input type="number" id="oiseauPoids" placeholder="Poids en grammes">
         </div>
 
-       <div class="grid-2">
-  <div>
-    <label>Nom</label>
-    <input type="text" id="oiseauNom" placeholder="Nom de l’oiseau">
+        <div>
+          <label>Particularités</label>
+          <input type="text" id="oiseauParticularites" placeholder="Particularités">
 
-    <label>Numéro d’ID</label>
-    <input type="text" id="oiseauIdNumber" placeholder="Numéro d’identification">
+          <label>Notes</label>
+          <textarea id="oiseauNotes" placeholder="Notes"></textarea>
 
-    <label>Numéro CITES</label>
-    <input type="text" id="oiseauCites" placeholder="Numéro CITES">
+          <label>Photo de l’oiseau</label>
+          <input type="file" id="oiseauPhoto" accept="image/*">
 
-    <label>Espèce</label>
-    <input type="text" id="oiseauEspece" placeholder="Espèce">
+          <label>Documents de l’oiseau</label>
+          <input type="file" id="oiseauDocuments" multiple>
 
-    <label>Sexe</label>
-    <select id="oiseauSexe">
-      <option value="">Choisir</option>
-      <option>Mâle</option>
-      <option>Femelle</option>
-      <option>Inconnu</option>
-    </select>
+          <div class="top-actions">
+            <button class="btn" onclick="ajouterOuModifierOiseau()">Enregistrer l’oiseau</button>
+            <button class="btn btn-secondary" onclick="annulerEditionOiseau()">Annuler édition</button>
+          </div>
+        </div>
+      </div>
 
-    <label>Âge / année</label>
-    <input type="text" id="oiseauAge" placeholder="Âge ou année">
-
-    <label>Poids actuel (g)</label>
-    <input type="number" id="oiseauPoids" placeholder="Poids en grammes">
-  </div>
-
-  <div>
-    <label>Particularités</label>
-    <input type="text" id="oiseauParticularites" placeholder="Particularités">
-
-    <label>Notes</label>
-    <textarea id="oiseauNotes" placeholder="Notes"></textarea>
-
-    <label>Photo de l’oiseau</label>
-    <input type="file" id="oiseauPhoto" accept="image/*">
-
-    <label>Documents de l’oiseau</label>
-    <input type="file" id="oiseauDocuments" multiple>
-
-    <div class="top-actions" style="margin-top:14px;">
-      <button class="btn" onclick="ajouterOuModifierOiseau()">Enregistrer l’oiseau</button>
-      <button class="btn btn-secondary" onclick="annulerEditionOiseau()">Annuler édition</button>
-    </div>
-  </div>
-</div> 
       <input type="hidden" id="oiseauEditIndex" value="">
-
       <div id="listeOiseaux"></div>
     </section>
 
@@ -518,9 +532,9 @@
           <label>Remarques</label>
           <textarea id="nRemarques" placeholder="Remarques"></textarea>
 
-          <div class="top-actions" style="margin-top:14px;">
+          <div class="top-actions">
             <button class="btn" onclick="ajouterLigneNourrissage()">Ajouter ligne</button>
-            <button class="btn btn-secondary" onclick="exporterPDFNourrissage()">Exporter PDF</button>
+            <button class="btn btn-secondary" onclick="imprimerNourrissagePDF()">Exporter PDF</button>
           </div>
         </div>
       </div>
@@ -565,8 +579,10 @@
       </div>
     </section>
 
-    <div class="footer-note">Fiche Rapaces — version complète</div>
+    <div class="footer-note">Fiche Rapaces — version complète hors ligne</div>
   </div>
+
+  <div id="printArea"></div>
 
   <script>
     const PIN_CODE = "0212";
@@ -585,8 +601,6 @@
       documents: [],
       nourrissage: []
     };
-
-    let birdCharts = {};
 
     function safeText(v) {
       return (v ?? "").toString()
@@ -624,51 +638,8 @@
       return dateStr.slice(0, 7);
     }
 
-    function populateFoodSelects() {
-      const ids = ["encNourriture", "nNourriture"];
-      ids.forEach(id => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = '<option value="">Choisir</option>' +
-          FOOD_OPTIONS.map(f => `<option value="${safeText(f)}">${safeText(f)}</option>`).join("");
-      });
-    }
-
-    function populateBirdSelects() {
-      const ids = ["encNom", "nOiseau"];
-      ids.forEach(id => {
-        const sel = document.getElementById(id);
-        sel.innerHTML = '<option value="">Choisir un oiseau</option>' +
-          appData.oiseaux.map(o => `<option value="${safeText(o.nom)}">${safeText(o.nom)}</option>`).join("");
-      });
-    }
-
-    function sauvegarder() {
-      localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
-      mettreResumeAJour();
-      populateBirdSelects();
-      afficherStatsNourrissage();
-      afficherCalendrierNourrissage();
-    }
-
-    function chargerDonnees() {
-      const saved = localStorage.getItem("ficheRapacesData");
-      if (saved) {
-        try {
-          appData = JSON.parse(saved);
-        } catch (e) {
-          console.log("Erreur de lecture des données locales", e);
-        }
-      }
-      normalizeData();
-      populateFoodSelects();
-      populateBirdSelects();
-      afficherEncodages();
-      afficherOiseaux();
-      afficherDocuments();
-      afficherNourrissage();
-      afficherStatsNourrissage();
-      afficherCalendrierNourrissage();
-      mettreResumeAJour();
+    function getTodayStr() {
+      return new Date().toISOString().slice(0, 10);
     }
 
     function normalizeData() {
@@ -680,6 +651,8 @@
       appData.oiseaux = appData.oiseaux.map(o => ({
         id: o.id || makeId(),
         nom: o.nom || "",
+        idNumber: o.idNumber || "",
+        cites: o.cites || "",
         espece: o.espece || "",
         sexe: o.sexe || "",
         age: o.age || "",
@@ -722,6 +695,41 @@
       }));
     }
 
+    function sauvegarder() {
+      localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
+      mettreResumeAJour();
+      populateBirdSelects();
+      populateFoodSelects();
+      afficherStatsNourrissage();
+      afficherCalendrierNourrissage();
+    }
+
+    function chargerDonnees() {
+      const saved = localStorage.getItem("ficheRapacesData");
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+        } catch (e) {
+          console.log("Erreur de lecture des données locales", e);
+        }
+      }
+
+      normalizeData();
+      populateFoodSelects();
+      populateBirdSelects();
+
+      document.getElementById("encDate").value = getTodayStr();
+      document.getElementById("nDate").value = getTodayStr();
+
+      afficherEncodages();
+      afficherOiseaux();
+      afficherDocuments();
+      afficherNourrissage();
+      afficherStatsNourrissage();
+      afficherCalendrierNourrissage();
+      mettreResumeAJour();
+    }
+
     function verifierPIN() {
       const pin = document.getElementById("pinInput").value;
       const error = document.getElementById("pinError");
@@ -759,6 +767,30 @@
       document.getElementById("resumeBadges").innerHTML = html;
     }
 
+    function populateFoodSelects() {
+      const ids = ["encNourriture", "nNourriture"];
+      ids.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Choisir</option>' +
+          FOOD_OPTIONS.map(f => `<option value="${safeText(f)}">${safeText(f)}</option>`).join("");
+        if (FOOD_OPTIONS.includes(current)) sel.value = current;
+      });
+    }
+
+    function populateBirdSelects() {
+      const ids = ["encNom", "nOiseau"];
+      ids.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Choisir un oiseau</option>' +
+          appData.oiseaux.map(o => `<option value="${safeText(o.nom)}">${safeText(o.nom)}</option>`).join("");
+        if (appData.oiseaux.some(o => o.nom === current)) sel.value = current;
+      });
+    }
+
     async function fileToDataURL(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -792,7 +824,7 @@
     }
 
     function viderFormulaireEncodage() {
-      document.getElementById("encDate").value = "";
+      document.getElementById("encDate").value = getTodayStr();
       document.getElementById("encNom").value = "";
       document.getElementById("encEspece").value = "";
       document.getElementById("encPoids").value = "";
@@ -811,7 +843,7 @@
       bird.poidsActuel = value;
       bird.historiquePoids.push({
         id: makeId(),
-        date: date || new Date().toISOString().slice(0, 10),
+        date: date || getTodayStr(),
         poids: value
       });
       bird.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -836,7 +868,11 @@
       }
 
       appData.encodages.unshift(item);
-      if (item.poids) updateBirdWeightFromEncodage(item.nom, item.poids, item.date);
+
+      if (item.poids) {
+        updateBirdWeightFromEncodage(item.nom, item.poids, item.date);
+      }
+
       sauvegarder();
       afficherEncodages();
       afficherOiseaux();
@@ -894,6 +930,8 @@
 
       const baseBird = {
         nom,
+        idNumber: document.getElementById("oiseauIdNumber").value.trim(),
+        cites: document.getElementById("oiseauCites").value.trim(),
         espece: document.getElementById("oiseauEspece").value.trim(),
         sexe: document.getElementById("oiseauSexe").value,
         age: document.getElementById("oiseauAge").value.trim(),
@@ -914,7 +952,7 @@
         if (poidsNum && Number.isFinite(poidsNum) && poidsNum > 0) {
           newBird.historiquePoids.push({
             id: makeId(),
-            date: new Date().toISOString().slice(0, 10),
+            date: getTodayStr(),
             poids: poidsNum
           });
         }
@@ -924,6 +962,8 @@
         const i = Number(editIndex);
         const existing = appData.oiseaux[i];
         existing.nom = baseBird.nom;
+        existing.idNumber = baseBird.idNumber;
+        existing.cites = baseBird.cites;
         existing.espece = baseBird.espece;
         existing.sexe = baseBird.sexe;
         existing.age = baseBird.age;
@@ -934,12 +974,12 @@
           const current = Number(baseBird.poidsActuel);
           existing.poidsActuel = baseBird.poidsActuel;
           const alreadySameToday = existing.historiquePoids.some(h =>
-            h.date === new Date().toISOString().slice(0, 10) && Number(h.poids) === current
+            h.date === getTodayStr() && Number(h.poids) === current
           );
           if (Number.isFinite(current) && current > 0 && !alreadySameToday) {
             existing.historiquePoids.push({
               id: makeId(),
-              date: new Date().toISOString().slice(0, 10),
+              date: getTodayStr(),
               poids: current
             });
             existing.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
@@ -958,6 +998,8 @@
     function annulerEditionOiseau() {
       document.getElementById("oiseauEditIndex").value = "";
       document.getElementById("oiseauNom").value = "";
+      document.getElementById("oiseauIdNumber").value = "";
+      document.getElementById("oiseauCites").value = "";
       document.getElementById("oiseauEspece").value = "";
       document.getElementById("oiseauSexe").value = "";
       document.getElementById("oiseauAge").value = "";
@@ -972,6 +1014,8 @@
       const o = appData.oiseaux[index];
       document.getElementById("oiseauEditIndex").value = index;
       document.getElementById("oiseauNom").value = o.nom || "";
+      document.getElementById("oiseauIdNumber").value = o.idNumber || "";
+      document.getElementById("oiseauCites").value = o.cites || "";
       document.getElementById("oiseauEspece").value = o.espece || "";
       document.getElementById("oiseauSexe").value = o.sexe || "";
       document.getElementById("oiseauAge").value = o.age || "";
@@ -1019,12 +1063,98 @@
       bird.poidsActuel = num;
       bird.historiquePoids.push({
         id: makeId(),
-        date: new Date().toISOString().slice(0, 10),
+        date: getTodayStr(),
         poids: num
       });
       bird.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
       sauvegarder();
       afficherOiseaux();
+    }
+
+    function dessinerCourbeOiseau(oiseau) {
+      const canvas = document.getElementById("chart-" + oiseau.id);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const data = [...(oiseau.historiquePoids || [])]
+        .filter(x => x.date && Number(x.poids) > 0)
+        .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const left = 60;
+      const right = canvas.width - 20;
+      const top = 20;
+      const bottom = canvas.height - 40;
+      const width = right - left;
+      const height = bottom - top;
+
+      ctx.strokeStyle = "#d9ccb8";
+      ctx.lineWidth = 1;
+
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.stroke();
+
+      if (data.length === 0) {
+        ctx.fillStyle = "#6f5843";
+        ctx.font = "16px Arial";
+        ctx.fillText("Aucune donnée de poids.", left + 20, top + 30);
+        return;
+      }
+
+      const values = data.map(d => Number(d.poids));
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = Math.max(max - min, 20);
+
+      for (let i = 0; i < 5; i++) {
+        const y = top + (height / 4) * i;
+        ctx.strokeStyle = "#eee";
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+
+        const labelValue = Math.round(max - (range / 4) * i);
+        ctx.fillStyle = "#6f5843";
+        ctx.font = "12px Arial";
+        ctx.fillText(labelValue + " g", 10, y + 4);
+      }
+
+      const points = data.map((d, i) => {
+        const x = data.length === 1
+          ? left + width / 2
+          : left + (i * width / (data.length - 1));
+        const y = bottom - ((Number(d.poids) - min) / range) * height;
+        return { x, y, date: d.date, poids: Number(d.poids) };
+      });
+
+      ctx.strokeStyle = "#789a63";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+
+      points.forEach(p => {
+        ctx.fillStyle = "#5f7c50";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#4f3d2d";
+        ctx.font = "11px Arial";
+        ctx.fillText(formatDateFR(p.date), p.x - 20, bottom + 18);
+        ctx.fillText(p.poids + " g", p.x - 16, p.y - 10);
+      });
     }
 
     function afficherOiseaux() {
@@ -1068,6 +1198,8 @@
 
         div.innerHTML = `
           <h3>${safeText(o.nom)}</h3>
+          ${o.idNumber ? `<div class="pill">ID : ${safeText(o.idNumber)}</div>` : ""}
+          ${o.cites ? `<div class="pill">CITES : ${safeText(o.cites)}</div>` : ""}
           <div class="pill">${safeText(o.espece || "Espèce non précisée")}</div>
           ${o.sexe ? `<div class="pill">${safeText(o.sexe)}</div>` : ""}
           ${o.age ? `<div class="pill">${safeText(o.age)}</div>` : ""}
@@ -1082,58 +1214,19 @@
 
           <h4 style="margin-top:14px;">Évolution du poids</h4>
           <div class="file-box">
-            <canvas id="chart-${safeText(o.id)}" height="120"></canvas>
+            <canvas class="weight-canvas" id="chart-${safeText(o.id)}" width="900" height="260"></canvas>
           </div>
 
           <div class="small-actions">
             <button class="btn" onclick="editerOiseau(${index})">Modifier</button>
             <button class="btn btn-secondary" onclick="ajouterPoidsOiseau(${index})">Ajouter poids</button>
-            <button class="btn btn-secondary" onclick="exporterPDFOiseau(${index})">PDF fiche</button>
+            <button class="btn btn-secondary" onclick="imprimerFicheOiseau(${index})">PDF fiche</button>
             <button class="btn btn-danger" onclick="supprimerOiseau(${index})">Supprimer</button>
           </div>
         `;
         liste.appendChild(div);
 
-        setTimeout(() => renderBirdChart(o), 0);
-      });
-    }
-
-    function renderBirdChart(oiseau) {
-      const canvasId = "chart-" + oiseau.id;
-      const ctx = document.getElementById(canvasId);
-      if (!ctx) return;
-
-      if (birdCharts[oiseau.id]) {
-        birdCharts[oiseau.id].destroy();
-      }
-
-      const data = [...(oiseau.historiquePoids || [])].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-      const labels = data.map(d => formatDateFR(d.date));
-      const values = data.map(d => Number(d.poids));
-
-      birdCharts[oiseau.id] = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: [{
-            label: "Poids (g)",
-            data: values,
-            tension: 0.2,
-            borderWidth: 2,
-            fill: false
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true }
-          },
-          scales: {
-            y: {
-              beginAtZero: false
-            }
-          }
-        }
+        setTimeout(() => dessinerCourbeOiseau(o), 0);
       });
     }
 
@@ -1236,7 +1329,7 @@
       sauvegarder();
       afficherNourrissage();
 
-      document.getElementById("nDate").value = "";
+      document.getElementById("nDate").value = getTodayStr();
       document.getElementById("nHeure").value = "";
       document.getElementById("nOiseau").value = "";
       document.getElementById("nNourriture").value = "";
@@ -1263,7 +1356,8 @@
       appData.nourrissage
         .slice()
         .sort((a,b) => `${b.date} ${b.heure}`.localeCompare(`${a.date} ${a.heure}`))
-        .forEach((n, index) => {
+        .forEach((n) => {
+          const actualIndex = appData.nourrissage.findIndex(x => x.id === n.id);
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${safeText(formatDateFR(n.date))}</td>
@@ -1272,7 +1366,7 @@
             <td>${safeText(n.nourriture)}</td>
             <td>${safeText(n.quantite || "-")}</td>
             <td>${safeText(n.remarques || "-")}</td>
-            <td><button class="btn btn-danger" onclick="supprimerNourrissage(${appData.nourrissage.findIndex(x => x.id === n.id)})">Supprimer</button></td>
+            <td><button class="btn btn-danger" onclick="supprimerNourrissage(${actualIndex})">Supprimer</button></td>
           `;
           body.appendChild(tr);
         });
@@ -1405,89 +1499,103 @@
       event.target.value = "";
     }
 
-    function getBirdPdfText(bird) {
-      let text = "";
-      text += `Nom : ${bird.nom}\n`;
-      text += `Espèce : ${bird.espece || "-"}\n`;
-      text += `Sexe : ${bird.sexe || "-"}\n`;
-      text += `Âge : ${bird.age || "-"}\n`;
-      text += `Poids actuel : ${bird.poidsActuel || "-"} g\n`;
-      text += `Particularités : ${bird.particularites || "-"}\n`;
-      text += `Notes : ${bird.notes || "-"}\n\n`;
-      text += `Historique des poids :\n`;
-      if (bird.historiquePoids.length) {
-        bird.historiquePoids.forEach(h => {
-          text += `- ${formatDateFR(h.date)} : ${h.poids} g\n`;
-        });
-      } else {
-        text += "- Aucun historique\n";
-      }
-      text += `\nDocuments liés : ${bird.documents.length}\n`;
-      return text;
+    function imprimerContenu(html) {
+      const area = document.getElementById("printArea");
+      area.innerHTML = html;
+      window.print();
+      area.innerHTML = "";
     }
 
-    function exporterPDFOiseau(index) {
-      const bird = appData.oiseaux[index];
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const lines = doc.splitTextToSize(getBirdPdfText(bird), 180);
-      doc.setFontSize(16);
-      doc.text(`Fiche oiseau - ${bird.nom}`, 14, 16);
-      doc.setFontSize(11);
-      doc.text(lines, 14, 28);
-      doc.save(`fiche-oiseau-${bird.nom}.pdf`);
+    function imprimerFicheOiseau(index) {
+      const o = appData.oiseaux[index];
+      const hist = (o.historiquePoids || []).length
+        ? o.historiquePoids
+            .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
+            .map(h => `<li>${safeText(formatDateFR(h.date))} : ${safeText(h.poids)} g</li>`)
+            .join("")
+        : "<li>Aucun historique</li>";
+
+      const docs = (o.documents || []).length
+        ? o.documents.map(d => `<li>${safeText(d.name)}</li>`).join("")
+        : "<li>Aucun document</li>";
+
+      const html = `
+        <div class="print-page">
+          <h1>Fiche oiseau</h1>
+          <h2>${safeText(o.nom)}</h2>
+          <p><strong>Numéro d’ID :</strong> ${safeText(o.idNumber || "-")}</p>
+          <p><strong>Numéro CITES :</strong> ${safeText(o.cites || "-")}</p>
+          <p><strong>Espèce :</strong> ${safeText(o.espece || "-")}</p>
+          <p><strong>Sexe :</strong> ${safeText(o.sexe || "-")}</p>
+          <p><strong>Âge :</strong> ${safeText(o.age || "-")}</p>
+          <p><strong>Poids actuel :</strong> ${safeText(o.poidsActuel || "-")} g</p>
+          <p><strong>Particularités :</strong> ${safeText(o.particularites || "-")}</p>
+          <p><strong>Notes :</strong> ${safeText(o.notes || "-")}</p>
+          <h3>Historique des poids</h3>
+          <ul>${hist}</ul>
+          <h3>Documents liés</h3>
+          <ul>${docs}</ul>
+        </div>
+      `;
+
+      imprimerContenu(html);
     }
 
-    function exporterPDFTousOiseaux() {
+    function imprimerToutesFichesOiseaux() {
       if (!appData.oiseaux.length) {
-        alert("Aucun oiseau à exporter.");
+        alert("Aucun oiseau à imprimer.");
         return;
       }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      appData.oiseaux.forEach((bird, i) => {
-        if (i > 0) doc.addPage();
-        doc.setFontSize(16);
-        doc.text(`Fiche oiseau - ${bird.nom}`, 14, 16);
-        doc.setFontSize(11);
-        const lines = doc.splitTextToSize(getBirdPdfText(bird), 180);
-        doc.text(lines, 14, 28);
-      });
-      doc.save("fiches-oiseaux.pdf");
+
+      const html = appData.oiseaux.map((o) => {
+        const hist = (o.historiquePoids || []).length
+          ? o.historiquePoids
+              .sort((a,b) => (a.date || "").localeCompare(b.date || ""))
+              .map(h => `<li>${safeText(formatDateFR(h.date))} : ${safeText(h.poids)} g</li>`)
+              .join("")
+          : "<li>Aucun historique</li>";
+
+        const docs = (o.documents || []).length
+          ? o.documents.map(d => `<li>${safeText(d.name)}</li>`).join("")
+          : "<li>Aucun document</li>";
+
+        return `
+          <div class="print-page">
+            <h1>Fiche oiseau</h1>
+            <h2>${safeText(o.nom)}</h2>
+            <p><strong>Numéro d’ID :</strong> ${safeText(o.idNumber || "-")}</p>
+            <p><strong>Numéro CITES :</strong> ${safeText(o.cites || "-")}</p>
+            <p><strong>Espèce :</strong> ${safeText(o.espece || "-")}</p>
+            <p><strong>Sexe :</strong> ${safeText(o.sexe || "-")}</p>
+            <p><strong>Âge :</strong> ${safeText(o.age || "-")}</p>
+            <p><strong>Poids actuel :</strong> ${safeText(o.poidsActuel || "-")} g</p>
+            <p><strong>Particularités :</strong> ${safeText(o.particularites || "-")}</p>
+            <p><strong>Notes :</strong> ${safeText(o.notes || "-")}</p>
+            <h3>Historique des poids</h3>
+            <ul>${hist}</ul>
+            <h3>Documents liés</h3>
+            <ul>${docs}</ul>
+          </div>
+        `;
+      }).join("");
+
+      imprimerContenu(html);
     }
 
-    function exporterPDFNourrissage() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.setFontSize(16);
-      doc.text("Tableau nourrissage", 14, 16);
-      doc.setFontSize(10);
-
-      let y = 26;
-      const lines = appData.nourrissage
+    function imprimerNourrissagePDF() {
+      const rows = appData.nourrissage
         .slice()
         .sort((a,b) => `${a.date} ${a.heure}`.localeCompare(`${b.date} ${b.heure}`))
-        .map(n => `${formatDateFR(n.date)} | ${n.heure || "-"} | ${n.oiseau} | ${n.nourriture} | ${n.quantite || "-"} g | ${n.remarques || "-"}`);
-
-      if (!lines.length) lines.push("Aucune donnée de nourrissage.");
-
-      lines.forEach(line => {
-        const wrapped = doc.splitTextToSize(line, 180);
-        wrapped.forEach(w => {
-          if (y > 280) {
-            doc.addPage();
-            y = 20;
-          }
-          doc.text(w, 14, y);
-          y += 6;
-        });
-      });
-
-      y += 8;
-      if (y > 250) {
-        doc.addPage();
-        y = 20;
-      }
+        .map(n => `
+          <tr>
+            <td>${safeText(formatDateFR(n.date))}</td>
+            <td>${safeText(n.heure || "-")}</td>
+            <td>${safeText(n.oiseau)}</td>
+            <td>${safeText(n.nourriture)}</td>
+            <td>${safeText(n.quantite || "-")} g</td>
+            <td>${safeText(n.remarques || "-")}</td>
+          </tr>
+        `).join("");
 
       const totalsByDay = {};
       const totalsByWeek = {};
@@ -1504,30 +1612,39 @@
         }
       });
 
-      doc.setFontSize(13);
-      doc.text("Totaux", 14, y);
-      y += 8;
-      doc.setFontSize(10);
+      const dayHtml = Object.keys(totalsByDay).sort().map(k => `<li>${safeText(formatDateFR(k))} : ${totalsByDay[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
+      const weekHtml = Object.keys(totalsByWeek).sort().map(k => `<li>${safeText(k)} : ${totalsByWeek[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
+      const monthHtml = Object.keys(totalsByMonth).sort().map(k => `<li>${safeText(k)} : ${totalsByMonth[k]} g</li>`).join("") || "<li>Aucune donnée</li>";
 
-      Object.keys(totalsByDay).sort().forEach(k => {
-        if (y > 280) { doc.addPage(); y = 20; }
-        doc.text(`Jour ${formatDateFR(k)} : ${totalsByDay[k]} g`, 14, y);
-        y += 6;
-      });
+      const html = `
+        <div class="print-page">
+          <h1>Tableau nourrissage</h1>
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Heure</th>
+                <th>Oiseau</th>
+                <th>Nourriture</th>
+                <th>Quantité</th>
+                <th>Remarques</th>
+              </tr>
+            </thead>
+            <tbody>${rows || `<tr><td colspan="6">Aucune donnée</td></tr>`}</tbody>
+          </table>
 
-      Object.keys(totalsByWeek).sort().forEach(k => {
-        if (y > 280) { doc.addPage(); y = 20; }
-        doc.text(`Semaine ${k} : ${totalsByWeek[k]} g`, 14, y);
-        y += 6;
-      });
+          <h2 style="margin-top:20px;">Totaux jour</h2>
+          <ul>${dayHtml}</ul>
 
-      Object.keys(totalsByMonth).sort().forEach(k => {
-        if (y > 280) { doc.addPage(); y = 20; }
-        doc.text(`Mois ${k} : ${totalsByMonth[k]} g`, 14, y);
-        y += 6;
-      });
+          <h2>Totaux semaine</h2>
+          <ul>${weekHtml}</ul>
 
-      doc.save("tableau-nourrissage.pdf");
+          <h2>Totaux mois</h2>
+          <ul>${monthHtml}</ul>
+        </div>
+      `;
+
+      imprimerContenu(html);
     }
 
     if ("serviceWorker" in navigator) {
