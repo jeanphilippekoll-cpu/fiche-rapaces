@@ -420,26 +420,54 @@
           <input type="number" id="oiseauPoids" placeholder="Poids en grammes">
         </div>
 
-        <div>
-          <label>Particularités</label>
-          <input type="text" id="oiseauParticularites" placeholder="Particularités">
+       <div class="grid-2">
+  <div>
+    <label>Nom</label>
+    <input type="text" id="oiseauNom" placeholder="Nom de l’oiseau">
 
-          <label>Notes</label>
-          <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+    <label>Numéro d’ID</label>
+    <input type="text" id="oiseauIdNumber" placeholder="Numéro d’identification">
 
-          <label>Photo de l’oiseau</label>
-          <input type="file" id="oiseauPhoto" accept="image/*">
+    <label>Numéro CITES</label>
+    <input type="text" id="oiseauCites" placeholder="Numéro CITES">
 
-          <label>Documents de l’oiseau</label>
-          <input type="file" id="oiseauDocuments" multiple>
+    <label>Espèce</label>
+    <input type="text" id="oiseauEspece" placeholder="Espèce">
 
-          <div class="top-actions" style="margin-top:14px;">
-            <button class="btn" onclick="ajouterOuModifierOiseau()">Enregistrer l’oiseau</button>
-            <button class="btn btn-secondary" onclick="annulerEditionOiseau()">Annuler édition</button>
-          </div>
-        </div>
-      </div>
+    <label>Sexe</label>
+    <select id="oiseauSexe">
+      <option value="">Choisir</option>
+      <option>Mâle</option>
+      <option>Femelle</option>
+      <option>Inconnu</option>
+    </select>
 
+    <label>Âge / année</label>
+    <input type="text" id="oiseauAge" placeholder="Âge ou année">
+
+    <label>Poids actuel (g)</label>
+    <input type="number" id="oiseauPoids" placeholder="Poids en grammes">
+  </div>
+
+  <div>
+    <label>Particularités</label>
+    <input type="text" id="oiseauParticularites" placeholder="Particularités">
+
+    <label>Notes</label>
+    <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+
+    <label>Photo de l’oiseau</label>
+    <input type="file" id="oiseauPhoto" accept="image/*">
+
+    <label>Documents de l’oiseau</label>
+    <input type="file" id="oiseauDocuments" multiple>
+
+    <div class="top-actions" style="margin-top:14px;">
+      <button class="btn" onclick="ajouterOuModifierOiseau()">Enregistrer l’oiseau</button>
+      <button class="btn btn-secondary" onclick="annulerEditionOiseau()">Annuler édition</button>
+    </div>
+  </div>
+</div> 
       <input type="hidden" id="oiseauEditIndex" value="">
 
       <div id="listeOiseaux"></div>
