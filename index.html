@@ -352,7 +352,7 @@
     <div class="header">
       <div>
         <h1>Fiche Rapaces</h1>
-        <p class="muted">Accueil, encodage, oiseaux, documents et nourrissage dans une seule application.</p>
+        <p class="muted">Application synchronisée Firebase.</p>
       </div>
       <div class="nav">
         <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
@@ -365,14 +365,33 @@
 
     <section id="section-accueil" class="section active">
       <h2>Accueil</h2>
+
       <div class="grid">
         <div class="card-mini">
           <h3>Résumé</h3>
           <div id="resumeBadges"></div>
         </div>
+
         <div class="card-mini">
-          <h3>Sauvegarde</h3>
-          <p class="muted">Les données sont stockées localement sur l’appareil.</p>
+          <h3>Connexion Cloud</h3>
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="Email">
+
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="Mot de passe">
+
+          <div class="small-actions">
+            <button class="btn" onclick="loginFirebase()">Connexion</button>
+            <button class="btn btn-secondary" onclick="registerFirebase()">Créer compte</button>
+            <button class="btn btn-danger" onclick="logoutFirebase()">Déconnexion</button>
+          </div>
+
+          <p id="loginStatus" class="muted">Non connecté</p>
+        </div>
+
+        <div class="card-mini">
+          <h3>Sauvegarde locale</h3>
+          <p class="muted">Tu peux garder une copie locale en plus de Firebase.</p>
           <div class="small-actions">
             <button class="btn btn-secondary" onclick="exporterJSON()">Exporter JSON</button>
             <label class="btn btn-blue" style="display:inline-block;">
@@ -381,6 +400,7 @@
             </label>
           </div>
         </div>
+
         <div class="card-mini">
           <h3>Exports PDF</h3>
           <div class="small-actions">
@@ -579,13 +599,41 @@
       </div>
     </section>
 
-    <div class="footer-note">Fiche Rapaces — version complète hors ligne</div>
+    <div class="footer-note">Fiche Rapaces — synchronisée Firebase</div>
   </div>
 
   <div id="printArea"></div>
 
-  <script>
-    const PIN_CODE = "0212";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+      authDomain: "fiche-rapaces.firebaseapp.com",
+      projectId: "fiche-rapaces",
+      storageBucket: "fiche-rapaces.firebasestorage.app",
+      messagingSenderId: "881543403206",
+      appId: "1:881543403206:web:17915a78ddbbde9a1929c7",
+      measurementId: "G-J5VVJY05QD"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
 
     const FOOD_OPTIONS = [
       "Poussin",
@@ -601,6 +649,10 @@
       documents: [],
       nourrissage: []
     };
+
+    let currentUserId = null;
+    let unsubscribeSnapshot = null;
+    let isApplyingRemoteUpdate = false;
 
     function safeText(v) {
       return (v ?? "").toString()
@@ -695,6 +747,22 @@
       }));
     }
 
+    async function saveToFirebase() {
+      if (!currentUserId || isApplyingRemoteUpdate) return;
+
+      try {
+        await setDoc(doc(db, "users", currentUserId), {
+          encodages: appData.encodages,
+          oiseaux: appData.oiseaux,
+          documents: appData.documents,
+          nourrissage: appData.nourrissage,
+          updatedAt: Date.now()
+        });
+      } catch (e) {
+        console.log("Erreur sauvegarde Firebase :", e);
+      }
+    }
+
     function sauvegarder() {
       localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
       mettreResumeAJour();
@@ -702,9 +770,23 @@
       populateFoodSelects();
       afficherStatsNourrissage();
       afficherCalendrierNourrissage();
+      saveToFirebase();
     }
 
-    function chargerDonnees() {
+    function renderAll() {
+      normalizeData();
+      mettreResumeAJour();
+      populateBirdSelects();
+      populateFoodSelects();
+      afficherEncodages();
+      afficherOiseaux();
+      afficherDocuments();
+      afficherNourrissage();
+      afficherStatsNourrissage();
+      afficherCalendrierNourrissage();
+    }
+
+    async function chargerDonnees() {
       const saved = localStorage.getItem("ficheRapacesData");
       if (saved) {
         try {
@@ -715,25 +797,50 @@
       }
 
       normalizeData();
-      populateFoodSelects();
-      populateBirdSelects();
-
       document.getElementById("encDate").value = getTodayStr();
       document.getElementById("nDate").value = getTodayStr();
+      renderAll();
+    }
 
-      afficherEncodages();
-      afficherOiseaux();
-      afficherDocuments();
-      afficherNourrissage();
-      afficherStatsNourrissage();
-      afficherCalendrierNourrissage();
-      mettreResumeAJour();
+    async function loadFromFirebaseOnce() {
+      if (!currentUserId) return;
+      try {
+        const snap = await getDoc(doc(db, "users", currentUserId));
+        if (snap.exists()) {
+          isApplyingRemoteUpdate = true;
+          appData = snap.data();
+          normalizeData();
+          localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
+          renderAll();
+          isApplyingRemoteUpdate = false;
+        } else {
+          await saveToFirebase();
+        }
+      } catch (e) {
+        console.log("Erreur chargement Firebase :", e);
+      }
+    }
+
+    function startRealtimeSync() {
+      if (!currentUserId) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      unsubscribeSnapshot = onSnapshot(doc(db, "users", currentUserId), (snap) => {
+        if (snap.exists()) {
+          isApplyingRemoteUpdate = true;
+          appData = snap.data();
+          normalizeData();
+          localStorage.setItem("ficheRapacesData", JSON.stringify(appData));
+          renderAll();
+          isApplyingRemoteUpdate = false;
+        }
+      });
     }
 
     function verifierPIN() {
       const pin = document.getElementById("pinInput").value;
       const error = document.getElementById("pinError");
-      if (pin === PIN_CODE) {
+      if (pin === "0212") {
         sessionStorage.setItem("rapaces_pin_ok", "oui");
         document.getElementById("pinOverlay").classList.add("hidden");
         document.getElementById("appContent").classList.remove("hidden");
@@ -1092,13 +1199,11 @@
       const width = right - left;
       const height = bottom - top;
 
-      ctx.strokeStyle = "#d9ccb8";
-      ctx.lineWidth = 1;
-
       ctx.beginPath();
       ctx.moveTo(left, top);
       ctx.lineTo(left, bottom);
       ctx.lineTo(right, bottom);
+      ctx.strokeStyle = "#d9ccb8";
       ctx.stroke();
 
       if (data.length === 0) {
@@ -1128,9 +1233,7 @@
       }
 
       const points = data.map((d, i) => {
-        const x = data.length === 1
-          ? left + width / 2
-          : left + (i * width / (data.length - 1));
+        const x = data.length === 1 ? left + width / 2 : left + (i * width / (data.length - 1));
         const y = bottom - ((Number(d.poids) - min) / range) * height;
         return { x, y, date: d.date, poids: Number(d.poids) };
       });
@@ -1486,10 +1589,7 @@
           appData = JSON.parse(reader.result);
           normalizeData();
           sauvegarder();
-          afficherEncodages();
-          afficherOiseaux();
-          afficherDocuments();
-          afficherNourrissage();
+          renderAll();
           alert("Import réussi.");
         } catch (e) {
           alert("Fichier JSON invalide.");
@@ -1647,6 +1747,64 @@
       imprimerContenu(html);
     }
 
+    async function loginFirebase() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        alert("Entre email et mot de passe.");
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Erreur connexion : " + (e.message || ""));
+      }
+    }
+
+    async function registerFirebase() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      if (!email || !password) {
+        alert("Entre email et mot de passe.");
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Erreur création compte : " + (e.message || ""));
+      }
+    }
+
+    async function logoutFirebase() {
+      try {
+        await signOut(auth);
+      } catch (e) {
+        alert("Erreur déconnexion.");
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const status = document.getElementById("loginStatus");
+
+      if (user) {
+        currentUserId = user.uid;
+        status.textContent = "Connecté : " + user.email;
+        await loadFromFirebaseOnce();
+        startRealtimeSync();
+      } else {
+        currentUserId = null;
+        status.textContent = "Non connecté";
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+      }
+    });
+
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch((err) => {
@@ -1658,6 +1816,32 @@
     document.getElementById("pinInput").addEventListener("keypress", function(e) {
       if (e.key === "Enter") verifierPIN();
     });
+
+    window.verifierPIN = verifierPIN;
+    window.showSection = showSection;
+    window.viderFormulaireEncodage = viderFormulaireEncodage;
+    window.ajouterEncodage = ajouterEncodage;
+    window.supprimerEncodage = supprimerEncodage;
+    window.ajouterOuModifierOiseau = ajouterOuModifierOiseau;
+    window.annulerEditionOiseau = annulerEditionOiseau;
+    window.editerOiseau = editerOiseau;
+    window.supprimerOiseau = supprimerOiseau;
+    window.supprimerDocumentOiseau = supprimerDocumentOiseau;
+    window.supprimerPhotoOiseau = supprimerPhotoOiseau;
+    window.ajouterPoidsOiseau = ajouterPoidsOiseau;
+    window.ajouterDocument = ajouterDocument;
+    window.supprimerDocument = supprimerDocument;
+    window.supprimerFichierDocument = supprimerFichierDocument;
+    window.ajouterLigneNourrissage = ajouterLigneNourrissage;
+    window.supprimerNourrissage = supprimerNourrissage;
+    window.exporterJSON = exporterJSON;
+    window.importerJSON = importerJSON;
+    window.imprimerFicheOiseau = imprimerFicheOiseau;
+    window.imprimerToutesFichesOiseaux = imprimerToutesFichesOiseaux;
+    window.imprimerNourrissagePDF = imprimerNourrissagePDF;
+    window.loginFirebase = loginFirebase;
+    window.registerFirebase = registerFirebase;
+    window.logoutFirebase = logoutFirebase;
 
     chargerPIN();
     chargerDonnees();
