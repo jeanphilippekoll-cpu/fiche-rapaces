@@ -1,10 +1,10 @@
-const CACHE_NAME = "rapaces-v2";
+const CACHE_NAME = "rapaces-v3";
 
 const FILES_TO_CACHE = [
   "/fiche-rapaces/",
   "/fiche-rapaces/index.html",
   "/fiche-rapaces/style.css",
-  "/fiche-rapaces/app.js",
+  "/fiche-rapaces/app.js?v=3",
   "/fiche-rapaces/icon.png",
   "/fiche-rapaces/apple-touch-icon.png",
   "/fiche-rapaces/manifest.json"
