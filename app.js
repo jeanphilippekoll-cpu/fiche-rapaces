@@ -1,0 +1,1522 @@
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject, uploadString } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+      authDomain: "fiche-rapaces.firebaseapp.com",
+      projectId: "fiche-rapaces",
+      storageBucket: "fiche-rapaces.firebasestorage.app",
+      messagingSenderId: "881543403206",
+      appId: "1:881543403206:web:17915a78ddbbde9a1929c7",
+      measurementId: "G-J5VVJY05QD"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getFirestore(firebaseApp);
+    const storage = getStorage(firebaseApp);
+
+    const FOOD_OPTIONS = ["Poussin", "Caille", "Pigeon", "Lapin", "Poisson", "Souris"];
+    const POUSSINS_PAR_BOITE = 225;
+
+    const MAX_PHOTO_SIZE = 5 * 1024 * 1024;
+    const MAX_DOC_SIZE = 10 * 1024 * 1024;
+    const MAX_DOC_FILES_PER_ADD = 10;
+
+    let appData = {
+      encodages: [],
+      oiseaux: [],
+      documents: [],
+      nourrissage: [],
+      stock: { poussin:0, caille:0, pigeon:0, lapin:0, poisson:0, souris:0 }
+    };
+
+    let currentUserId = null;
+    let unsubscribeSnapshot = null;
+    let isApplyingRemoteUpdate = false;
+    let isMigratingLegacyFiles = false;
+
+    function safeText(v) {
+      return (v ?? "").toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function makeId() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    function formatDateFR(dateStr) {
+      if (!dateStr) return "-";
+      const d = new Date(dateStr + "T00:00:00");
+      return isNaN(d) ? dateStr : d.toLocaleDateString("fr-BE");
+    }
+
+    function getWeekKey(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      if (isNaN(d)) return "";
+      const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      const dayNum = date.getUTCDay() || 7;
+      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+      const weekNum = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+      return `${date.getUTCFullYear()}-S${String(weekNum).padStart(2, "0")}`;
+    }
+
+    function getMonthKey(dateStr) {
+      return dateStr ? dateStr.slice(0, 7) : "";
+    }
+
+    function getTodayStr() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function sanitizeFileName(name) {
+      return (name || "fichier")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^\w.\-]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+    }
+
+    function buildStoragePath(baseFolder, fileName) {
+      return `${baseFolder}/${Date.now()}_${makeId()}_${sanitizeFileName(fileName)}`;
+    }
+
+    function getRenderableFileUrl(fileMeta) {
+      return fileMeta?.url || fileMeta?.data || "";
+    }
+
+    function isLegacyDataFile(fileMeta) {
+      return !!(fileMeta && typeof fileMeta.data === "string" && fileMeta.data.startsWith("data:") && !fileMeta.url);
+    }
+
+    function normalizeStoredFile(fileMeta) {
+      if (!fileMeta) return null;
+      return {
+        id: fileMeta.id || makeId(),
+        name: fileMeta.name || "",
+        type: fileMeta.type || "application/octet-stream",
+        size: Number(fileMeta.size || 0),
+        url: fileMeta.url || "",
+        storagePath: fileMeta.storagePath || "",
+        uploadedAt: fileMeta.uploadedAt || Date.now(),
+        data: fileMeta.data || ""
+      };
+    }
+
+    function serializeStoredFile(fileMeta) {
+      if (!fileMeta) return null;
+      const compact = {
+        id: fileMeta.id || makeId(),
+        name: fileMeta.name || "",
+        type: fileMeta.type || "application/octet-stream",
+        size: Number(fileMeta.size || 0),
+        url: fileMeta.url || "",
+        storagePath: fileMeta.storagePath || "",
+        uploadedAt: fileMeta.uploadedAt || Date.now()
+      };
+
+      if (!compact.url && fileMeta.data) {
+        compact.data = fileMeta.data;
+      }
+
+      return compact;
+    }
+
+    function getSerializableAppData() {
+      return {
+        encodages: Array.isArray(appData.encodages) ? appData.encodages : [],
+        oiseaux: (Array.isArray(appData.oiseaux) ? appData.oiseaux : []).map(o => ({
+          id: o.id || makeId(),
+          nom: o.nom || "",
+          idNumber: o.idNumber || "",
+          cites: o.cites || "",
+          espece: o.espece || "",
+          sexe: o.sexe || "",
+          age: o.age || "",
+          poidsActuel: o.poidsActuel || "",
+          particularites: o.particularites || "",
+          notes: o.notes || "",
+          photo: serializeStoredFile(o.photo),
+          documents: Array.isArray(o.documents) ? o.documents.map(serializeStoredFile).filter(Boolean) : [],
+          historiquePoids: Array.isArray(o.historiquePoids) ? o.historiquePoids : []
+        })),
+        documents: (Array.isArray(appData.documents) ? appData.documents : []).map(d => ({
+          id: d.id || makeId(),
+          titre: d.titre || "",
+          type: d.type || "",
+          description: d.description || "",
+          fichiers: Array.isArray(d.fichiers) ? d.fichiers.map(serializeStoredFile).filter(Boolean) : []
+        })),
+        nourrissage: Array.isArray(appData.nourrissage) ? appData.nourrissage : [],
+        stock: {
+          poussin: Number(appData.stock?.poussin || 0),
+          caille: Number(appData.stock?.caille || 0),
+          pigeon: Number(appData.stock?.pigeon || 0),
+          lapin: Number(appData.stock?.lapin || 0),
+          poisson: Number(appData.stock?.poisson || 0),
+          souris: Number(appData.stock?.souris || 0)
+        },
+        updatedAt: Date.now()
+      };
+    }
+
+    function hasPendingLegacyFiles() {
+      for (const bird of (appData.oiseaux || [])) {
+        if (isLegacyDataFile(bird.photo)) return true;
+        for (const docItem of (bird.documents || [])) {
+          if (isLegacyDataFile(docItem)) return true;
+        }
+      }
+      for (const docItem of (appData.documents || [])) {
+        for (const fileMeta of (docItem.fichiers || [])) {
+          if (isLegacyDataFile(fileMeta)) return true;
+        }
+      }
+      return false;
+    }
+
+    function safeLocalSave() {
+      try {
+        localStorage.setItem("ficheRapacesData", JSON.stringify(getSerializableAppData()));
+      } catch (e) {
+        console.log("Erreur sauvegarde locale :", e);
+      }
+    }
+
+    async function saveToFirebase() {
+      if (!currentUserId || isApplyingRemoteUpdate || isMigratingLegacyFiles) return;
+      if (hasPendingLegacyFiles()) {
+        console.log("Migration des anciens fichiers en attente, sauvegarde Firebase reportée.");
+        return;
+      }
+      try {
+        await setDoc(doc(db, "users", currentUserId), getSerializableAppData());
+      } catch (e) {
+        console.log("Erreur sauvegarde Firebase :", e);
+      }
+    }
+
+    function normalizeData() {
+      if (!appData.encodages) appData.encodages = [];
+      if (!appData.oiseaux) appData.oiseaux = [];
+      if (!appData.documents) appData.documents = [];
+      if (!appData.nourrissage) appData.nourrissage = [];
+      if (!appData.stock) appData.stock = { poussin:0, caille:0, pigeon:0, lapin:0, poisson:0, souris:0 };
+
+      appData.oiseaux = appData.oiseaux.map(o => ({
+        id: o.id || makeId(),
+        nom: o.nom || "",
+        idNumber: o.idNumber || "",
+        cites: o.cites || "",
+        espece: o.espece || "",
+        sexe: o.sexe || "",
+        age: o.age || "",
+        poidsActuel: o.poidsActuel || o.poids || "",
+        particularites: o.particularites || "",
+        notes: o.notes || "",
+        photo: normalizeStoredFile(o.photo),
+        documents: Array.isArray(o.documents) ? o.documents.map(normalizeStoredFile).filter(Boolean) : [],
+        historiquePoids: Array.isArray(o.historiquePoids) ? o.historiquePoids : []
+      }));
+
+      appData.documents = appData.documents.map(d => ({
+        id: d.id || makeId(),
+        titre: d.titre || "",
+        type: d.type || "",
+        description: d.description || "",
+        fichiers: Array.isArray(d.fichiers) ? d.fichiers.map(normalizeStoredFile).filter(Boolean) : []
+      }));
+
+      appData.encodages = appData.encodages.map(e => ({
+        id: e.id || makeId(),
+        date: e.date || "",
+        nom: e.nom || "",
+        espece: e.espece || "",
+        poids: e.poids || "",
+        nourriture: e.nourriture === "Sous caille" ? "Caille" : (e.nourriture || ""),
+        etat: e.etat || "",
+        lieu: e.lieu || "",
+        observations: e.observations || ""
+      }));
+
+      appData.nourrissage = appData.nourrissage.map(n => ({
+        id: n.id || makeId(),
+        date: n.date || "",
+        heure: n.heure || "",
+        oiseau: n.oiseau || "",
+        nourriture: n.nourriture === "Sous caille" ? "Caille" : (n.nourriture || ""),
+        quantite: n.quantite || "",
+        remarques: n.remarques || ""
+      }));
+
+      appData.stock = {
+        poussin: Number(appData.stock.poussin || 0),
+        caille: Number(appData.stock.caille || 0),
+        pigeon: Number(appData.stock.pigeon || 0),
+        lapin: Number(appData.stock.lapin || 0),
+        poisson: Number(appData.stock.poisson || 0),
+        souris: Number(appData.stock.souris || 0)
+      };
+    }
+
+    function sauvegarder() {
+      safeLocalSave();
+      mettreResumeAJour();
+      populateBirdSelects();
+      populateFoodSelects();
+      afficherStatsNourrissage();
+      afficherCalendrierNourrissage();
+      afficherStock();
+      saveToFirebase();
+    }
+
+    function renderAll() {
+      normalizeData();
+      mettreResumeAJour();
+      populateBirdSelects();
+      populateFoodSelects();
+      afficherEncodages();
+      afficherOiseaux();
+      afficherDocuments();
+      afficherStatsNourrissage();
+      afficherCalendrierNourrissage();
+      afficherStock();
+    }
+
+    async function uploadFileToStorage(file, baseFolder) {
+      const storagePath = buildStoragePath(baseFolder, file.name);
+      const storageRef = ref(storage, storagePath);
+
+      await uploadBytes(storageRef, file, {
+        contentType: file.type || "application/octet-stream"
+      });
+
+      const url = await getDownloadURL(storageRef);
+
+      return {
+        id: makeId(),
+        name: file.name,
+        type: file.type || "application/octet-stream",
+        size: Number(file.size || 0),
+        url,
+        storagePath,
+        uploadedAt: Date.now(),
+        data: ""
+      };
+    }
+
+    async function uploadDataUrlToStorage(dataUrl, originalName, type, baseFolder, existingId = "") {
+      const storagePath = buildStoragePath(baseFolder, originalName || "legacy-file");
+      const storageRef = ref(storage, storagePath);
+
+      await uploadString(storageRef, dataUrl, "data_url", {
+        contentType: type || "application/octet-stream"
+      });
+
+      const url = await getDownloadURL(storageRef);
+
+      return {
+        id: existingId || makeId(),
+        name: originalName || "fichier",
+        type: type || "application/octet-stream",
+        size: 0,
+        url,
+        storagePath,
+        uploadedAt: Date.now(),
+        data: ""
+      };
+    }
+
+    async function deleteFileFromStorageIfPossible(fileMeta) {
+      if (!fileMeta?.storagePath) return;
+      try {
+        await deleteObject(ref(storage, fileMeta.storagePath));
+      } catch (e) {
+        console.log("Suppression Storage impossible ou déjà faite :", e);
+      }
+    }
+
+    function validateSelectedFiles(files, maxSize, label) {
+      if (files.length > MAX_DOC_FILES_PER_ADD) {
+        throw new Error(`Trop de fichiers sélectionnés pour ${label}. Maximum ${MAX_DOC_FILES_PER_ADD}.`);
+      }
+      for (const file of files) {
+        if (file.size > maxSize) {
+          throw new Error(`Le fichier "${file.name}" dépasse la limite autorisée pour ${label}.`);
+        }
+      }
+    }
+
+    function getSelectedFiles(inputId) {
+      return Array.from(document.getElementById(inputId).files || []);
+    }
+
+    async function migrateLegacyFilesToStorage() {
+      if (isMigratingLegacyFiles || !hasPendingLegacyFiles()) return;
+      isMigratingLegacyFiles = true;
+
+      try {
+        let changed = false;
+
+        for (const bird of appData.oiseaux) {
+          if (isLegacyDataFile(bird.photo)) {
+            bird.photo = await uploadDataUrlToStorage(
+              bird.photo.data,
+              bird.photo.name || `${bird.nom || "oiseau"}_photo.jpg`,
+              bird.photo.type || "image/jpeg",
+              `birds/${bird.id}/photos`,
+              bird.photo.id
+            );
+            changed = true;
+          }
+
+          if (Array.isArray(bird.documents)) {
+            const migratedDocs = [];
+            for (const fileMeta of bird.documents) {
+              if (isLegacyDataFile(fileMeta)) {
+                const uploaded = await uploadDataUrlToStorage(
+                  fileMeta.data,
+                  fileMeta.name || "document",
+                  fileMeta.type || "application/octet-stream",
+                  `birds/${bird.id}/documents`,
+                  fileMeta.id
+                );
+                migratedDocs.push(uploaded);
+                changed = true;
+              } else {
+                migratedDocs.push(normalizeStoredFile(fileMeta));
+              }
+            }
+            bird.documents = migratedDocs.filter(Boolean);
+          }
+        }
+
+        for (const docItem of appData.documents) {
+          if (Array.isArray(docItem.fichiers)) {
+            const migratedFiles = [];
+            for (const fileMeta of docItem.fichiers) {
+              if (isLegacyDataFile(fileMeta)) {
+                const uploaded = await uploadDataUrlToStorage(
+                  fileMeta.data,
+                  fileMeta.name || "document",
+                  fileMeta.type || "application/octet-stream",
+                  `documents/${docItem.id}/files`,
+                  fileMeta.id
+                );
+                migratedFiles.push(uploaded);
+                changed = true;
+              } else {
+                migratedFiles.push(normalizeStoredFile(fileMeta));
+              }
+            }
+            docItem.fichiers = migratedFiles.filter(Boolean);
+          }
+        }
+
+        if (changed) {
+          safeLocalSave();
+          renderAll();
+          await saveToFirebase();
+        }
+      } catch (e) {
+        console.log("Migration des anciens fichiers impossible :", e);
+      } finally {
+        isMigratingLegacyFiles = false;
+      }
+    }
+
+    async function chargerDonnees() {
+      const saved = localStorage.getItem("ficheRapacesData");
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+        } catch (e) {
+          console.log("Erreur lecture locale", e);
+        }
+      }
+
+      normalizeData();
+      document.getElementById("encDate").value = getTodayStr();
+      renderAll();
+      migrateLegacyFilesToStorage();
+    }
+
+    async function loadFromFirebaseOnce() {
+      if (!currentUserId) return;
+      try {
+        const snap = await getDoc(doc(db, "users", currentUserId));
+        if (snap.exists()) {
+          isApplyingRemoteUpdate = true;
+          appData = snap.data();
+          normalizeData();
+          safeLocalSave();
+          renderAll();
+          isApplyingRemoteUpdate = false;
+          await migrateLegacyFilesToStorage();
+        } else {
+          await saveToFirebase();
+        }
+      } catch (e) {
+        console.log("Erreur chargement Firebase :", e);
+      }
+    }
+
+    function startRealtimeSync() {
+      if (!currentUserId) return;
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+      unsubscribeSnapshot = onSnapshot(doc(db, "users", currentUserId), (snap) => {
+        if (snap.exists()) {
+          isApplyingRemoteUpdate = true;
+          appData = snap.data();
+          normalizeData();
+          safeLocalSave();
+          renderAll();
+          isApplyingRemoteUpdate = false;
+          migrateLegacyFilesToStorage();
+        }
+      });
+    }
+
+    function verifierPIN() {
+      const pin = document.getElementById("pinInput").value;
+      const error = document.getElementById("pinError");
+      if (pin === "0212") {
+        sessionStorage.setItem("rapaces_pin_ok", "oui");
+        document.getElementById("pinOverlay").classList.add("hidden");
+        document.getElementById("appContent").classList.remove("hidden");
+        error.textContent = "";
+      } else {
+        error.textContent = "Code incorrect.";
+      }
+    }
+
+    function chargerPIN() {
+      if (sessionStorage.getItem("rapaces_pin_ok") === "oui") {
+        document.getElementById("pinOverlay").classList.add("hidden");
+        document.getElementById("appContent").classList.remove("hidden");
+      }
+    }
+
+    function showSection(section) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+      document.getElementById("section-" + section).classList.add("active");
+      document.getElementById("btn-" + section).classList.add("active");
+    }
+
+    function mettreResumeAJour() {
+      document.getElementById("resumeBadges").innerHTML = `
+        <span class="badge">${appData.oiseaux.length} oiseau(x)</span>
+        <span class="badge">${appData.documents.length} document(s)</span>
+        <span class="badge">${appData.encodages.length} fiche(s) encodage</span>
+        <span class="badge">${appData.nourrissage.length} ligne(s) nourrissage</span>`;
+    }
+
+    function populateFoodSelects() {
+      ["encNourriture", "feedFood"].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Choisir</option>' + FOOD_OPTIONS.map(f => `<option value="${safeText(f)}">${safeText(f)}</option>`).join("");
+        if (FOOD_OPTIONS.includes(current)) sel.value = current;
+      });
+    }
+
+    function populateBirdSelects() {
+      const sel = document.getElementById("encNom");
+      if (!sel) return;
+      const current = sel.value;
+      sel.innerHTML = '<option value="">Choisir un oiseau</option>' + appData.oiseaux.map(o => `<option value="${safeText(o.nom)}">${safeText(o.nom)}</option>`).join("");
+      if (appData.oiseaux.some(o => o.nom === current)) sel.value = current;
+    }
+
+    function viderFormulaireEncodage() {
+      document.getElementById("encDate").value = getTodayStr();
+      document.getElementById("encNom").value = "";
+      document.getElementById("encEspece").value = "";
+      document.getElementById("encPoids").value = "";
+      document.getElementById("encNourriture").value = "";
+      document.getElementById("encEtat").value = "";
+      document.getElementById("encLieu").value = "";
+      document.getElementById("encObs").value = "";
+    }
+
+    function updateBirdWeightFromEncodage(nom, poids, date) {
+      if (!nom || !poids) return;
+      const bird = appData.oiseaux.find(o => o.nom === nom);
+      if (!bird) return;
+      const value = Number(poids);
+      if (!Number.isFinite(value) || value <= 0) return;
+      bird.poidsActuel = value;
+      bird.historiquePoids.push({ id: makeId(), date: date || getTodayStr(), poids: value });
+      bird.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    }
+
+    function ajouterEncodage() {
+      const item = {
+        id: makeId(),
+        date: document.getElementById("encDate").value,
+        nom: document.getElementById("encNom").value,
+        espece: document.getElementById("encEspece").value,
+        poids: document.getElementById("encPoids").value,
+        nourriture: document.getElementById("encNourriture").value,
+        etat: document.getElementById("encEtat").value,
+        lieu: document.getElementById("encLieu").value,
+        observations: document.getElementById("encObs").value
+      };
+      if (!item.nom) return alert("Veuillez choisir un oiseau.");
+      appData.encodages.unshift(item);
+      if (item.poids) updateBirdWeightFromEncodage(item.nom, item.poids, item.date);
+      sauvegarder();
+      afficherEncodages();
+      afficherOiseaux();
+      viderFormulaireEncodage();
+    }
+
+    function afficherEncodages() {
+      const liste = document.getElementById("listeEncodage");
+      liste.innerHTML = "";
+      if (!appData.encodages.length) {
+        liste.innerHTML = `<p class="muted">Aucune fiche encodée.</p>`;
+        return;
+      }
+
+      appData.encodages.forEach((e, index) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <strong>${safeText(e.nom)}</strong>
+          <div class="pill">${safeText(formatDateFR(e.date))}</div>
+          ${e.nourriture ? `<div class="pill">${safeText(e.nourriture)}</div>` : ""}
+          ${e.poids ? `<div class="pill">${safeText(e.poids)} g</div>` : ""}
+          <p><strong>Espèce :</strong> ${safeText(e.espece || "-")}</p>
+          <p><strong>État :</strong> ${safeText(e.etat || "-")}</p>
+          <p><strong>Lieu :</strong> ${safeText(e.lieu || "-")}</p>
+          <p><strong>Observations :</strong> ${safeText(e.observations || "-")}</p>
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerEncodage(${index})">Supprimer</button>
+          </div>`;
+        liste.appendChild(div);
+      });
+    }
+
+    function supprimerEncodage(index) {
+      appData.encodages.splice(index, 1);
+      sauvegarder();
+      afficherEncodages();
+    }
+
+    async function ajouterOuModifierOiseau() {
+      try {
+        const editIndex = document.getElementById("oiseauEditIndex").value;
+        const nom = document.getElementById("oiseauNom").value.trim();
+        if (!nom) return alert("Veuillez entrer un nom.");
+
+        const selectedPhoto = document.getElementById("oiseauPhoto").files?.[0] || null;
+        const selectedDocs = getSelectedFiles("oiseauDocuments");
+
+        if (selectedPhoto && selectedPhoto.size > MAX_PHOTO_SIZE) {
+          return alert("La photo dépasse 5 Mo.");
+        }
+        validateSelectedFiles(selectedDocs, MAX_DOC_SIZE, "les documents de l’oiseau");
+
+        const poidsActuel = document.getElementById("oiseauPoids").value;
+        const poidsNum = poidsActuel ? Number(poidsActuel) : null;
+
+        const baseBird = {
+          nom,
+          idNumber: document.getElementById("oiseauIdNumber").value.trim(),
+          cites: document.getElementById("oiseauCites").value.trim(),
+          espece: document.getElementById("oiseauEspece").value.trim(),
+          sexe: document.getElementById("oiseauSexe").value,
+          age: document.getElementById("oiseauAge").value.trim(),
+          poidsActuel: poidsActuel || "",
+          particularites: document.getElementById("oiseauParticularites").value.trim(),
+          notes: document.getElementById("oiseauNotes").value.trim()
+        };
+
+        if (editIndex === "") {
+          const birdId = makeId();
+
+          let photo = null;
+          if (selectedPhoto) {
+            photo = await uploadFileToStorage(selectedPhoto, `birds/${birdId}/photos`);
+          }
+
+          const docs = [];
+          for (const file of selectedDocs) {
+            docs.push(await uploadFileToStorage(file, `birds/${birdId}/documents`));
+          }
+
+          const newBird = {
+            id: birdId,
+            ...baseBird,
+            photo,
+            documents: docs,
+            historiquePoids: []
+          };
+
+          if (poidsNum && Number.isFinite(poidsNum) && poidsNum > 0) {
+            newBird.historiquePoids.push({ id: makeId(), date: getTodayStr(), poids: poidsNum });
+          }
+
+          appData.oiseaux.unshift(newBird);
+        } else {
+          const i = Number(editIndex);
+          const existing = appData.oiseaux[i];
+          if (!existing) return;
+
+          Object.assign(existing, baseBird);
+
+          if (baseBird.poidsActuel) {
+            const current = Number(baseBird.poidsActuel);
+            const alreadySameToday = existing.historiquePoids.some(h => h.date === getTodayStr() && Number(h.poids) === current);
+            if (Number.isFinite(current) && current > 0 && !alreadySameToday) {
+              existing.historiquePoids.push({ id: makeId(), date: getTodayStr(), poids: current });
+              existing.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+            }
+          }
+
+          if (selectedPhoto) {
+            if (existing.photo?.storagePath) {
+              await deleteFileFromStorageIfPossible(existing.photo);
+            }
+            existing.photo = await uploadFileToStorage(selectedPhoto, `birds/${existing.id}/photos`);
+          }
+
+          if (selectedDocs.length) {
+            for (const file of selectedDocs) {
+              existing.documents.push(await uploadFileToStorage(file, `birds/${existing.id}/documents`));
+            }
+          }
+        }
+
+        sauvegarder();
+        afficherOiseaux();
+        annulerEditionOiseau();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de l’enregistrement de l’oiseau : " + (e.message || "erreur inconnue"));
+      }
+    }
+
+    function annulerEditionOiseau() {
+      ["oiseauEditIndex","oiseauNom","oiseauIdNumber","oiseauCites","oiseauEspece","oiseauSexe","oiseauAge","oiseauPoids","oiseauParticularites","oiseauNotes"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      document.getElementById("oiseauPhoto").value = "";
+      document.getElementById("oiseauDocuments").value = "";
+    }
+
+    function editerOiseau(index) {
+      const o = appData.oiseaux[index];
+      if (!o) return;
+      document.getElementById("oiseauEditIndex").value = index;
+      document.getElementById("oiseauNom").value = o.nom || "";
+      document.getElementById("oiseauIdNumber").value = o.idNumber || "";
+      document.getElementById("oiseauCites").value = o.cites || "";
+      document.getElementById("oiseauEspece").value = o.espece || "";
+      document.getElementById("oiseauSexe").value = o.sexe || "";
+      document.getElementById("oiseauAge").value = o.age || "";
+      document.getElementById("oiseauPoids").value = o.poidsActuel || "";
+      document.getElementById("oiseauParticularites").value = o.particularites || "";
+      document.getElementById("oiseauNotes").value = o.notes || "";
+      showSection("oiseaux");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function supprimerOiseau(index) {
+      if (!confirm("Supprimer cet oiseau ?")) return;
+      try {
+        const bird = appData.oiseaux[index];
+        if (!bird) return;
+
+        if (bird.photo?.storagePath) {
+          await deleteFileFromStorageIfPossible(bird.photo);
+        }
+
+        for (const docMeta of (bird.documents || [])) {
+          await deleteFileFromStorageIfPossible(docMeta);
+        }
+
+        const deletedName = bird.nom;
+        appData.oiseaux.splice(index, 1);
+        appData.nourrissage = appData.nourrissage.filter(n => n.oiseau !== deletedName);
+        appData.encodages = appData.encodages.filter(e => e.nom !== deletedName);
+
+        sauvegarder();
+        afficherOiseaux();
+        afficherEncodages();
+        afficherCalendrierNourrissage();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de la suppression de l’oiseau.");
+      }
+    }
+
+    async function supprimerDocumentOiseau(birdIndex, docId) {
+      try {
+        const bird = appData.oiseaux[birdIndex];
+        if (!bird) return;
+        const fileMeta = bird.documents.find(d => d.id === docId);
+        if (fileMeta) {
+          await deleteFileFromStorageIfPossible(fileMeta);
+        }
+        bird.documents = bird.documents.filter(d => d.id !== docId);
+        sauvegarder();
+        afficherOiseaux();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de la suppression du document.");
+      }
+    }
+
+    async function supprimerPhotoOiseau(index) {
+      try {
+        const bird = appData.oiseaux[index];
+        if (!bird?.photo) return;
+        await deleteFileFromStorageIfPossible(bird.photo);
+        bird.photo = null;
+        sauvegarder();
+        afficherOiseaux();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de la suppression de la photo.");
+      }
+    }
+
+    function ajouterPoidsOiseau(index) {
+      const value = prompt("Entrer le nouveau poids en grammes :");
+      if (!value) return;
+      const num = Number(value);
+      if (!Number.isFinite(num) || num <= 0) return alert("Poids invalide.");
+      const bird = appData.oiseaux[index];
+      bird.poidsActuel = num;
+      bird.historiquePoids.push({ id: makeId(), date: getTodayStr(), poids: num });
+      bird.historiquePoids.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      sauvegarder();
+      afficherOiseaux();
+    }
+
+    function dessinerCourbeOiseau(oiseau) {
+      const canvas = document.getElementById("chart-" + oiseau.id);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const data = [...(oiseau.historiquePoids || [])]
+        .filter(x => x.date && Number(x.poids) > 0)
+        .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const left = 60, right = canvas.width - 20, top = 20, bottom = canvas.height - 40;
+      const width = right - left, height = bottom - top;
+
+      ctx.beginPath();
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.strokeStyle = "#d9ccb8";
+      ctx.stroke();
+
+      if (!data.length) {
+        ctx.fillStyle = "#6f5843";
+        ctx.font = "16px Arial";
+        ctx.fillText("Aucune donnée de poids.", left + 20, top + 30);
+        return;
+      }
+
+      const values = data.map(d => Number(d.poids));
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const range = Math.max(max - min, 20);
+
+      for (let i = 0; i < 5; i++) {
+        const y = top + (height / 4) * i;
+        ctx.strokeStyle = "#eee";
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+
+        const labelValue = Math.round(max - (range / 4) * i);
+        ctx.fillStyle = "#6f5843";
+        ctx.font = "12px Arial";
+        ctx.fillText(labelValue + " g", 10, y + 4);
+      }
+
+      const points = data.map((d, i) => ({
+        x: data.length === 1 ? left + width / 2 : left + (i * width / (data.length - 1)),
+        y: bottom - ((Number(d.poids) - min) / range) * height,
+        date: d.date,
+        poids: Number(d.poids)
+      }));
+
+      ctx.strokeStyle = "#789a63";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+
+      points.forEach(p => {
+        ctx.fillStyle = "#5f7c50";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#4f3d2d";
+        ctx.font = "11px Arial";
+        ctx.fillText(formatDateFR(p.date), p.x - 20, bottom + 18);
+        ctx.fillText(p.poids + " g", p.x - 16, p.y - 10);
+      });
+    }
+
+    function afficherOiseaux() {
+      const liste = document.getElementById("listeOiseaux");
+      liste.innerHTML = "";
+
+      if (!appData.oiseaux.length) {
+        liste.innerHTML = `<p class="muted">Aucun oiseau enregistré.</p>`;
+        return;
+      }
+
+      appData.oiseaux.forEach((o, index) => {
+        const photoUrl = getRenderableFileUrl(o.photo);
+        const photoHtml = photoUrl
+          ? `<div class="file-box">
+               <strong>Photo</strong><br>
+               <img class="thumb" src="${photoUrl}" alt="${safeText(o.nom)}">
+               <div class="small-actions">
+                 <a class="btn btn-blue" href="${photoUrl}" target="_blank" rel="noopener">Ouvrir</a>
+                 <button class="btn btn-danger" onclick="supprimerPhotoOiseau(${index})">Supprimer photo</button>
+               </div>
+             </div>`
+          : `<div class="file-box"><span class="muted">Aucune photo.</span></div>`;
+
+        const docsHtml = o.documents.length
+          ? o.documents.map(docMeta => {
+              const fileUrl = getRenderableFileUrl(docMeta);
+              return `<div class="file-box">
+                        <strong>${safeText(docMeta.name)}</strong><br>
+                        <span class="muted">${safeText(docMeta.type || "fichier")} - ${Math.round((docMeta.size || 0)/1024)} Ko</span>
+                        <div class="small-actions">
+                          ${fileUrl ? `<a class="btn btn-blue" href="${fileUrl}" target="_blank" rel="noopener">Ouvrir</a>` : ""}
+                          <button class="btn btn-danger" onclick="supprimerDocumentOiseau(${index}, '${docMeta.id}')">Supprimer</button>
+                        </div>
+                      </div>`;
+            }).join("")
+          : `<div class="file-box"><span class="muted">Aucun document lié.</span></div>`;
+
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <h3>${safeText(o.nom)}</h3>
+          ${o.idNumber ? `<div class="pill">ID : ${safeText(o.idNumber)}</div>` : ""}
+          ${o.cites ? `<div class="pill">CITES : ${safeText(o.cites)}</div>` : ""}
+          <div class="pill">${safeText(o.espece || "Espèce non précisée")}</div>
+          ${o.sexe ? `<div class="pill">${safeText(o.sexe)}</div>` : ""}
+          ${o.age ? `<div class="pill">${safeText(o.age)}</div>` : ""}
+          ${o.poidsActuel ? `<div class="pill">${safeText(o.poidsActuel)} g</div>` : ""}
+          <p><strong>Particularités :</strong> ${safeText(o.particularites || "-")}</p>
+          <p><strong>Notes :</strong> ${safeText(o.notes || "-")}</p>
+          ${photoHtml}
+          <h4 style="margin-top:14px;">Documents de l’oiseau</h4>
+          ${docsHtml}
+          <h4 style="margin-top:14px;">Évolution du poids</h4>
+          <div class="file-box"><canvas class="weight-canvas" id="chart-${safeText(o.id)}" width="900" height="260"></canvas></div>
+          <div class="small-actions">
+            <button class="btn" onclick="editerOiseau(${index})">Modifier</button>
+            <button class="btn btn-secondary" onclick="ajouterPoidsOiseau(${index})">Ajouter poids</button>
+            <button class="btn btn-secondary" onclick="imprimerFicheOiseau(${index})">PDF fiche</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau(${index})">Supprimer</button>
+          </div>`;
+        liste.appendChild(div);
+        setTimeout(() => dessinerCourbeOiseau(o), 0);
+      });
+    }
+
+    async function ajouterDocument() {
+      try {
+        const titre = document.getElementById("docTitre").value.trim();
+        if (!titre) return alert("Veuillez entrer un titre.");
+
+        const selectedFiles = getSelectedFiles("docFichiers");
+        validateSelectedFiles(selectedFiles, MAX_DOC_SIZE, "les documents");
+
+        const docId = makeId();
+        const fichiers = [];
+
+        for (const file of selectedFiles) {
+          fichiers.push(await uploadFileToStorage(file, `documents/${docId}/files`));
+        }
+
+        appData.documents.unshift({
+          id: docId,
+          titre,
+          type: document.getElementById("docType").value.trim(),
+          description: document.getElementById("docDescription").value.trim(),
+          fichiers
+        });
+
+        sauvegarder();
+        afficherDocuments();
+
+        document.getElementById("docTitre").value = "";
+        document.getElementById("docType").value = "";
+        document.getElementById("docDescription").value = "";
+        document.getElementById("docFichiers").value = "";
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de l’ajout du document : " + (e.message || "erreur inconnue"));
+      }
+    }
+
+    async function supprimerDocument(index) {
+      try {
+        const docItem = appData.documents[index];
+        if (!docItem) return;
+
+        for (const fileMeta of (docItem.fichiers || [])) {
+          await deleteFileFromStorageIfPossible(fileMeta);
+        }
+
+        appData.documents.splice(index, 1);
+        sauvegarder();
+        afficherDocuments();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de la suppression du document.");
+      }
+    }
+
+    async function supprimerFichierDocument(docIndex, fileId) {
+      try {
+        const docItem = appData.documents[docIndex];
+        if (!docItem) return;
+
+        const fileMeta = docItem.fichiers.find(f => f.id === fileId);
+        if (fileMeta) {
+          await deleteFileFromStorageIfPossible(fileMeta);
+        }
+
+        docItem.fichiers = docItem.fichiers.filter(f => f.id !== fileId);
+        sauvegarder();
+        afficherDocuments();
+      } catch (e) {
+        console.log(e);
+        alert("Erreur lors de la suppression du fichier.");
+      }
+    }
+
+    function afficherDocuments() {
+      const liste = document.getElementById("listeDocuments");
+      liste.innerHTML = "";
+
+      if (!appData.documents.length) {
+        liste.innerHTML = `<p class="muted">Aucun document enregistré.</p>`;
+        return;
+      }
+
+      appData.documents.forEach((d, index) => {
+        const filesHtml = d.fichiers.length
+          ? d.fichiers.map(fileMeta => {
+              const fileUrl = getRenderableFileUrl(fileMeta);
+              return `<div class="file-box">
+                        <strong>${safeText(fileMeta.name)}</strong><br>
+                        <span class="muted">${safeText(fileMeta.type || "fichier")} - ${Math.round((fileMeta.size || 0)/1024)} Ko</span>
+                        <div class="small-actions">
+                          ${fileUrl ? `<a class="btn btn-blue" href="${fileUrl}" target="_blank" rel="noopener">Ouvrir</a>` : ""}
+                          <button class="btn btn-danger" onclick="supprimerFichierDocument(${index}, '${fileMeta.id}')">Supprimer fichier</button>
+                        </div>
+                      </div>`;
+            }).join("")
+          : `<div class="file-box"><span class="muted">Aucun fichier joint.</span></div>`;
+
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <h3>${safeText(d.titre)}</h3>
+          <div class="pill">${safeText(d.type || "-")}</div>
+          <p>${safeText(d.description || "-")}</p>
+          <h4>Fichiers</h4>
+          ${filesHtml}
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerDocument(${index})">Supprimer document</button>
+          </div>`;
+        liste.appendChild(div);
+      });
+    }
+
+    function calculerTotauxNourrissage() {
+      const today = getTodayStr();
+      const week = getWeekKey(today);
+      const month = getMonthKey(today);
+      let jour = 0, semaine = 0, mois = 0;
+
+      appData.nourrissage.forEach(n => {
+        const q = Number(n.quantite || 0) || 0;
+        if (n.date === today) jour += q;
+        if (getWeekKey(n.date) === week) semaine += q;
+        if (getMonthKey(n.date) === month) mois += q;
+      });
+
+      return { jour, semaine, mois };
+    }
+
+    function afficherStatsNourrissage() {
+      const totals = calculerTotauxNourrissage();
+      document.getElementById("statsNourrissage").innerHTML = `
+        <div class="card-mini"><h4>Total aujourd’hui</h4><p><strong>${totals.jour}</strong> pièce(s)</p></div>
+        <div class="card-mini"><h4>Total cette semaine</h4><p><strong>${totals.semaine}</strong> pièce(s)</p></div>
+        <div class="card-mini"><h4>Total ce mois</h4><p><strong>${totals.mois}</strong> pièce(s)</p></div>`;
+    }
+
+    function getCurrentWeekDates() {
+      const today = new Date();
+      const day = today.getDay() || 7;
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - day + 1);
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        dates.push(d.toISOString().slice(0, 10));
+      }
+      return dates;
+    }
+
+    function openFeedModal(date, birdName, entryId = "") {
+      document.getElementById("feedModal").classList.remove("hidden");
+      document.getElementById("feedEditId").value = entryId;
+      document.getElementById("feedDate").value = date;
+      document.getElementById("feedBird").value = birdName;
+      document.getElementById("feedDeleteBtn").classList.toggle("hidden", !entryId);
+      document.getElementById("feedModalTitle").textContent = entryId ? "Modifier nourrissage" : "Ajouter nourrissage";
+
+      if (entryId) {
+        const item = appData.nourrissage.find(n => n.id === entryId);
+        document.getElementById("feedFood").value = item?.nourriture || "";
+        document.getElementById("feedQty").value = item?.quantite || "";
+        document.getElementById("feedNote").value = item?.remarques || "";
+      } else {
+        document.getElementById("feedFood").value = "";
+        document.getElementById("feedQty").value = "";
+        document.getElementById("feedNote").value = "";
+      }
+    }
+
+    function closeFeedModal() {
+      document.getElementById("feedModal").classList.add("hidden");
+      document.getElementById("feedEditId").value = "";
+    }
+
+    function saveFeedModal() {
+      const id = document.getElementById("feedEditId").value;
+      const date = document.getElementById("feedDate").value;
+      const bird = document.getElementById("feedBird").value;
+      const food = document.getElementById("feedFood").value;
+      const qty = document.getElementById("feedQty").value;
+      const note = document.getElementById("feedNote").value.trim();
+
+      if (!date || !bird || !food) return alert("Date, oiseau et nourriture sont obligatoires.");
+
+      if (id) {
+        const item = appData.nourrissage.find(n => n.id === id);
+        if (item) {
+          item.date = date;
+          item.oiseau = bird;
+          item.nourriture = food;
+          item.quantite = qty;
+          item.remarques = note;
+        }
+      } else {
+        appData.nourrissage.push({
+          id: makeId(),
+          date,
+          heure: "",
+          oiseau: bird,
+          nourriture: food,
+          quantite: qty,
+          remarques: note
+        });
+      }
+
+      sauvegarder();
+      afficherCalendrierNourrissage();
+      closeFeedModal();
+    }
+
+    function deleteFeedFromModal() {
+      const id = document.getElementById("feedEditId").value;
+      if (!id) return;
+      appData.nourrissage = appData.nourrissage.filter(n => n.id !== id);
+      sauvegarder();
+      afficherCalendrierNourrissage();
+      closeFeedModal();
+    }
+
+    function quickDeleteFeed(id) {
+      if (!confirm("Supprimer cette ligne de nourrissage ?")) return;
+      appData.nourrissage = appData.nourrissage.filter(n => n.id !== id);
+      sauvegarder();
+      afficherCalendrierNourrissage();
+    }
+
+    function afficherCalendrierNourrissage() {
+      const body = document.getElementById("calendarNourrissageBody");
+      body.innerHTML = "";
+
+      const weekDates = getCurrentWeekDates();
+      const birds = appData.oiseaux.map(o => o.nom);
+
+      if (!birds.length) {
+        body.innerHTML = `<tr><td colspan="8" class="muted">Aucun oiseau enregistré.</td></tr>`;
+        return;
+      }
+
+      birds.forEach(nom => {
+        const tr = document.createElement("tr");
+        let html = `<td><strong>${safeText(nom)}</strong></td>`;
+
+        weekDates.forEach(date => {
+          const lines = appData.nourrissage.filter(n => n.oiseau === nom && n.date === date);
+          const entries = lines.map(n => `
+            <div class="feed-line">
+              <strong>${safeText(n.nourriture)}</strong><br>
+              ${safeText(n.quantite || "0")} pièce(s)
+              ${n.remarques ? `<br><span class="muted">${safeText(n.remarques)}</span>` : ""}
+              <div class="small-actions">
+                <button class="btn btn-secondary" onclick="openFeedModal('${date}','${safeText(nom)}','${n.id}')">Modifier</button>
+                <button class="btn btn-danger" onclick="quickDeleteFeed('${n.id}')">Supprimer</button>
+              </div>
+            </div>`).join("") || `<div class="muted">Aucun encodage</div>`;
+
+          html += `<td class="calendar-cell"><span class="calendar-day">${safeText(formatDateFR(date))}</span>${entries}<button class="btn" onclick="openFeedModal('${date}','${safeText(nom)}')">+ Ajouter</button></td>`;
+        });
+
+        tr.innerHTML = html;
+        body.appendChild(tr);
+      });
+    }
+
+    function getPoussinBoitesRestantes() {
+      return Number(appData.stock?.poussin || 0) / POUSSINS_PAR_BOITE;
+    }
+
+    function enregistrerStock() {
+      appData.stock.poussin = Number(document.getElementById("stockPoussin").value || 0);
+      appData.stock.caille = Number(document.getElementById("stockCaille").value || 0);
+      appData.stock.pigeon = Number(document.getElementById("stockPigeon").value || 0);
+      appData.stock.lapin = Number(document.getElementById("stockLapin").value || 0);
+      appData.stock.poisson = Number(document.getElementById("stockPoisson").value || 0);
+      appData.stock.souris = Number(document.getElementById("stockSouris").value || 0);
+      sauvegarder();
+      afficherStock();
+    }
+
+    function resetStock() {
+      appData.stock = { poussin:0, caille:0, pigeon:0, lapin:0, poisson:0, souris:0 };
+      sauvegarder();
+      afficherStock();
+    }
+
+    function remplirFormStock() {
+      document.getElementById("stockPoussin").value = appData.stock?.poussin || 0;
+      document.getElementById("stockPoussinBoites").value = getPoussinBoitesRestantes().toFixed(2);
+      document.getElementById("stockCaille").value = appData.stock?.caille || 0;
+      document.getElementById("stockPigeon").value = appData.stock?.pigeon || 0;
+      document.getElementById("stockLapin").value = appData.stock?.lapin || 0;
+      document.getElementById("stockPoisson").value = appData.stock?.poisson || 0;
+      document.getElementById("stockSouris").value = appData.stock?.souris || 0;
+    }
+
+    function calculerUtilisationNourriture() {
+      const today = getTodayStr();
+      const currentWeek = getWeekKey(today);
+      const currentMonth = getMonthKey(today);
+      const result = {
+        Poussin:{jour:0,semaine:0,mois:0},
+        Caille:{jour:0,semaine:0,mois:0},
+        Pigeon:{jour:0,semaine:0,mois:0},
+        Lapin:{jour:0,semaine:0,mois:0},
+        Poisson:{jour:0,semaine:0,mois:0},
+        Souris:{jour:0,semaine:0,mois:0}
+      };
+
+      appData.nourrissage.forEach(n => {
+        const q = Number(n.quantite || 0);
+        const food = n.nourriture;
+        if (!result[food]) return;
+        if (n.date === today) result[food].jour += q;
+        if (getWeekKey(n.date) === currentWeek) result[food].semaine += q;
+        if (getMonthKey(n.date) === currentMonth) result[food].mois += q;
+      });
+
+      return result;
+    }
+
+    function afficherStock() {
+      remplirFormStock();
+      const usage = calculerUtilisationNourriture();
+      const stocks = [
+        { nom: "Poussin", cle: "poussin" },
+        { nom: "Caille", cle: "caille" },
+        { nom: "Pigeon", cle: "pigeon" },
+        { nom: "Lapin", cle: "lapin" },
+        { nom: "Poisson", cle: "poisson" },
+        { nom: "Souris", cle: "souris" }
+      ];
+
+      document.getElementById("resumeStock").innerHTML = stocks.map(item => {
+        const stockActuel = Number(appData.stock?.[item.cle] || 0);
+        const u = usage[item.nom] || { jour: 0, semaine: 0, mois: 0 };
+        const extra = item.nom === "Poussin"
+          ? `<p><strong>Boîtes restantes :</strong> ${(stockActuel / POUSSINS_PAR_BOITE).toFixed(2)} boîte(s)</p>`
+          : "";
+        return `<div class="card-mini">
+                  <h3>${item.nom}</h3>
+                  <p><strong>Stock actuel :</strong> ${stockActuel} pièce(s)</p>
+                  ${extra}
+                  <p><strong>Utilisé aujourd’hui :</strong> ${u.jour} pièce(s)</p>
+                  <p><strong>Utilisé cette semaine :</strong> ${u.semaine} pièce(s)</p>
+                  <p><strong>Utilisé ce mois :</strong> ${u.mois} pièce(s)</p>
+                  <p><strong>Stock restant théorique :</strong> ${stockActuel - u.mois} pièce(s)</p>
+                </div>`;
+      }).join("");
+
+      const boitesRestantes = getPoussinBoitesRestantes();
+      document.getElementById("poussinAlert").innerHTML =
+        boitesRestantes <= 2 && appData.stock.poussin > 0
+          ? `<div class="alert">Alerte : il reste environ ${boitesRestantes.toFixed(2)} boîte(s) de poussins.</div>`
+          : "";
+    }
+
+    function exporterJSON() {
+      const blob = new Blob([JSON.stringify(getSerializableAppData(), null, 2)], {type: "application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "fiche-rapaces-donnees.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importerJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          appData = JSON.parse(reader.result);
+          normalizeData();
+          safeLocalSave();
+          renderAll();
+          await migrateLegacyFilesToStorage();
+          await saveToFirebase();
+          alert("Import réussi.");
+        } catch (e) {
+          alert("Fichier JSON invalide.");
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    function imprimerContenu(html) {
+      const area = document.getElementById("printArea");
+      area.innerHTML = html;
+      window.print();
+      area.innerHTML = "";
+    }
+
+    function imprimerFicheOiseau(index) {
+      const o = appData.oiseaux[index];
+      const hist = (o.historiquePoids || []).length
+        ? o.historiquePoids.sort((a,b) => (a.date || "").localeCompare(b.date || "")).map(h => `<li>${safeText(formatDateFR(h.date))} : ${safeText(h.poids)} g</li>`).join("")
+        : "<li>Aucun historique</li>";
+      const docs = (o.documents || []).length
+        ? o.documents.map(d => `<li>${safeText(d.name)}</li>`).join("")
+        : "<li>Aucun document</li>";
+
+      imprimerContenu(`
+        <div class="print-page">
+          <h1>Fiche oiseau</h1>
+          <h2>${safeText(o.nom)}</h2>
+          <p><strong>Numéro d’ID :</strong> ${safeText(o.idNumber || "-")}</p>
+          <p><strong>Numéro CITES :</strong> ${safeText(o.cites || "-")}</p>
+          <p><strong>Espèce :</strong> ${safeText(o.espece || "-")}</p>
+          <p><strong>Sexe :</strong> ${safeText(o.sexe || "-")}</p>
+          <p><strong>Âge :</strong> ${safeText(o.age || "-")}</p>
+          <p><strong>Poids actuel :</strong> ${safeText(o.poidsActuel || "-")} g</p>
+          <p><strong>Particularités :</strong> ${safeText(o.particularites || "-")}</p>
+          <p><strong>Notes :</strong> ${safeText(o.notes || "-")}</p>
+          <h3>Historique des poids</h3>
+          <ul>${hist}</ul>
+          <h3>Documents liés</h3>
+          <ul>${docs}</ul>
+        </div>`);
+    }
+
+    function imprimerToutesFichesOiseaux() {
+      if (!appData.oiseaux.length) return alert("Aucun oiseau à imprimer.");
+
+      const html = appData.oiseaux.map(o => {
+        const hist = (o.historiquePoids || []).length
+          ? o.historiquePoids.sort((a,b) => (a.date || "").localeCompare(b.date || "")).map(h => `<li>${safeText(formatDateFR(h.date))} : ${safeText(h.poids)} g</li>`).join("")
+          : "<li>Aucun historique</li>";
+        const docs = (o.documents || []).length
+          ? o.documents.map(d => `<li>${safeText(d.name)}</li>`).join("")
+          : "<li>Aucun document</li>";
+
+        return `<div class="print-page">
+                  <h1>Fiche oiseau</h1>
+                  <h2>${safeText(o.nom)}</h2>
+                  <p><strong>Numéro d’ID :</strong> ${safeText(o.idNumber || "-")}</p>
+                  <p><strong>Numéro CITES :</strong> ${safeText(o.cites || "-")}</p>
+                  <p><strong>Espèce :</strong> ${safeText(o.espece || "-")}</p>
+                  <p><strong>Sexe :</strong> ${safeText(o.sexe || "-")}</p>
+                  <p><strong>Âge :</strong> ${safeText(o.age || "-")}</p>
+                  <p><strong>Poids actuel :</strong> ${safeText(o.poidsActuel || "-")} g</p>
+                  <p><strong>Particularités :</strong> ${safeText(o.particularites || "-")}</p>
+                  <p><strong>Notes :</strong> ${safeText(o.notes || "-")}</p>
+                  <h3>Historique des poids</h3>
+                  <ul>${hist}</ul>
+                  <h3>Documents liés</h3>
+                  <ul>${docs}</ul>
+                </div>`;
+      }).join("");
+
+      imprimerContenu(html);
+    }
+
+    function imprimerNourrissagePDF() {
+      const rows = appData.nourrissage.slice()
+        .sort((a,b) => `${a.date}${a.oiseau}`.localeCompare(`${b.date}${b.oiseau}`))
+        .map(n => `<tr>
+                    <td>${safeText(formatDateFR(n.date))}</td>
+                    <td>${safeText(n.oiseau)}</td>
+                    <td>${safeText(n.nourriture)}</td>
+                    <td>${safeText(n.quantite || "-")} pièce(s)</td>
+                    <td>${safeText(n.remarques || "-")}</td>
+                  </tr>`).join("");
+
+      const totals = calculerTotauxNourrissage();
+
+      imprimerContenu(`
+        <div class="print-page">
+          <h1>Tableau nourrissage</h1>
+          <p><strong>Total aujourd’hui :</strong> ${totals.jour} pièce(s)</p>
+          <p><strong>Total cette semaine :</strong> ${totals.semaine} pièce(s)</p>
+          <p><strong>Total ce mois :</strong> ${totals.mois} pièce(s)</p>
+          <table class="print-table">
+            <thead>
+              <tr><th>Date</th><th>Oiseau</th><th>Nourriture</th><th>Quantité</th><th>Remarques</th></tr>
+            </thead>
+            <tbody>${rows || `<tr><td colspan="5">Aucune donnée</td></tr>`}</tbody>
+          </table>
+        </div>`);
+    }
+
+    async function loginFirebase() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      if (!email || !password) return alert("Entre email et mot de passe.");
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Erreur connexion : " + (e.message || ""));
+      }
+    }
+
+    async function registerFirebase() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      if (!email || !password) return alert("Entre email et mot de passe.");
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (e) {
+        alert("Erreur création compte : " + (e.message || ""));
+      }
+    }
+
+    async function logoutFirebase() {
+      try {
+        await signOut(auth);
+      } catch (e) {
+        alert("Erreur déconnexion.");
+      }
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      const status = document.getElementById("loginStatus");
+      if (user) {
+        currentUserId = user.uid;
+        status.textContent = "Connecté : " + user.email;
+        await loadFromFirebaseOnce();
+        startRealtimeSync();
+      } else {
+        currentUserId = null;
+        status.textContent = "Non connecté";
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+      }
+    });
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch((err) => console.log("Service Worker non enregistré :", err));
+      });
+    }
+
+    document.getElementById("pinInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") verifierPIN();
+    });
+
+    window.verifierPIN = verifierPIN;
+    window.showSection = showSection;
+    window.viderFormulaireEncodage = viderFormulaireEncodage;
+    window.ajouterEncodage = ajouterEncodage;
+    window.supprimerEncodage = supprimerEncodage;
+    window.ajouterOuModifierOiseau = ajouterOuModifierOiseau;
+    window.annulerEditionOiseau = annulerEditionOiseau;
+    window.editerOiseau = editerOiseau;
+    window.supprimerOiseau = supprimerOiseau;
+    window.supprimerDocumentOiseau = supprimerDocumentOiseau;
+    window.supprimerPhotoOiseau = supprimerPhotoOiseau;
+    window.ajouterPoidsOiseau = ajouterPoidsOiseau;
+    window.ajouterDocument = ajouterDocument;
+    window.supprimerDocument = supprimerDocument;
+    window.supprimerFichierDocument = supprimerFichierDocument;
+    window.openFeedModal = openFeedModal;
+    window.closeFeedModal = closeFeedModal;
+    window.saveFeedModal = saveFeedModal;
+    window.deleteFeedFromModal = deleteFeedFromModal;
+    window.quickDeleteFeed = quickDeleteFeed;
+    window.enregistrerStock = enregistrerStock;
+    window.resetStock = resetStock;
+    window.exporterJSON = exporterJSON;
+    window.importerJSON = importerJSON;
+    window.imprimerFicheOiseau = imprimerFicheOiseau;
+    window.imprimerToutesFichesOiseaux = imprimerToutesFichesOiseaux;
+    window.imprimerNourrissagePDF = imprimerNourrissagePDF;
+    window.loginFirebase = loginFirebase;
+    window.registerFirebase = registerFirebase;
+    window.logoutFirebase = logoutFirebase;
+
+    chargerPIN();
+    chargerDonnees();
+  
