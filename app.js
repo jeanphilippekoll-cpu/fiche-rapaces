@@ -513,13 +513,35 @@
       document.getElementById("btn-" + section).classList.add("active");
     }
 
-    function mettreResumeAJour() {
-      document.getElementById("resumeBadges").innerHTML = `
-        <span class="badge">${appData.oiseaux.length} oiseau(x)</span>
-        <span class="badge">${appData.documents.length} document(s)</span>
-        <span class="badge">${appData.encodages.length} fiche(s) encodage</span>
-        <span class="badge">${appData.nourrissage.length} ligne(s) nourrissage</span>`;
-    }
+   function mettreResumeAJour() {
+  document.getElementById("resumeBadges").innerHTML = `
+    <span class="badge">${appData.oiseaux.length} oiseau(x)</span>
+    <span class="badge">${appData.documents.length} document(s)</span>
+    <span class="badge">${appData.encodages.length} fiche(s) encodage</span>
+    <span class="badge">${appData.nourrissage.length} ligne(s) nourrissage</span>`;
+
+  const statOiseaux = document.getElementById("statOiseaux");
+  const statDocuments = document.getElementById("statDocuments");
+  const statEncodages = document.getElementById("statEncodages");
+  const statNourrissage = document.getElementById("statNourrissage");
+  const dashboardStockMini = document.getElementById("dashboardStockMini");
+
+  if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length;
+  if (statDocuments) statDocuments.textContent = appData.documents.length;
+  if (statEncodages) statEncodages.textContent = appData.encodages.length;
+  if (statNourrissage) statNourrissage.textContent = appData.nourrissage.length;
+
+  if (dashboardStockMini) {
+    dashboardStockMini.innerHTML = `
+      <div class="mini-item"><span>Poussins</span><strong>${Number(appData.stock?.poussin || 0)}</strong></div>
+      <div class="mini-item"><span>Cailles</span><strong>${Number(appData.stock?.caille || 0)}</strong></div>
+      <div class="mini-item"><span>Pigeons</span><strong>${Number(appData.stock?.pigeon || 0)}</strong></div>
+      <div class="mini-item"><span>Lapins</span><strong>${Number(appData.stock?.lapin || 0)}</strong></div>
+      <div class="mini-item"><span>Poissons</span><strong>${Number(appData.stock?.poisson || 0)}</strong></div>
+      <div class="mini-item"><span>Souris</span><strong>${Number(appData.stock?.souris || 0)}</strong></div>
+    `;
+  }
+} 
 
     function populateFoodSelects() {
       ["encNourriture", "feedFood"].forEach(id => {
@@ -1486,7 +1508,7 @@
       if (e.key === "Enter") verifierPIN();
     });
 
-    window.verifierPIN = verifierPIN;
+    
     window.showSection = showSection;
     window.viderFormulaireEncodage = viderFormulaireEncodage;
     window.ajouterEncodage = ajouterEncodage;
@@ -1517,6 +1539,8 @@
     window.registerFirebase = registerFirebase;
     window.logoutFirebase = logoutFirebase;
 
-    chargerPIN();
     chargerDonnees();
+
+   window.loginFirebaseOverlay = loginFirebaseOverlay;
+window.registerFirebaseOverlay = registerFirebaseOverlay; 
   
