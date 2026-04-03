@@ -148,3 +148,14 @@ document.getElementById("feedDate")?.value = todayStr();
 window.loginFirebaseOverlay = loginFirebaseOverlay;
 window.registerFirebaseOverlay = registerFirebaseOverlay;
 window.logoutFirebase = logoutFirebase;
+window.loginFirebaseOverlay = loginFirebaseOverlay;
+window.registerFirebaseOverlay = registerFirebaseOverlay;
+window.logoutFirebase = logoutFirebase;
+
+window.showSection = showSection;
+window.saveData = saveData;
+window.ajouterOiseau = ajouterOiseau;
+window.ajouterEncodage = ajouterEncodage;
+window.ajouterDocument = ajouterDocument;
+window.ajouterNourrissage = ajouterNourrissage;
+window.enregistrerStock = enregistrerStock;
