@@ -433,7 +433,73 @@
       </div>
     </section>
   </div>
+<script type="module">
+  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
+  const firebaseConfig = {
+    apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+    authDomain: "fiche-rapaces.firebaseapp.com",
+    projectId: "fiche-rapaces",
+    storageBucket: "fiche-rapaces.firebasestorage.app",
+    messagingSenderId: "881543403206",
+    appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
+  };
+
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  window.loginFirebaseOverlay = async function () {
+    const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
+    const password = document.getElementById("loginPasswordOverlay")?.value || "";
+    const authError = document.getElementById("authError");
+
+    if (authError) authError.textContent = "";
+
+    if (!email || !password) {
+      if (authError) authError.textContent = "Entre email et mot de passe.";
+      return;
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      if (authError) authError.textContent = "Erreur connexion : " + (e.message || "");
+    }
+  };
+
+  window.registerFirebaseOverlay = async function () {
+    const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
+    const password = document.getElementById("loginPasswordOverlay")?.value || "";
+    const authError = document.getElementById("authError");
+
+    if (authError) authError.textContent = "";
+
+    if (!email || !password) {
+      if (authError) authError.textContent = "Entre email et mot de passe.";
+      return;
+    }
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      if (authError) authError.textContent = "Erreur création compte : " + (e.message || "");
+    }
+  };
+
+  window.logoutFirebase = async function () {
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+</script>
   <script type="module" src="app.js?v=7"></script>
 </body>
 </html>
