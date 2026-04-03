@@ -12,6 +12,12 @@ import {
   getDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -25,6 +31,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
@@ -65,6 +72,14 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+async function uploadBirdPhoto(file, birdId) {
+  if (!file || !currentUser) return "";
+  const path = `users/${currentUser.uid}/oiseaux/${birdId}/${Date.now()}_${file.name}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+}
+
 function showSection(section) {
   document.querySelectorAll(".section").forEach(el => el.classList.add("hidden"));
   document.querySelectorAll(".nav button").forEach(btn => btn.classList.remove("active"));
@@ -102,6 +117,7 @@ function renderOiseaux() {
   zone.innerHTML = appData.oiseaux.map((oiseau) => `
     <div class="item">
       <h3>${safe(oiseau.nom)}</h3>
+      ${oiseau.photoUrl ? `<p><img src="${oiseau.photoUrl}" alt="${safe(oiseau.nom)}" style="max-width:220px; width:100%; border-radius:10px; margin:10px 0;"></p>` : ""}
       <p><strong>Espèce :</strong> ${safe(oiseau.espece)}</p>
       <p><strong>Sexe :</strong> ${safe(oiseau.sexe)}</p>
       <p><strong>Âge :</strong> ${safe(oiseau.age)}</p>
@@ -237,8 +253,8 @@ async function saveData() {
 
 async function loadData() {
   if (!currentUser) return;
-  const ref = doc(db, "users", currentUser.uid);
-  const snap = await getDoc(ref);
+  const refDoc = doc(db, "users", currentUser.uid);
+  const snap = await getDoc(refDoc);
 
   if (snap.exists()) {
     const data = snap.data();
@@ -297,28 +313,45 @@ document.querySelectorAll(".nav button").forEach(btn => {
   });
 });
 
-document.getElementById("btnAddOiseau").addEventListener("click", () => {
+document.getElementById("btnAddOiseau").addEventListener("click", async () => {
   const nom = document.getElementById("oiseauNom").value.trim();
   if (!nom) return;
 
-  appData.oiseaux.unshift({
-    id: makeId(),
-    nom,
-    espece: document.getElementById("oiseauEspece").value.trim(),
-    sexe: document.getElementById("oiseauSexe").value.trim(),
-    age: document.getElementById("oiseauAge").value.trim(),
-    poidsActuel: document.getElementById("oiseauPoids").value.trim(),
-    notes: document.getElementById("oiseauNotes").value.trim()
-  });
+  const birdId = makeId();
+  const photoFile = document.getElementById("oiseauPhoto")?.files?.[0] || null;
+  let photoUrl = "";
 
-  document.getElementById("oiseauNom").value = "";
-  document.getElementById("oiseauEspece").value = "";
-  document.getElementById("oiseauSexe").value = "";
-  document.getElementById("oiseauAge").value = "";
-  document.getElementById("oiseauPoids").value = "";
-  document.getElementById("oiseauNotes").value = "";
+  try {
+    if (photoFile) {
+      photoUrl = await uploadBirdPhoto(photoFile, birdId);
+    }
 
-  renderAll();
+    appData.oiseaux.unshift({
+      id: birdId,
+      nom,
+      espece: document.getElementById("oiseauEspece").value.trim(),
+      sexe: document.getElementById("oiseauSexe").value.trim(),
+      age: document.getElementById("oiseauAge").value.trim(),
+      poidsActuel: document.getElementById("oiseauPoids").value.trim(),
+      notes: document.getElementById("oiseauNotes").value.trim(),
+      photoUrl
+    });
+
+    document.getElementById("oiseauNom").value = "";
+    document.getElementById("oiseauEspece").value = "";
+    document.getElementById("oiseauSexe").value = "";
+    document.getElementById("oiseauAge").value = "";
+    document.getElementById("oiseauPoids").value = "";
+    document.getElementById("oiseauNotes").value = "";
+    if (document.getElementById("oiseauPhoto")) {
+      document.getElementById("oiseauPhoto").value = "";
+    }
+
+    renderAll();
+    await saveData();
+  } catch (e) {
+    statusEl.textContent = "❌ Erreur upload photo : " + e.message;
+  }
 });
 
 document.getElementById("btnAddEncodage").addEventListener("click", () => {
