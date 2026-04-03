@@ -22,6 +22,7 @@
       width:100%;
       padding:12px;
       margin:8px 0;
+      box-sizing:border-box;
     }
     .login-box button{
       padding:12px 18px;
@@ -36,6 +37,8 @@
     .topbar{
       display:flex;
       justify-content:space-between;
+      align-items:center;
+      gap:12px;
       flex-wrap:wrap;
       margin-bottom:20px;
     }
@@ -62,15 +65,31 @@
       padding:16px;
       margin-bottom:18px;
     }
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
+    }
     input, select, textarea{
       width:100%;
       padding:10px;
       margin-top:6px;
       margin-bottom:12px;
+      box-sizing:border-box;
       border-radius:8px;
       border:1px solid #444;
       background:#fff;
       color:#000;
+    }
+    textarea{min-height:100px}
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .actions button{
+      padding:10px 14px;
+      cursor:pointer;
     }
     .item{
       border:1px solid #333;
@@ -79,157 +98,173 @@
       margin-top:10px;
       background:#181818;
     }
+    .muted{opacity:.8}
     .danger{
       background:#b00020;
       color:#fff;
       border:none;
-      padding:8px;
-      cursor:pointer;
+    }
+    .ok{color:#7CFC98}
+    .stats-number{
+      font-size:32px;
+      font-weight:bold;
+      margin:0;
+    }
+    .bird-photo{
+      max-width:220px;
+      width:100%;
+      border-radius:10px;
+      margin:10px 0;
+      display:block;
     }
   </style>
 </head>
-
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen" class="login-box">
-  <h1>Connexion</h1>
-
-  <input id="email" type="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Mot de passe">
-
-  <button id="btnLogin">Se connecter</button>
-  <button id="btnRegister">Créer compte</button>
-
-  <p id="status"></p>
-</div>
-
-<!-- APP -->
-<div id="appScreen" class="app hidden">
-
-  <div class="topbar">
+  <div id="loginScreen" class="login-box">
+    <h1>Connexion</h1>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Mot de passe">
     <div>
-      <h1>Fiche Rapaces</h1>
-      <div id="userInfo"></div>
+      <button id="btnLogin">Se connecter</button>
+      <button id="btnRegister">Créer compte</button>
     </div>
-
-    <div>
-      <button id="btnSave">Sauvegarder</button>
-      <button id="btnLogout">Déconnexion</button>
-    </div>
+    <p id="status"></p>
   </div>
 
-  <!-- NAV -->
-  <div class="nav">
-    <button class="active" data-section="accueil">Accueil</button>
-    <button data-section="oiseaux">Oiseaux</button>
-    <button data-section="encodage">Encodage</button>
-    <button data-section="documents">Documents</button>
-    <button data-section="nourrissage">Nourrissage</button>
-    <button data-section="stock">Stock</button>
+  <div id="appScreen" class="app hidden">
+    <div class="topbar">
+      <div>
+        <h1>Fiche Rapaces</h1>
+        <div id="userInfo" class="muted"></div>
+      </div>
+      <div class="actions">
+        <button id="btnSave">Sauvegarder</button>
+        <button id="btnLogout">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button id="btn-accueil" class="active" data-section="accueil">Accueil</button>
+      <button id="btn-oiseaux" data-section="oiseaux">Oiseaux</button>
+      <button id="btn-encodage" data-section="encodage">Encodage</button>
+      <button id="btn-documents" data-section="documents">Documents</button>
+      <button id="btn-nourrissage" data-section="nourrissage">Nourrissage</button>
+      <button id="btn-stock" data-section="stock">Stock</button>
+    </div>
+
+    <section id="section-accueil" class="section">
+      <div class="grid">
+        <div class="card">
+          <h3>Oiseaux</h3>
+          <p id="statOiseaux" class="stats-number">0</p>
+        </div>
+        <div class="card">
+          <h3>Encodages</h3>
+          <p id="statEncodages" class="stats-number">0</p>
+        </div>
+        <div class="card">
+          <h3>Documents</h3>
+          <p id="statDocuments" class="stats-number">0</p>
+        </div>
+        <div class="card">
+          <h3>Nourrissages</h3>
+          <p id="statNourrissages" class="stats-number">0</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="section-oiseaux" class="section hidden">
+      <div class="card">
+        <h2>Ajouter un oiseau</h2>
+        <input id="oiseauNom" placeholder="Nom">
+        <input id="oiseauEspece" placeholder="Espèce">
+        <input id="oiseauSexe" placeholder="Sexe">
+        <input id="oiseauAge" placeholder="Âge">
+        <input id="oiseauPoids" placeholder="Poids (g)">
+        <input id="oiseauPhoto" type="file" accept="image/*">
+        <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+        <div class="actions">
+          <button id="btnAddOiseau">Ajouter l’oiseau</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Liste des oiseaux</h2>
+        <div id="listeOiseaux"></div>
+      </div>
+    </section>
+
+    <section id="section-encodage" class="section hidden">
+      <div class="card">
+        <h2>Nouvel encodage</h2>
+        <input id="encDate" type="date">
+        <select id="encNom"></select>
+        <input id="encEspece" placeholder="Espèce">
+        <input id="encPoids" placeholder="Poids">
+        <input id="encNourriture" placeholder="Nourriture">
+        <input id="encEtat" placeholder="État">
+        <input id="encLieu" placeholder="Lieu">
+        <textarea id="encObs" placeholder="Observations"></textarea>
+        <div class="actions">
+          <button id="btnAddEncodage">Ajouter encodage</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Liste des encodages</h2>
+        <div id="listeEncodages"></div>
+      </div>
+    </section>
+
+    <section id="section-documents" class="section hidden">
+      <div class="card">
+        <h2>Documents</h2>
+        <input id="docTitre" placeholder="Titre">
+        <input id="docType" placeholder="Type">
+        <textarea id="docDescription" placeholder="Description"></textarea>
+        <div class="actions">
+          <button id="btnAddDocument">Ajouter document</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Liste des documents</h2>
+        <div id="listeDocuments"></div>
+      </div>
+    </section>
+
+    <section id="section-nourrissage" class="section hidden">
+      <div class="card">
+        <h2>Nourrissage</h2>
+        <input id="feedDate" type="date">
+        <select id="feedBird"></select>
+        <input id="feedFood" placeholder="Nourriture">
+        <input id="feedQty" placeholder="Quantité">
+        <textarea id="feedNote" placeholder="Remarques"></textarea>
+        <div class="actions">
+          <button id="btnAddFeed">Ajouter nourrissage</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Liste des nourrissages</h2>
+        <div id="listeNourrissage"></div>
+      </div>
+    </section>
+
+    <section id="section-stock" class="section hidden">
+      <div class="card">
+        <h2>Stock nourriture</h2>
+        <input id="stockPoussin" type="number" placeholder="Poussin">
+        <input id="stockCaille" type="number" placeholder="Caille">
+        <input id="stockPigeon" type="number" placeholder="Pigeon">
+        <input id="stockLapin" type="number" placeholder="Lapin">
+        <input id="stockPoisson" type="number" placeholder="Poisson">
+        <input id="stockSouris" type="number" placeholder="Souris">
+        <div class="actions">
+          <button id="btnSaveStock">Enregistrer stock</button>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <!-- ACCUEIL -->
-  <section id="section-accueil" class="section">
-    <div class="card">
-      <p>Bienvenue dans ton application</p>
-    </div>
-  </section>
-
-  <!-- OISEAUX -->
-  <section id="section-oiseaux" class="section hidden">
-
-    <div class="card">
-      <h2>Ajouter un oiseau</h2>
-
-      <input id="oiseauNom" placeholder="Nom">
-      <input id="oiseauEspece" placeholder="Espèce">
-      <input id="oiseauSexe" placeholder="Sexe">
-      <input id="oiseauAge" placeholder="Âge">
-      <input id="oiseauPoids" placeholder="Poids (g)">
-      <input id="oiseauPhoto" type="file" accept="image/*">
-      <textarea id="oiseauNotes" placeholder="Notes"></textarea>
-
-      <button id="btnAddOiseau">Ajouter</button>
-    </div>
-
-    <div class="card">
-      <div id="listeOiseaux"></div>
-    </div>
-
-  </section>
-
-  <!-- ENCODAGE -->
-  <section id="section-encodage" class="section hidden">
-
-    <div class="card">
-      <input id="encDate" type="date">
-      <select id="encNom"></select>
-      <input id="encEspece" placeholder="Espèce">
-      <input id="encPoids" placeholder="Poids">
-      <input id="encNourriture" placeholder="Nourriture">
-      <input id="encEtat" placeholder="État">
-      <input id="encLieu" placeholder="Lieu">
-      <textarea id="encObs"></textarea>
-
-      <button id="btnAddEncodage">Ajouter</button>
-    </div>
-
-    <div id="listeEncodages"></div>
-
-  </section>
-
-  <!-- DOCUMENTS -->
-  <section id="section-documents" class="section hidden">
-
-    <div class="card">
-      <input id="docTitre" placeholder="Titre">
-      <input id="docType" placeholder="Type">
-      <textarea id="docDescription"></textarea>
-
-      <button id="btnAddDocument">Ajouter</button>
-    </div>
-
-    <div id="listeDocuments"></div>
-
-  </section>
-
-  <!-- NOURRISSAGE -->
-  <section id="section-nourrissage" class="section hidden">
-
-    <div class="card">
-      <input id="feedDate" type="date">
-      <select id="feedBird"></select>
-      <input id="feedFood">
-      <input id="feedQty">
-      <textarea id="feedNote"></textarea>
-
-      <button id="btnAddFeed">Ajouter</button>
-    </div>
-
-    <div id="listeNourrissage"></div>
-
-  </section>
-
-  <!-- STOCK -->
-  <section id="section-stock" class="section hidden">
-
-    <div class="card">
-      <input id="stockPoussin" type="number" placeholder="Poussin">
-      <input id="stockCaille" type="number" placeholder="Caille">
-      <input id="stockPigeon" type="number" placeholder="Pigeon">
-      <input id="stockLapin" type="number" placeholder="Lapin">
-      <input id="stockPoisson" type="number" placeholder="Poisson">
-      <input id="stockSouris" type="number" placeholder="Souris">
-
-      <button id="btnSaveStock">Sauver</button>
-    </div>
-
-  </section>
-
-</div>
-
-<script type="module" src="app.js?v=4"></script>
-
+  <script type="module" src="app.js?v=5"></script>
 </body>
 </html>
