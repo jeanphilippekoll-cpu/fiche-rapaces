@@ -165,3 +165,5 @@ window.ajouterEncodage = ajouterEncodage;
 window.ajouterDocument = ajouterDocument;
 window.ajouterNourrissage = ajouterNourrissage;
 window.enregistrerStock = enregistrerStock;
+document.getElementById("btnLogin")?.addEventListener("click", loginFirebaseOverlay);
+document.getElementById("btnRegister")?.addEventListener("click", registerFirebaseOverlay);
