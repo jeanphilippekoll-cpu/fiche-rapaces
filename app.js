@@ -137,7 +137,7 @@ function renderOiseaux() {
   zone.innerHTML = appData.oiseaux.map((oiseau) => `
     <div class="item">
       <h3>${safe(oiseau.nom)}</h3>
-      ${oiseau.photoUrl ? `<p><img src="${oiseau.photoUrl}" alt="${safe(oiseau.nom)}" style="max-width:220px; width:100%; border-radius:10px; margin:10px 0;"></p>` : ""}
+      ${oiseau.photoUrl ? `<p><img src="${oiseau.photoUrl}" alt="${safe(oiseau.nom)}" class="bird-photo" data-photo="${oiseau.photoUrl}"></p>` : ""}
       <p><strong>Espèce :</strong> ${safe(oiseau.espece)}</p>
       <p><strong>Sexe :</strong> ${safe(oiseau.sexe)}</p>
       <p><strong>Âge :</strong> ${safe(oiseau.age)}</p>
@@ -157,6 +157,14 @@ function renderOiseaux() {
     });
   });
 }
+zone.querySelectorAll("[data-photo]").forEach(img => {
+  img.addEventListener("click", () => {
+    const modal = document.getElementById("photoModal");
+    const modalImg = document.getElementById("photoModalImg");
+    if (!modal || !modalImg) return;
+    modalImg.src = img.getAttribute("data-photo");
+    modal.classList.remove("hidden");
+  });
 
 function renderEncodages() {
   const zone = document.getElementById("listeEncodages");
