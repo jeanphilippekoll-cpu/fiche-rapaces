@@ -516,3 +516,15 @@ window.supprimerOiseau = supprimerOiseau;
 window.supprimerEncodage = supprimerEncodage;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
+document.addEventListener("DOMContentLoaded", () => {
+  const btnLogin = document.getElementById("btnLoginOverlay");
+  const btnRegister = document.getElementById("btnRegisterOverlay");
+
+  if (btnLogin) {
+    btnLogin.addEventListener("click", loginFirebaseOverlay);
+  }
+
+  if (btnRegister) {
+    btnRegister.addEventListener("click", registerFirebaseOverlay);
+  }
+});
