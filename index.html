@@ -4,173 +4,61 @@
   <meta charset="UTF-8">
   <title>Fiche Rapaces</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body{
-      margin:0;
-      font-family:Arial, sans-serif;
-      background:#111;
-      color:#fff;
-    }
-    .hidden{display:none}
-    .login-box{
-      max-width:420px;
-      margin:80px auto;
-      text-align:center;
-    }
-    .login-box input{
-      width:100%;
-      padding:12px;
-      margin:8px 0;
-      box-sizing:border-box;
-    }
-    .login-box button{
-      padding:12px 18px;
-      margin:8px 6px;
-      cursor:pointer;
-    }
-    .app{
-      max-width:1200px;
-      margin:0 auto;
-      padding:20px;
-    }
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      margin-bottom:20px;
-    }
-    .nav{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin:20px 0;
-    }
-    .nav button{
-      padding:10px 16px;
-      cursor:pointer;
-      border:none;
-      border-radius:8px;
-    }
-    .nav button.active{
-      background:#4caf50;
-      color:#fff;
-    }
-    .card{
-      background:#1c1c1c;
-      border:1px solid #333;
-      border-radius:12px;
-      padding:16px;
-      margin-bottom:18px;
-    }
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:14px;
-    }
-    input, select, textarea{
-      width:100%;
-      padding:10px;
-      margin-top:6px;
-      margin-bottom:12px;
-      box-sizing:border-box;
-      border-radius:8px;
-      border:1px solid #444;
-      background:#fff;
-      color:#000;
-    }
-    textarea{min-height:100px}
-    .actions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .actions button{
-      padding:10px 14px;
-      cursor:pointer;
-    }
-    .item{
-      border:1px solid #333;
-      border-radius:10px;
-      padding:12px;
-      margin-top:10px;
-      background:#181818;
-    }
-    .muted{opacity:.8}
-    .danger{
-      background:#b00020;
-      color:#fff;
-      border:none;
-    }
-    .ok{color:#7CFC98}
-    .stats-number{
-      font-size:32px;
-      font-weight:bold;
-      margin:0;
-    }
-    .bird-photo{
-      max-width:220px;
-      width:100%;
-      border-radius:10px;
-      margin:10px 0;
-      display:block;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
 
-  <div id="loginScreen" class="login-box">
-    <h1>Connexion</h1>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Mot de passe">
-    <div>
-      <button id="btnLogin">Se connecter</button>
-      <button id="btnRegister">Créer compte</button>
+  <div id="authOverlay" class="overlay">
+    <div class="card">
+      <h2>Connexion à Fiche Rapaces</h2>
+      <p>Connectez-vous pour accéder à vos données.</p>
+
+      <label>Email</label>
+      <input type="email" id="loginEmailOverlay" placeholder="votre@email.com">
+
+      <label>Mot de passe</label>
+      <input type="password" id="loginPasswordOverlay" placeholder="Mot de passe">
+
+      <div class="top-actions" style="justify-content:center">
+        <button class="btn" onclick="loginFirebaseOverlay()">Se connecter</button>
+        <button class="btn btn-secondary" onclick="registerFirebaseOverlay()">Créer un compte</button>
+      </div>
+
+      <p id="authError" style="color:#b85c5c"></p>
     </div>
-    <p id="status"></p>
   </div>
 
-  <div id="appScreen" class="app hidden">
-    <div class="topbar">
+  <div id="appContent" class="app hidden">
+    <header class="topbar">
       <div>
         <h1>Fiche Rapaces</h1>
-        <div id="userInfo" class="muted"></div>
+        <div id="userInfo"></div>
+        <div id="status"></div>
       </div>
       <div class="actions">
-        <button id="btnSave">Sauvegarder</button>
-        <button id="btnLogout">Déconnexion</button>
+        <button class="btn" onclick="saveData()">Sauvegarder</button>
+        <button class="btn btn-secondary" onclick="logoutFirebase()">Déconnexion</button>
       </div>
-    </div>
+    </header>
 
-    <div class="nav">
-      <button id="btn-accueil" class="active" data-section="accueil">Accueil</button>
-      <button id="btn-oiseaux" data-section="oiseaux">Oiseaux</button>
-      <button id="btn-encodage" data-section="encodage">Encodage</button>
-      <button id="btn-documents" data-section="documents">Documents</button>
-      <button id="btn-nourrissage" data-section="nourrissage">Nourrissage</button>
-      <button id="btn-stock" data-section="stock">Stock</button>
-    </div>
+    <nav class="nav">
+      <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
+      <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+      <button id="btn-encodage" onclick="showSection('encodage')">Encodage</button>
+      <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+      <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
+      <button id="btn-stock" onclick="showSection('stock')">Stock</button>
+    </nav>
 
     <section id="section-accueil" class="section">
       <div class="grid">
-        <div class="card">
-          <h3>Oiseaux</h3>
-          <p id="statOiseaux" class="stats-number">0</p>
-        </div>
-        <div class="card">
-          <h3>Encodages</h3>
-          <p id="statEncodages" class="stats-number">0</p>
-        </div>
-        <div class="card">
-          <h3>Documents</h3>
-          <p id="statDocuments" class="stats-number">0</p>
-        </div>
-        <div class="card">
-          <h3>Nourrissages</h3>
-          <p id="statNourrissages" class="stats-number">0</p>
-        </div>
+        <div class="card"><h3>Oiseaux</h3><p id="statOiseaux">0</p></div>
+        <div class="card"><h3>Encodages</h3><p id="statEncodages">0</p></div>
+        <div class="card"><h3>Documents</h3><p id="statDocuments">0</p></div>
+        <div class="card"><h3>Nourrissages</h3><p id="statNourrissages">0</p></div>
       </div>
     </section>
 
@@ -182,10 +70,9 @@
         <input id="oiseauSexe" placeholder="Sexe">
         <input id="oiseauAge" placeholder="Âge">
         <input id="oiseauPoids" placeholder="Poids (g)">
-        <input id="oiseauPhoto" type="file" accept="image/*">
         <textarea id="oiseauNotes" placeholder="Notes"></textarea>
         <div class="actions">
-          <button id="btnAddOiseau">Ajouter l’oiseau</button>
+          <button class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
         </div>
       </div>
       <div class="card">
@@ -206,7 +93,7 @@
         <input id="encLieu" placeholder="Lieu">
         <textarea id="encObs" placeholder="Observations"></textarea>
         <div class="actions">
-          <button id="btnAddEncodage">Ajouter encodage</button>
+          <button class="btn" onclick="ajouterEncodage()">Ajouter encodage</button>
         </div>
       </div>
       <div class="card">
@@ -222,7 +109,7 @@
         <input id="docType" placeholder="Type">
         <textarea id="docDescription" placeholder="Description"></textarea>
         <div class="actions">
-          <button id="btnAddDocument">Ajouter document</button>
+          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
         </div>
       </div>
       <div class="card">
@@ -240,7 +127,7 @@
         <input id="feedQty" placeholder="Quantité">
         <textarea id="feedNote" placeholder="Remarques"></textarea>
         <div class="actions">
-          <button id="btnAddFeed">Ajouter nourrissage</button>
+          <button class="btn" onclick="ajouterNourrissage()">Ajouter nourrissage</button>
         </div>
       </div>
       <div class="card">
@@ -259,12 +146,12 @@
         <input id="stockPoisson" type="number" placeholder="Poisson">
         <input id="stockSouris" type="number" placeholder="Souris">
         <div class="actions">
-          <button id="btnSaveStock">Enregistrer stock</button>
+          <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
         </div>
       </div>
     </section>
   </div>
 
-  <script type="module" src="app.js?v=5"></script>
+  <script type="module" src="app.js?v=7"></script>
 </body>
 </html>
