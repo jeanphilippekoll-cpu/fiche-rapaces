@@ -10,54 +10,27 @@
 
   <style>
     :root{
-      --bg:#0f0f10;
-      --panel:#1a1b1f;
-      --panel-2:#23242a;
-      --text:#f3f3f3;
-      --muted:#b8b8c2;
-      --line:#343640;
+      --bg:#111;
+      --panel:#1b1b1b;
+      --line:#333;
+      --text:#fff;
+      --muted:#bdbdbd;
       --accent:#7ca56b;
-      --accent-2:#d7c3a3;
+      --accent2:#ddd;
       --danger:#b44545;
-      --shadow:0 10px 30px rgba(0,0,0,.28);
-      --radius:14px;
     }
-
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:Arial, Helvetica, sans-serif;
       background:var(--bg);
       color:var(--text);
     }
-
-    .hidden{display:none !important}
-
-    .overlay{
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-    }
-
-    .card{
-      background:var(--panel);
-      border:1px solid var(--line);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:20px;
-      width:100%;
-      max-width:520px;
-    }
-
     .app{
-      max-width:1280px;
+      max-width:1200px;
       margin:0 auto;
       padding:24px;
     }
-
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -66,183 +39,110 @@
       flex-wrap:wrap;
       margin-bottom:20px;
     }
-
     .topbar h1{
       margin:0 0 6px 0;
       font-size:38px;
     }
-
-    #userInfo,#status{
+    #status{
       color:var(--muted);
       font-size:14px;
       margin-top:4px;
     }
-
     .nav{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
       margin:20px 0 26px;
     }
-
-    .nav button,
-    .btn{
+    .nav button,.btn{
       border:none;
       border-radius:10px;
       padding:10px 16px;
       cursor:pointer;
-      background:var(--accent-2);
-      color:#2b2218;
+      background:var(--accent2);
+      color:#222;
       font-weight:600;
     }
-
     .nav button.active{
       background:var(--accent);
-      color:white;
+      color:#fff;
     }
-
-    .btn-secondary{
-      background:#d9d9de;
-      color:#222;
-    }
-
     .btn-danger{
       background:var(--danger);
       color:#fff;
     }
-
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       gap:14px;
     }
-
-    .section{
-      margin-top:8px;
-    }
-
-    input, select, textarea{
-      width:100%;
+    .section{margin-top:8px}
+    .hidden{display:none !important}
+    .card{
+      background:var(--panel);
       border:1px solid var(--line);
-      border-radius:10px;
-      background:var(--panel-2);
-      color:var(--text);
-      padding:12px 14px;
+      border-radius:14px;
+      padding:18px;
+      margin-bottom:18px;
+    }
+    input,select,textarea{
+      width:100%;
+      padding:12px;
       margin-top:6px;
       margin-bottom:12px;
-      outline:none;
+      border-radius:10px;
+      border:1px solid #555;
+      background:#222;
+      color:#fff;
     }
-
-    input::placeholder,
-    textarea::placeholder{
-      color:#9ea1ad;
-    }
-
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
-
+    textarea{min-height:110px;resize:vertical}
     label{
       display:block;
       margin-top:8px;
       margin-bottom:4px;
       font-weight:600;
     }
-
-    .actions,
-    .top-actions,
-    .small-actions{
+    .actions,.small-actions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
     }
-
-    .top-actions{
-      margin-top:12px;
-    }
-
     .item{
-      background:var(--panel);
+      background:#181818;
       border:1px solid var(--line);
       border-radius:12px;
       padding:14px;
       margin-top:12px;
     }
-
-    .item h3{
-      margin:0 0 10px 0;
-    }
-
-    .item p{
-      margin:6px 0;
-    }
-
-    .muted{
-      color:var(--muted);
-    }
-
+    .item h3{margin:0 0 10px 0}
+    .item p{margin:6px 0}
     .stats-number{
       font-size:34px;
       font-weight:700;
       margin:6px 0 0 0;
     }
-
     .bird-photo{
       max-width:220px;
       width:100%;
       border-radius:12px;
       margin:10px 0;
       display:block;
-      box-shadow:var(--shadow);
     }
-
-    @media (max-width:720px){
-      .app{padding:16px}
-      .topbar h1{font-size:30px}
-      .card{padding:16px}
-    }
+    a{color:#8ecbff}
   </style>
 </head>
 <body>
-
-  <!-- CONNEXION -->
-  <div id="authOverlay" class="overlay">
-    <div class="card">
-      <h2 style="margin-top:0">Connexion à Fiche Rapaces</h2>
-      <p class="muted">Connectez-vous pour accéder à vos données.</p>
-
-      <label for="loginEmailOverlay">Email</label>
-      <input type="email" id="loginEmailOverlay" placeholder="votre@email.com">
-
-      <label for="loginPasswordOverlay">Mot de passe</label>
-      <input type="password" id="loginPasswordOverlay" placeholder="Mot de passe">
-
-      <div class="top-actions" style="justify-content:center">
-      <button class="btn" id="btnLogin">Se connecter</button>
-      <button class="btn btn-secondary" id="btnRegister">Créer un compte</button>  
-      </div>
-
-      <p id="authError" style="color:#ff9a9a; margin-top:14px;"></p>
-    </div>
-  </div>
-
-  <!-- APP -->
-  <div id="appContent" class="app hidden">
+  <div id="appContent" class="app">
     <header class="topbar">
       <div>
         <h1>Fiche Rapaces</h1>
-        <div id="userInfo"></div>
-        <div id="status"></div>
+        <div id="status">Chargement…</div>
       </div>
-
       <div class="actions">
         <button class="btn" onclick="saveData()">Sauvegarder</button>
-        <button class="btn btn-secondary" onclick="logoutFirebase()">Déconnexion</button>
       </div>
     </header>
 
-    <!-- NAVIGATION -->
     <nav class="nav">
       <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
       <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
@@ -252,7 +152,6 @@
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
     </nav>
 
-    <!-- ACCUEIL -->
     <section id="section-accueil" class="section">
       <div class="grid">
         <div class="card">
@@ -274,7 +173,6 @@
       </div>
     </section>
 
-    <!-- OISEAUX -->
     <section id="section-oiseaux" class="section hidden">
       <div class="card">
         <h2>Ajouter un oiseau</h2>
@@ -308,7 +206,6 @@
       </div>
     </section>
 
-    <!-- ENCODAGE -->
     <section id="section-encodage" class="section hidden">
       <div class="card">
         <h2>Nouvel encodage</h2>
@@ -348,7 +245,6 @@
       </div>
     </section>
 
-    <!-- DOCUMENTS -->
     <section id="section-documents" class="section hidden">
       <div class="card">
         <h2>Documents</h2>
@@ -373,7 +269,6 @@
       </div>
     </section>
 
-    <!-- NOURRISSAGE -->
     <section id="section-nourrissage" class="section hidden">
       <div class="card">
         <h2>Nourrissage</h2>
@@ -404,7 +299,6 @@
       </div>
     </section>
 
-    <!-- STOCK -->
     <section id="section-stock" class="section hidden">
       <div class="card">
         <h2>Stock nourriture</h2>
@@ -433,73 +327,7 @@
       </div>
     </section>
   </div>
-<script type="module">
-  import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
-    authDomain: "fiche-rapaces.firebaseapp.com",
-    projectId: "fiche-rapaces",
-    storageBucket: "fiche-rapaces.firebasestorage.app",
-    messagingSenderId: "881543403206",
-    appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
-  };
-
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  window.loginFirebaseOverlay = async function () {
-    const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
-    const password = document.getElementById("loginPasswordOverlay")?.value || "";
-    const authError = document.getElementById("authError");
-
-    if (authError) authError.textContent = "";
-
-    if (!email || !password) {
-      if (authError) authError.textContent = "Entre email et mot de passe.";
-      return;
-    }
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      if (authError) authError.textContent = "Erreur connexion : " + (e.message || "");
-    }
-  };
-
-  window.registerFirebaseOverlay = async function () {
-    const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
-    const password = document.getElementById("loginPasswordOverlay")?.value || "";
-    const authError = document.getElementById("authError");
-
-    if (authError) authError.textContent = "";
-
-    if (!email || !password) {
-      if (authError) authError.textContent = "Entre email et mot de passe.";
-      return;
-    }
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (e) {
-      if (authError) authError.textContent = "Erreur création compte : " + (e.message || "");
-    }
-  };
-
-  window.logoutFirebase = async function () {
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-</script>
-  <script type="module" src="app.js?v=7"></script>
+  <script type="module" src="app.js?v=100"></script>
 </body>
 </html>
