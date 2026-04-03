@@ -39,17 +39,20 @@ async function loginFirebaseOverlay() {
   const password = document.getElementById("loginPasswordOverlay").value;
   const authError = document.getElementById("authError");
 
-  if (authError) authError.innerText = "";
+  alert("clic détecté");
+
+  if (authError) authError.textContent = "";
 
   if (!email || !password) {
-    if (authError) authError.innerText = "Entre email et mot de passe.";
+    if (authError) authError.textContent = "Entre email et mot de passe.";
     return;
   }
 
   try {
     await signInWithEmailAndPassword(auth, email, password);
+    if (authError) authError.textContent = "Connexion OK";
   } catch (e) {
-    if (authError) authError.innerText = "Erreur : " + e.message;
+    if (authError) authError.textContent = "Erreur connexion : " + (e.message || "");
   }
 }
 
