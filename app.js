@@ -145,3 +145,6 @@ document.getElementById("btnRegisterOverlay").onclick = registerFirebaseOverlay;
 // INIT
 document.getElementById("encDate")?.value = todayStr();
 document.getElementById("feedDate")?.value = todayStr();
+window.loginFirebaseOverlay = loginFirebaseOverlay;
+window.registerFirebaseOverlay = registerFirebaseOverlay;
+window.logoutFirebase = logoutFirebase;
