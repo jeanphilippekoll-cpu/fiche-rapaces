@@ -481,3 +481,4 @@ onAuthStateChanged(auth, async (user) => {
     statusEl.textContent = "";
   }
 });
+initPhotoViewer();
