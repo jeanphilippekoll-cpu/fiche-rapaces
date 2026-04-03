@@ -72,6 +72,26 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function initPhotoViewer() {
+  const modal = document.getElementById("photoModal");
+  const modalImg = document.getElementById("photoModalImg");
+  const closeBtn = document.getElementById("photoClose");
+
+  if (!modal || !modalImg || !closeBtn) return;
+
+  closeBtn.onclick = () => {
+    modal.classList.add("hidden");
+    modalImg.src = "";
+  };
+
+  modal.onclick = (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+      modalImg.src = "";
+    }
+  };
+}
+
 async function uploadBirdPhoto(file, birdId) {
   if (!file || !currentUser) return "";
   const path = `users/${currentUser.uid}/oiseaux/${birdId}/${Date.now()}_${file.name}`;
