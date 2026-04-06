@@ -20,6 +20,8 @@ const db = getFirestore(firebaseApp);
 const statusEl = document.getElementById("status");
 const syncBadgeEl = document.getElementById("syncBadge");
 
+let rawRapacesData = {}; // <- correction importante
+
 let appData = {
   oiseaux: [],
   encodages: [],
