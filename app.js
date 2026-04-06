@@ -27,6 +27,18 @@ const storage = getStorage(firebaseApp);
 
 const statusEl = document.getElementById("status");
 
+const BOITE_POUSSIN_CAPACITE = 225;
+
+const ALIMENTS = [
+  "Poussin",
+  "Caille",
+  "Pigeon",
+  "Lapin",
+  "Poisson",
+  "Souris",
+  "Cailleteau 30gr"
+];
+
 let rawRapacesData = {};
 
 let appData = {
@@ -40,7 +52,9 @@ let appData = {
     pigeon: 0,
     lapin: 0,
     poisson: 0,
-    souris: 0
+    souris: 0,
+    cailleteau30gr: 0,
+    boitePoussinsMoyenne225: 0
   }
 };
 
@@ -55,12 +69,48 @@ function safe(v) {
     .replaceAll(">", "&gt;");
 }
 
+function safeAttr(v) {
+  return safe(v).replaceAll('"', "&quot;");
+}
+
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
+}
+
+function toNumber(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function normalizeFoodLabel(value) {
+  return (value || "").trim().toLowerCase();
+}
+
+function foodToStockKey(food) {
+  const key = normalizeFoodLabel(food);
+
+  if (key === "poussin") return "poussin";
+  if (key === "caille") return "caille";
+  if (key === "pigeon") return "pigeon";
+  if (key === "lapin") return "lapin";
+  if (key === "poisson") return "poisson";
+  if (key === "souris") return "souris";
+  if (key === "cailleteau 30gr") return "cailleteau30gr";
+
+  return null;
+}
+
+function computeBoitesFromPoussins(nbPoussins) {
+  const qty = Math.max(0, toNumber(nbPoussins));
+  return qty > 0 ? Math.ceil(qty / BOITE_POUSSIN_CAPACITE) : 0;
+}
+
+function syncBoitesFromPoussins() {
+  appData.stock.boitePoussinsMoyenne225 = computeBoitesFromPoussins(appData.stock.poussin);
 }
 
 async function uploadFile(file, path) {
@@ -82,6 +132,17 @@ function normalizeDocumentsOiseau(list) {
   return safeArray(list).map((docItem) => ({
     name: docItem?.name || docItem?.nom || "Document",
     url: docItem?.url || docItem?.lien || ""
+  }));
+}
+
+function normalizeNourrissage(list) {
+  return safeArray(list).map((item, index) => ({
+    id: item?.id || `feed_${index}_${makeId()}`,
+    date: item?.date || "",
+    oiseau: item?.oiseau || item?.nom || "",
+    nourriture: item?.nourriture || "",
+    quantite: toNumber(item?.quantite),
+    remarques: item?.remarques || ""
   }));
 }
 
@@ -141,19 +202,25 @@ function normalizeData(data) {
     }))
   ];
 
+  const stock = {
+    poussin: toNumber(data?.stock?.poussin),
+    caille: toNumber(data?.stock?.caille),
+    pigeon: toNumber(data?.stock?.pigeon),
+    lapin: toNumber(data?.stock?.lapin),
+    poisson: toNumber(data?.stock?.poisson),
+    souris: toNumber(data?.stock?.souris),
+    cailleteau30gr: toNumber(data?.stock?.cailleteau30gr),
+    boitePoussinsMoyenne225: toNumber(data?.stock?.boitePoussinsMoyenne225)
+  };
+
+  stock.boitePoussinsMoyenne225 = computeBoitesFromPoussins(stock.poussin);
+
   return {
     oiseaux,
     encodages,
     documents,
-    nourrissage: nourrissageSource,
-    stock: {
-      poussin: Number(data?.stock?.poussin || 0),
-      caille: Number(data?.stock?.caille || 0),
-      pigeon: Number(data?.stock?.pigeon || 0),
-      lapin: Number(data?.stock?.lapin || 0),
-      poisson: Number(data?.stock?.poisson || 0),
-      souris: Number(data?.stock?.souris || 0)
-    }
+    nourrissage: normalizeNourrissage(nourrissageSource),
+    stock
   };
 }
 
@@ -200,12 +267,32 @@ function buildFirestorePayload() {
     variation: e.variation || ""
   }));
 
+  const nourrissage = appData.nourrissage.map((n) => ({
+    id: n.id || makeId(),
+    date: n.date || "",
+    oiseau: n.oiseau || "",
+    nourriture: n.nourriture || "",
+    quantite: toNumber(n.quantite),
+    remarques: n.remarques || ""
+  }));
+
+  syncBoitesFromPoussins();
+
   return {
     ...rawRapacesData,
     oiseaux,
     encodages,
-    nourrissage: appData.nourrissage,
-    stock: appData.stock,
+    nourrissage,
+    stock: {
+      poussin: toNumber(appData.stock.poussin),
+      caille: toNumber(appData.stock.caille),
+      pigeon: toNumber(appData.stock.pigeon),
+      lapin: toNumber(appData.stock.lapin),
+      poisson: toNumber(appData.stock.poisson),
+      souris: toNumber(appData.stock.souris),
+      cailleteau30gr: toNumber(appData.stock.cailleteau30gr),
+      boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
+    },
     documents: rawRapacesData.documents || [],
     documentsGeneraux: rawRapacesData.documentsGeneraux || []
   };
@@ -232,14 +319,11 @@ function refreshStats() {
 
 function refreshBirdSelects() {
   const birds = appData.oiseaux
-    .map((o) => `<option value="${safe(o.nom)}">${safe(o.nom)}</option>`)
+    .map((o) => `<option value="${safeAttr(o.nom)}">${safe(o.nom)}</option>`)
     .join("");
 
   const encNom = document.getElementById("encNom");
-  const feedBird = document.getElementById("feedBird");
-
   if (encNom) encNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
-  if (feedBird) feedBird.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
 }
 
 function getEncodagesLies(oiseauNom) {
@@ -271,7 +355,7 @@ function renderDocumentsOiseau(documents) {
     <div>
       ${documents.map((docItem) => `
         <p>
-          <a href="${safe(docItem.url)}" target="_blank" rel="noopener noreferrer">
+          <a href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
             ${safe(docItem.name)}
           </a>
         </p>
@@ -288,7 +372,7 @@ function renderEncodagesLies(encodages) {
   return `
     <div>
       ${encodages.map((item) => `
-        <div style="margin-bottom:10px;padding:10px;border:1px solid #333;border-radius:10px;background:#141414;">
+        <div class="sub-item">
           <p><strong>Date :</strong> ${safe(item.date)}</p>
           <p><strong>Poids :</strong> ${safe(item.poids)}</p>
           <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
@@ -317,7 +401,7 @@ function renderOiseaux() {
 
         ${oiseau.photoUrl ? `
           <p>
-            <img src="${safe(oiseau.photoUrl)}" alt="${safe(oiseau.nom)}" class="bird-photo">
+            <img src="${safeAttr(oiseau.photoUrl)}" alt="${safeAttr(oiseau.nom)}" class="bird-photo">
           </p>
         ` : ""}
 
@@ -327,17 +411,17 @@ function renderOiseaux() {
         <p><strong>Poids actuel :</strong> ${safe(oiseau.poidsActuel)}</p>
         <p><strong>Notes :</strong> ${safe(oiseau.notes)}</p>
 
-        <hr style="border-color:#333;margin:14px 0;">
+        <hr class="sep">
 
         <h4>Documents liés</h4>
         ${renderDocumentsOiseau(oiseau.documents)}
 
-        <hr style="border-color:#333;margin:14px 0;">
+        <hr class="sep">
 
         <h4>Historique du poids</h4>
         ${renderHistoriquePoids(oiseau.historiquePoids)}
 
-        <hr style="border-color:#333;margin:14px 0;">
+        <hr class="sep">
 
         <h4>Encodages liés</h4>
         ${renderEncodagesLies(encodagesLies)}
@@ -389,7 +473,7 @@ function renderDocuments() {
       <h3>${safe(docItem.titre)}</h3>
       <p><strong>Type :</strong> ${safe(docItem.type)}</p>
       <p><strong>Description :</strong> ${safe(docItem.description)}</p>
-      ${docItem.lien ? `<p><a href="${safe(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>` : ""}
+      ${docItem.lien ? `<p><a href="${safeAttr(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>` : ""}
       <div class="small-actions">
         <button class="btn btn-danger" onclick="supprimerDocument('${docItem.id}')">Supprimer</button>
       </div>
@@ -397,7 +481,139 @@ function renderDocuments() {
   `).join("");
 }
 
-function renderNourrissage() {
+function getFoodOptionsHtml(selected = "") {
+  return `
+    <option value="">Choisir</option>
+    ${ALIMENTS.map((food) => `
+      <option value="${safeAttr(food)}" ${food === selected ? "selected" : ""}>
+        ${safe(food)}
+      </option>
+    `).join("")}
+  `;
+}
+
+function renderNourrissageTable() {
+  const zone = document.getElementById("feedTableZone");
+  if (!zone) return;
+
+  if (!appData.oiseaux.length) {
+    zone.innerHTML = `<p>Aucun oiseau disponible.</p>`;
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Espèce</th>
+            <th>Nourriture</th>
+            <th>Quantité (pièces)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${appData.oiseaux.map((oiseau) => `
+            <tr>
+              <td>${safe(oiseau.nom)}</td>
+              <td>${safe(oiseau.espece)}</td>
+              <td>
+                <select id="feedFood_${safeAttr(oiseau.id)}">
+                  ${getFoodOptionsHtml()}
+                </select>
+              </td>
+              <td>
+                <input
+                  id="feedQty_${safeAttr(oiseau.id)}"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                >
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function sameDay(dateA, dateB) {
+  return dateA === dateB;
+}
+
+function getWeekKey(dateStr) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+
+  return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function getMonthKey(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return "";
+  return dateStr.slice(0, 7);
+}
+
+function aggregateFeeds(items) {
+  const byFood = {};
+  let total = 0;
+
+  items.forEach((item) => {
+    const food = item.nourriture || "Inconnu";
+    const qty = toNumber(item.quantite);
+    byFood[food] = (byFood[food] || 0) + qty;
+    total += qty;
+  });
+
+  return { byFood, total };
+}
+
+function renderAggregateBlock(title, items) {
+  const agg = aggregateFeeds(items);
+  const foods = Object.entries(agg.byFood);
+
+  return `
+    <div class="summary-card">
+      <h3>${safe(title)}</h3>
+      <p class="summary-total">${agg.total} pièce(s)</p>
+      ${
+        foods.length
+          ? foods.map(([food, qty]) => `<p>${safe(food)} : ${safe(qty)}</p>`).join("")
+          : `<p>Aucun nourrissage.</p>`
+      }
+    </div>
+  `;
+}
+
+function renderNourrissageSummary() {
+  const zone = document.getElementById("feedSummaryZone");
+  if (!zone) return;
+
+  const dateRef = document.getElementById("feedDate")?.value || todayStr();
+  const weekRef = getWeekKey(dateRef);
+  const monthRef = getMonthKey(dateRef);
+
+  const todayItems = appData.nourrissage.filter((n) => sameDay(n.date, dateRef));
+  const weekItems = appData.nourrissage.filter((n) => getWeekKey(n.date) === weekRef);
+  const monthItems = appData.nourrissage.filter((n) => getMonthKey(n.date) === monthRef);
+
+  zone.innerHTML = `
+    <div class="summary-grid">
+      ${renderAggregateBlock(`Jour (${dateRef})`, todayItems)}
+      ${renderAggregateBlock(`Semaine (${weekRef})`, weekItems)}
+      ${renderAggregateBlock(`Mois (${monthRef})`, monthItems)}
+    </div>
+  `;
+}
+
+function renderNourrissageHistory() {
   const zone = document.getElementById("listeNourrissage");
   if (!zone) return;
 
@@ -406,7 +622,11 @@ function renderNourrissage() {
     return;
   }
 
-  zone.innerHTML = appData.nourrissage.map((item) => `
+  const sorted = [...appData.nourrissage].sort((a, b) => {
+    return (b.date || "").localeCompare(a.date || "");
+  });
+
+  zone.innerHTML = sorted.map((item) => `
     <div class="item">
       <p><strong>Date :</strong> ${safe(item.date)}</p>
       <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
@@ -420,23 +640,35 @@ function renderNourrissage() {
   `).join("");
 }
 
+function renderNourrissage() {
+  renderNourrissageTable();
+  renderNourrissageSummary();
+  renderNourrissageHistory();
+}
+
 function fillStockForm() {
+  syncBoitesFromPoussins();
+
   const ids = {
     poussin: "stockPoussin",
     caille: "stockCaille",
     pigeon: "stockPigeon",
     lapin: "stockLapin",
     poisson: "stockPoisson",
-    souris: "stockSouris"
+    souris: "stockSouris",
+    cailleteau30gr: "stockCailleteau30gr",
+    boitePoussinsMoyenne225: "stockBoitePoussinsMoyenne225"
   };
 
   Object.entries(ids).forEach(([key, id]) => {
     const el = document.getElementById(id);
-    if (el) el.value = appData.stock[key] ?? 0;
+    if (!el) return;
+    el.value = appData.stock[key] ?? 0;
   });
 }
 
 function renderAll() {
+  syncBoitesFromPoussins();
   refreshStats();
   refreshBirdSelects();
   renderOiseaux();
@@ -622,40 +854,87 @@ function ajouterDocument() {
   renderAll();
 }
 
+function decrementStock(food, qty) {
+  const stockKey = foodToStockKey(food);
+  if (!stockKey) return;
+
+  const current = toNumber(appData.stock[stockKey]);
+  appData.stock[stockKey] = Math.max(0, current - toNumber(qty));
+
+  if (stockKey === "poussin") {
+    syncBoitesFromPoussins();
+  }
+}
+
 function ajouterNourrissage() {
-  const oiseau = document.getElementById("feedBird")?.value || "";
-  if (!oiseau) return;
+  const date = document.getElementById("feedDate")?.value || todayStr();
+  const remarques = document.getElementById("feedNote")?.value.trim() || "";
 
-  appData.nourrissage.unshift({
-    id: makeId(),
-    date: document.getElementById("feedDate")?.value || "",
-    oiseau,
-    nourriture: document.getElementById("feedFood")?.value.trim() || "",
-    quantite: document.getElementById("feedQty")?.value.trim() || "",
-    remarques: document.getElementById("feedNote")?.value.trim() || ""
+  if (!appData.oiseaux.length) return;
+
+  const lignes = [];
+
+  appData.oiseaux.forEach((oiseau) => {
+    const foodEl = document.getElementById(`feedFood_${oiseau.id}`);
+    const qtyEl = document.getElementById(`feedQty_${oiseau.id}`);
+
+    const nourriture = foodEl?.value || "";
+    const quantite = toNumber(qtyEl?.value || 0);
+
+    if (!nourriture || quantite <= 0) return;
+
+    lignes.push({
+      id: makeId(),
+      date,
+      oiseau: oiseau.nom || "",
+      nourriture,
+      quantite,
+      remarques
+    });
   });
 
-  const feedDateEl = document.getElementById("feedDate");
-  if (feedDateEl) feedDateEl.value = todayStr();
+  if (!lignes.length) {
+    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
+    return;
+  }
 
-  ["feedBird","feedFood","feedQty","feedNote"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
+  lignes.forEach((ligne) => {
+    decrementStock(ligne.nourriture, ligne.quantite);
+    appData.nourrissage.unshift(ligne);
   });
+
+  appData.oiseaux.forEach((oiseau) => {
+    const foodEl = document.getElementById(`feedFood_${oiseau.id}`);
+    const qtyEl = document.getElementById(`feedQty_${oiseau.id}`);
+
+    if (foodEl) foodEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+  });
+
+  const noteEl = document.getElementById("feedNote");
+  if (noteEl) noteEl.value = "";
 
   renderAll();
+
+  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
 }
 
 function enregistrerStock() {
   appData.stock = {
-    poussin: Number(document.getElementById("stockPoussin")?.value || 0),
-    caille: Number(document.getElementById("stockCaille")?.value || 0),
-    pigeon: Number(document.getElementById("stockPigeon")?.value || 0),
-    lapin: Number(document.getElementById("stockLapin")?.value || 0),
-    poisson: Number(document.getElementById("stockPoisson")?.value || 0),
-    souris: Number(document.getElementById("stockSouris")?.value || 0)
+    poussin: Math.max(0, toNumber(document.getElementById("stockPoussin")?.value || 0)),
+    caille: Math.max(0, toNumber(document.getElementById("stockCaille")?.value || 0)),
+    pigeon: Math.max(0, toNumber(document.getElementById("stockPigeon")?.value || 0)),
+    lapin: Math.max(0, toNumber(document.getElementById("stockLapin")?.value || 0)),
+    poisson: Math.max(0, toNumber(document.getElementById("stockPoisson")?.value || 0)),
+    souris: Math.max(0, toNumber(document.getElementById("stockSouris")?.value || 0)),
+    cailleteau30gr: Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0)),
+    boitePoussinsMoyenne225: 0
   };
+
+  syncBoitesFromPoussins();
   renderAll();
+
+  if (statusEl) statusEl.textContent = "Stock mis à jour";
 }
 
 function supprimerOiseau(id) {
@@ -673,7 +952,23 @@ function supprimerDocument(id) {
   renderAll();
 }
 
+function restoreStockFromDeletedFeed(item) {
+  const stockKey = foodToStockKey(item?.nourriture);
+  if (!stockKey) return;
+
+  appData.stock[stockKey] = toNumber(appData.stock[stockKey]) + toNumber(item?.quantite);
+
+  if (stockKey === "poussin") {
+    syncBoitesFromPoussins();
+  }
+}
+
 function supprimerNourrissage(id) {
+  const found = appData.nourrissage.find((n) => n.id === id);
+  if (found) {
+    restoreStockFromDeletedFeed(found);
+  }
+
   appData.nourrissage = appData.nourrissage.filter((n) => n.id !== id);
   renderAll();
 }
@@ -698,5 +993,11 @@ window.supprimerNourrissage = supprimerNourrissage;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await loadData();
+  const feedDate = document.getElementById("feedDate");
+  if (feedDate) {
+    feedDate.addEventListener("change", () => {
+      renderNourrissageSummary();
+    });
+  }
   showSection("accueil");
 });

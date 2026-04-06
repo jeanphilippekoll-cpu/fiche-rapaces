@@ -114,6 +114,13 @@
       padding:14px;
       margin-top:12px;
     }
+    .sub-item{
+      margin-bottom:10px;
+      padding:10px;
+      border:1px solid #333;
+      border-radius:10px;
+      background:#141414;
+    }
     .item h3{margin:0 0 10px 0}
     .item h4{margin:10px 0 8px 0}
     .item p{margin:6px 0}
@@ -128,6 +135,54 @@
       border-radius:12px;
       margin:10px 0;
       display:block;
+    }
+    .sep{
+      border-color:#333;
+      margin:14px 0;
+    }
+    .feed-table-wrap{
+      overflow-x:auto;
+      margin-top:12px;
+    }
+    .feed-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:700px;
+    }
+    .feed-table th,
+    .feed-table td{
+      border:1px solid #333;
+      padding:10px;
+      text-align:left;
+      vertical-align:middle;
+    }
+    .feed-table th{
+      background:#202020;
+    }
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+    }
+    .summary-card{
+      background:#181818;
+      border:1px solid #333;
+      border-radius:12px;
+      padding:14px;
+    }
+    .summary-card h3{
+      margin-top:0;
+    }
+    .summary-total{
+      font-size:26px;
+      font-weight:700;
+      margin:8px 0 12px 0;
+    }
+    .stock-info{
+      color:var(--muted);
+      margin-top:-4px;
+      margin-bottom:12px;
+      font-size:14px;
     }
     a{color:#8ecbff}
   </style>
@@ -278,30 +333,28 @@
 
     <section id="section-nourrissage" class="section hidden">
       <div class="card">
-        <h2>Nourrissage</h2>
+        <h2>Nourrissage du jour</h2>
 
         <label for="feedDate">Date</label>
         <input id="feedDate" type="date">
 
-        <label for="feedBird">Oiseau</label>
-        <select id="feedBird"></select>
+        <label for="feedNote">Remarques générales</label>
+        <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
 
-        <label for="feedFood">Nourriture</label>
-        <input id="feedFood" placeholder="Nourriture">
-
-        <label for="feedQty">Quantité</label>
-        <input id="feedQty" placeholder="Quantité">
-
-        <label for="feedNote">Remarques</label>
-        <textarea id="feedNote" placeholder="Remarques"></textarea>
+        <div id="feedTableZone"></div>
 
         <div class="actions">
-          <button class="btn" onclick="ajouterNourrissage()">Ajouter nourrissage</button>
+          <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>Liste des nourrissages</h2>
+        <h2>Totaux nourrissage</h2>
+        <div id="feedSummaryZone"></div>
+      </div>
+
+      <div class="card">
+        <h2>Historique des nourrissages</h2>
         <div id="listeNourrissage"></div>
       </div>
     </section>
@@ -310,23 +363,30 @@
       <div class="card">
         <h2>Stock nourriture</h2>
 
-        <label for="stockPoussin">Poussin</label>
-        <input id="stockPoussin" type="number" placeholder="Poussin">
+        <label for="stockPoussin">Poussin (pièces)</label>
+        <input id="stockPoussin" type="number" min="0" placeholder="Poussin">
+        <div class="stock-info">Les boîtes de poussins moyennes sont calculées automatiquement sur base de 225 pièces.</div>
+
+        <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
+        <input id="stockBoitePoussinsMoyenne225" type="number" readonly>
 
         <label for="stockCaille">Caille</label>
-        <input id="stockCaille" type="number" placeholder="Caille">
+        <input id="stockCaille" type="number" min="0" placeholder="Caille">
 
         <label for="stockPigeon">Pigeon</label>
-        <input id="stockPigeon" type="number" placeholder="Pigeon">
+        <input id="stockPigeon" type="number" min="0" placeholder="Pigeon">
 
         <label for="stockLapin">Lapin</label>
-        <input id="stockLapin" type="number" placeholder="Lapin">
+        <input id="stockLapin" type="number" min="0" placeholder="Lapin">
 
         <label for="stockPoisson">Poisson</label>
-        <input id="stockPoisson" type="number" placeholder="Poisson">
+        <input id="stockPoisson" type="number" min="0" placeholder="Poisson">
 
         <label for="stockSouris">Souris</label>
-        <input id="stockSouris" type="number" placeholder="Souris">
+        <input id="stockSouris" type="number" min="0" placeholder="Souris">
+
+        <label for="stockCailleteau30gr">Cailleteau 30gr</label>
+        <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
 
         <div class="actions">
           <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
