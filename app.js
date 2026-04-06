@@ -375,20 +375,32 @@ function buildFirestorePayload() {
   };
 }
 
-function renderDocumentsOiseau(documents) {
-  if (!documents.length) {
-    return `<p class="muted-line">Aucun document lié.</p>`;
-  }
+function showSection(section) {
+  document.querySelectorAll(".section").forEach((el) => el.classList.add("hidden"));
+  document.querySelectorAll(".nav button").forEach((btn) => btn.classList.remove("active"));
+  document.getElementById(`section-${section}`)?.classList.remove("hidden");
+  document.getElementById(`btn-${section}`)?.classList.add("active");
+}
 
-  return `
-    <div class="stack-list">
-      ${documents.map((docItem) => `
-        <a class="doc-link" href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
-          ${safe(docItem.name)}
-        </a>
-      `).join("")}
-    </div>
-  `;
+function refreshStats() {
+  const statOiseaux = document.getElementById("statOiseaux");
+  const statPesees = document.getElementById("statPesees");
+  const statDocuments = document.getElementById("statDocuments");
+  const statNourrissages = document.getElementById("statNourrissages");
+
+  if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length;
+  if (statPesees) statPesees.textContent = appData.pesees.length;
+  if (statDocuments) statDocuments.textContent = appData.documents.length;
+  if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
+}
+
+function refreshBirdSelects() {
+  const birds = appData.oiseaux
+    .map((o) => `<option value="${safeAttr(o.nom)}">${safe(o.nom)}</option>`)
+    .join("");
+
+  const pesNom = document.getElementById("pesNom");
+  if (pesNom) pesNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
 }
 
 function renderHistoriquePoidsTable(historique) {
@@ -416,6 +428,22 @@ function renderHistoriquePoidsTable(historique) {
           `).join("")}
         </tbody>
       </table>
+    </div>
+  `;
+}
+
+function renderDocumentsOiseau(documents) {
+  if (!documents.length) {
+    return `<p class="muted-line">Aucun document lié.</p>`;
+  }
+
+  return `
+    <div class="stack-list">
+      ${documents.map((docItem) => `
+        <a class="doc-link" href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
+          ${safe(docItem.name)}
+        </a>
+      `).join("")}
     </div>
   `;
 }
