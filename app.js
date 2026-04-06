@@ -14,13 +14,13 @@ const firebaseConfig = {
   appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
 };
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const statusEl = document.getElementById("status");
 const syncBadgeEl = document.getElementById("syncBadge");
 
-let rawRapacesData = {}; // <- correction importante
+let rawRapacesData = {};
 
 let appData = {
   oiseaux: [],
@@ -29,6 +29,16 @@ let appData = {
   nourrissage: [],
   stock: {}
 };
+
+const ALIMENTS = [
+  "Poussin",
+  "Caille",
+  "Pigeon",
+  "Lapin",
+  "Poisson",
+  "Souris",
+  "Cailleteau 30gr"
+];
 
 function safe(v) {
   return (v ?? "").toString()
@@ -41,35 +51,29 @@ function safeAttr(v) {
   return safe(v).replaceAll('"', "&quot;");
 }
 
-function formatDisplayDate(value) {
-  if (!value) return "";
-  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const [year, month, day] = value.split("-");
-    return `${day}/${month}/${year}`;
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    const [y, m, d] = dateStr.split("-");
+    return `${d}/${m}/${y}`;
   }
-  const d = new Date(value);
-  if (!Number.isNaN(d.getTime())) return d.toLocaleDateString("fr-BE");
-  return String(value);
+  return dateStr;
 }
 
-function setStatus(message) {
-  if (statusEl) statusEl.textContent = message;
+function setStatus(text) {
+  if (statusEl) statusEl.textContent = text;
 }
 
-function setSyncBadge(label, type = "saved") {
+function setSyncBadge(text, cls = "sync-saved") {
   if (!syncBadgeEl) return;
-  syncBadgeEl.textContent = label;
-  syncBadgeEl.className = "sync-badge";
-  if (type === "online") syncBadgeEl.classList.add("sync-online");
-  else if (type === "offline") syncBadgeEl.classList.add("sync-offline");
-  else if (type === "saving") syncBadgeEl.classList.add("sync-saving");
-  else if (type === "saved") syncBadgeEl.classList.add("sync-saved");
-  else if (type === "error") syncBadgeEl.classList.add("sync-error");
+  syncBadgeEl.textContent = text;
+  syncBadgeEl.className = `sync-badge ${cls}`;
 }
 
 function showSection(section) {
   document.querySelectorAll(".section").forEach((el) => el.classList.add("hidden"));
   document.querySelectorAll(".nav button").forEach((btn) => btn.classList.remove("active"));
+
   document.getElementById(`section-${section}`)?.classList.remove("hidden");
   document.getElementById(`btn-${section}`)?.classList.add("active");
 }
@@ -80,10 +84,10 @@ function renderStats() {
   const statDocuments = document.getElementById("statDocuments");
   const statNourrissages = document.getElementById("statNourrissages");
 
-  if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length;
-  if (statPesees) statPesees.textContent = appData.encodages.length;
-  if (statDocuments) statDocuments.textContent = appData.documents.length;
-  if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
+  if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length || 0;
+  if (statPesees) statPesees.textContent = appData.encodages.length || 0;
+  if (statDocuments) statDocuments.textContent = appData.documents.length || 0;
+  if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length || 0;
 }
 
 function renderOiseaux() {
@@ -91,36 +95,36 @@ function renderOiseaux() {
   if (!zone) return;
 
   if (!appData.oiseaux.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
+    zone.innerHTML = "<p>Aucun oiseau.</p>";
     return;
   }
 
-  zone.innerHTML = appData.oiseaux.map((oiseau) => `
+  zone.innerHTML = appData.oiseaux.map((o) => `
     <div class="item">
-      <h3>${safe(oiseau.nom)}</h3>
-      ${oiseau?.photo?.url ? `<img src="${safeAttr(oiseau.photo.url)}" alt="${safeAttr(oiseau.nom)}" class="bird-photo">` : ""}
-      <p><strong>Espèce :</strong> ${safe(oiseau.espece || "-")}</p>
-      <p><strong>Poids actuel :</strong> ${safe(oiseau.poidsActuel || "-")}</p>
+      <h3>${safe(o.nom || "")}</h3>
+      ${o?.photo?.url ? `<p><img src="${safeAttr(o.photo.url)}" alt="${safeAttr(o.nom || "")}" class="bird-photo"></p>` : ""}
+      <p><strong>Espèce :</strong> ${safe(o.espece || "")}</p>
+      <p><strong>Poids actuel :</strong> ${safe(o.poidsActuel || "")}</p>
 
       <div class="card-section">
-        <h4>Documents liés</h4>
+        <h4>Documents</h4>
         ${
-          Array.isArray(oiseau.documents) && oiseau.documents.length
-            ? oiseau.documents.map((d) => `
-              <p>
-                <a class="doc-link" href="${safeAttr(d.url || "")}" target="_blank" rel="noopener noreferrer">
-                  ${safe(d.name || "Document")}
-                </a>
-              </p>
-            `).join("")
-            : `<p class="muted-line">Aucun document</p>`
+          Array.isArray(o.documents) && o.documents.length
+            ? o.documents.map((d) => `
+                <p>
+                  <a class="doc-link" href="${safeAttr(d.url || "")}" target="_blank" rel="noopener noreferrer">
+                    ${safe(d.name || "Document")}
+                  </a>
+                </p>
+              `).join("")
+            : "<p>Aucun document.</p>"
         }
       </div>
 
       <div class="card-section">
         <h4>Historique poids</h4>
         ${
-          Array.isArray(oiseau.historiquePoids) && oiseau.historiquePoids.length
+          Array.isArray(o.historiquePoids) && o.historiquePoids.length
             ? `
               <div class="feed-table-wrap">
                 <table class="feed-table simple-table">
@@ -131,20 +135,20 @@ function renderOiseaux() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${oiseau.historiquePoids
+                    ${o.historiquePoids
                       .slice()
                       .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
                       .map((h) => `
                         <tr>
-                          <td>${safe(formatDisplayDate(h.date))}</td>
-                          <td>${safe(h.poids)}</td>
+                          <td>${safe(formatDate(h.date || ""))}</td>
+                          <td>${safe(h.poids || "")}</td>
                         </tr>
                       `).join("")}
                   </tbody>
                 </table>
               </div>
             `
-            : `<p class="muted-line">Aucun poids</p>`
+            : "<p>Aucun poids.</p>"
         }
       </div>
     </div>
@@ -155,19 +159,22 @@ function renderPesees() {
   const zone = document.getElementById("listePesees");
   if (!zone) return;
 
-  zone.innerHTML = appData.encodages.length
-    ? appData.encodages
-        .slice()
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-        .map((item) => `
-          <div class="item">
-            <p><strong>Date :</strong> ${safe(formatDisplayDate(item.date))}</p>
-            <p><strong>Nom :</strong> ${safe(item.nom)}</p>
-            <p><strong>Poids :</strong> ${safe(item.poids)}</p>
-            <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-          </div>
-        `).join("")
-    : `<p class="muted-line">Aucun encodage.</p>`;
+  if (!appData.encodages.length) {
+    zone.innerHTML = "<p>Aucun encodage.</p>";
+    return;
+  }
+
+  zone.innerHTML = appData.encodages
+    .slice()
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .map((e) => `
+      <div class="item">
+        <p><strong>Date :</strong> ${safe(formatDate(e.date || ""))}</p>
+        <p><strong>Nom :</strong> ${safe(e.nom || "")}</p>
+        <p><strong>Poids :</strong> ${safe(e.poids || "")}</p>
+        <p><strong>Nourriture :</strong> ${safe(e.nourriture || "")}</p>
+      </div>
+    `).join("");
 }
 
 function renderDocuments() {
@@ -175,56 +182,119 @@ function renderDocuments() {
   if (!zone) return;
 
   if (!appData.documents.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun document général.</p>`;
+    zone.innerHTML = "<p>Aucun document.</p>";
     return;
   }
 
-  zone.innerHTML = appData.documents.map((docItem) => `
+  zone.innerHTML = appData.documents.map((d) => `
     <div class="item">
-      <h3>${safe(docItem.titre || docItem.nom || "Document")}</h3>
-      <p><strong>Type :</strong> ${safe(docItem.type || "-")}</p>
-      <p><strong>Description :</strong> ${safe(docItem.description || "-")}</p>
-      ${
-        docItem.lien || docItem.url
-          ? `<p><a class="doc-link" href="${safeAttr(docItem.lien || docItem.url)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>`
-          : ""
-      }
+      <h3>${safe(d.titre || d.nom || "Document")}</h3>
+      <p><strong>Type :</strong> ${safe(d.type || "")}</p>
+      <p><strong>Description :</strong> ${safe(d.description || "")}</p>
+      ${(d.lien || d.url) ? `<p><a class="doc-link" href="${safeAttr(d.lien || d.url)}" target="_blank" rel="noopener noreferrer">Ouvrir</a></p>` : ""}
     </div>
   `).join("");
 }
 
-function renderNourrissage() {
+function getFoodOptions(selectedValue = "") {
+  const first = `<option value="">Choisir</option>`;
+  const others = ALIMENTS.map((food) => `
+    <option value="${safeAttr(food)}" ${food === selectedValue ? "selected" : ""}>${safe(food)}</option>
+  `).join("");
+  return first + others;
+}
+
+function renderNourrissageTable() {
+  const zone = document.getElementById("feedTableZone");
+  if (!zone) return;
+
+  if (!appData.oiseaux.length) {
+    zone.innerHTML = "<p>Aucun oiseau.</p>";
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Espèce</th>
+            <th>Nourriture 1</th>
+            <th>Qté 1</th>
+            <th>Nourriture 2</th>
+            <th>Qté 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${appData.oiseaux.map((o, index) => `
+            <tr>
+              <td><strong>${safe(o.nom || "")}</strong></td>
+              <td>${safe(o.espece || "")}</td>
+              <td>
+                <select>
+                  ${getFoodOptions(index === 0 ? "Poussin" : "")}
+                </select>
+              </td>
+              <td>
+                <input type="number" min="0" step="1" placeholder="0">
+              </td>
+              <td>
+                <select>
+                  ${getFoodOptions("")}
+                </select>
+              </td>
+              <td>
+                <input type="number" min="0" step="1" placeholder="0">
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted-line">Tableau nourrissage oiseau par oiseau ajouté. Version lecture seule pour ne rien casser.</p>
+  `;
+}
+
+function renderNourrissageHistory() {
   const zone = document.getElementById("listeNourrissage");
-  const summaryZone = document.getElementById("feedSummaryZone");
-  const tableZone = document.getElementById("feedTableZone");
-
-  if (tableZone) {
-    tableZone.innerHTML = `<p class="muted-line">Lecture seule temporaire.</p>`;
-  }
-
-  if (summaryZone) {
-    summaryZone.innerHTML = `<p class="muted-line">Lecture seule temporaire.</p>`;
-  }
-
   if (!zone) return;
 
   if (!appData.nourrissage.length) {
-    zone.innerHTML = `<div class="card"><p class="muted-line">Aucun nourrissage.</p></div>`;
+    zone.innerHTML = "<p>Aucun nourrissage.</p>";
     return;
   }
 
   zone.innerHTML = appData.nourrissage
     .slice()
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-    .map((item) => `
-      <div class="card">
-        <p><strong>Date :</strong> ${safe(formatDisplayDate(item.date))}</p>
-        <p><strong>Oiseau :</strong> ${safe(item.oiseau || item.nom)}</p>
-        <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-        <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
-        <p><strong>Remarques :</strong> ${safe(item.remarques || "-")}</p>
+    .map((n) => `
+      <div class="item">
+        <p><strong>Date :</strong> ${safe(formatDate(n.date || ""))}</p>
+        <p><strong>Oiseau :</strong> ${safe(n.oiseau || n.nom || "")}</p>
+        <p><strong>Nourriture :</strong> ${safe(n.nourriture || "")}</p>
+        <p><strong>Quantité :</strong> ${safe(n.quantite || "")}</p>
+        <p><strong>Remarques :</strong> ${safe(n.remarques || "")}</p>
       </div>
     `).join("");
+}
+
+function renderNourrissageSummary() {
+  const zone = document.getElementById("feedSummaryZone");
+  if (!zone) return;
+
+  zone.innerHTML = `
+    <div class="item">
+      <p><strong>Mode actuel :</strong> lecture seule</p>
+      <p>Le tableau nourrissage par oiseau est affiché sans encore enregistrer, pour éviter de casser l’app.</p>
+    </div>
+  `;
+}
+
+function renderNourrissage() {
+  renderNourrissageTable();
+  renderNourrissageSummary();
+  renderNourrissageHistory();
 }
 
 function renderStock() {
@@ -243,9 +313,6 @@ function renderStock() {
     const el = document.getElementById(id);
     if (el) el.value = appData.stock?.[key] ?? 0;
   });
-
-  const stockAjouterBoitesPoussins = document.getElementById("stockAjouterBoitesPoussins");
-  if (stockAjouterBoitesPoussins) stockAjouterBoitesPoussins.value = "";
 }
 
 function renderAll() {
@@ -258,15 +325,13 @@ function renderAll() {
 }
 
 window.showSection = showSection;
-window.saveData = () => {
-  alert("Sauvegarde désactivée temporairement.");
-};
+window.saveData = () => alert("Sauvegarde désactivée temporairement.");
 window.ajouterOiseau = () => alert("Ajout désactivé temporairement.");
 window.modifierOiseau = () => alert("Modification désactivée temporairement.");
 window.cancelEditBird = () => {};
 window.ajouterPesee = () => alert("Ajout désactivé temporairement.");
 window.ajouterDocument = () => alert("Ajout désactivé temporairement.");
-window.ajouterNourrissage = () => alert("Ajout désactivé temporairement.");
+window.ajouterNourrissage = () => alert("Enregistrement nourrissage pas encore activé.");
 window.appliquerNourritureHabituelle = () => {};
 window.viderTableNourrissage = () => {};
 window.enregistrerStock = () => alert("Modification désactivée temporairement.");
@@ -277,14 +342,14 @@ window.exportBirdPdf = () => alert("PDF désactivé temporairement.");
 document.addEventListener("DOMContentLoaded", async () => {
   showSection("accueil");
   setStatus("Lecture Firestore…");
-  setSyncBadge("Lecture…", "saving");
+  setSyncBadge("Lecture…", "sync-saving");
 
   try {
     const snap = await getDoc(doc(db, "rapaces", "data"));
 
     if (!snap.exists()) {
       setStatus("Document rapaces/data introuvable");
-      setSyncBadge("Introuvable", "error");
+      setSyncBadge("Introuvable", "sync-error");
       return;
     }
 
@@ -300,11 +365,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     renderAll();
     setStatus("Données chargées");
-    setSyncBadge("Lecture seule", "saved");
+    setSyncBadge("Lecture seule", "sync-saved");
     console.log("DATA FIRESTORE", rawRapacesData);
   } catch (e) {
     console.error(e);
     setStatus("Erreur lecture Firestore");
-    setSyncBadge("Erreur", "error");
+    setSyncBadge("Erreur", "sync-error");
   }
 });
