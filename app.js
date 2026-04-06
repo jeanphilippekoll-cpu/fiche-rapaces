@@ -43,7 +43,7 @@ let rawRapacesData = {};
 
 let appData = {
   oiseaux: [],
-  encodages: [],
+  pesees: [],
   documents: [],
   nourrissage: [],
   stock: {
@@ -148,7 +148,7 @@ function normalizeNourrissage(list) {
 
 function normalizeData(data) {
   const oiseauxSource = safeArray(data?.oiseaux);
-  const encodagesSource = safeArray(data?.encodages);
+  const peseesSource = safeArray(data?.encodages || data?.pesees);
   const documentsSource = safeArray(data?.documents);
   const documentsGenerauxSource = safeArray(data?.documentsGeneraux);
   const nourrissageSource = safeArray(data?.nourrissage);
@@ -164,14 +164,16 @@ function normalizeData(data) {
     photoUrl: o?.photo?.url || o.photoUrl || o.photo || "",
     documents: normalizeDocumentsOiseau(o.documents),
     historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
+    nourritureHabituelle: o.nourritureHabituelle || "",
+    quantiteHabituelle: toNumber(o.quantiteHabituelle),
     alerteBasse: o.alerteBasse || "",
     alerteHaute: o.alerteHaute || "",
     documentNom: o.documentNom || "",
     documentUrl: o.documentUrl || ""
   }));
 
-  const encodages = encodagesSource.map((e, index) => ({
-    id: e.id || `enc_${index}_${makeId()}`,
+  const pesees = peseesSource.map((e, index) => ({
+    id: e.id || `pes_${index}_${makeId()}`,
     date: e.date || "",
     nom: e.nom || "",
     espece: e.espece || "",
@@ -217,7 +219,7 @@ function normalizeData(data) {
 
   return {
     oiseaux,
-    encodages,
+    pesees,
     documents,
     nourrissage: normalizeNourrissage(nourrissageSource),
     stock
@@ -238,6 +240,8 @@ function buildFirestorePayload() {
       age: o.age || "",
       poidsActuel: o.poidsActuel ?? "",
       notes: o.notes || "",
+      nourritureHabituelle: o.nourritureHabituelle || "",
+      quantiteHabituelle: toNumber(o.quantiteHabituelle),
       photo: {
         ...(ancien?.photo || {}),
         url: o.photoUrl || ""
@@ -253,7 +257,7 @@ function buildFirestorePayload() {
     };
   });
 
-  const encodages = appData.encodages.map((e) => ({
+  const encodages = appData.pesees.map((e) => ({
     date: e.date || "",
     nom: e.nom || "",
     poids: e.poids ?? "",
@@ -307,12 +311,12 @@ function showSection(section) {
 
 function refreshStats() {
   const statOiseaux = document.getElementById("statOiseaux");
-  const statEncodages = document.getElementById("statEncodages");
+  const statPesees = document.getElementById("statPesees");
   const statDocuments = document.getElementById("statDocuments");
   const statNourrissages = document.getElementById("statNourrissages");
 
   if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length;
-  if (statEncodages) statEncodages.textContent = appData.encodages.length;
+  if (statPesees) statPesees.textContent = appData.pesees.length;
   if (statDocuments) statDocuments.textContent = appData.documents.length;
   if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
 }
@@ -322,25 +326,28 @@ function refreshBirdSelects() {
     .map((o) => `<option value="${safeAttr(o.nom)}">${safe(o.nom)}</option>`)
     .join("");
 
-  const encNom = document.getElementById("encNom");
-  if (encNom) encNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
+  const pesNom = document.getElementById("pesNom");
+  if (pesNom) pesNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
 }
 
-function getEncodagesLies(oiseauNom) {
-  return appData.encodages.filter(
+function getPeseesLies(oiseauNom) {
+  return appData.pesees.filter(
     (e) => (e.nom || "").trim().toLowerCase() === (oiseauNom || "").trim().toLowerCase()
   );
 }
 
 function renderHistoriquePoids(historique) {
   if (!historique.length) {
-    return `<p>Aucun historique de poids.</p>`;
+    return `<p class="muted-line">Aucun historique de poids.</p>`;
   }
 
   return `
-    <div>
+    <div class="stack-list">
       ${historique.map((h) => `
-        <p>• ${safe(h.date)} : ${safe(h.poids)} g</p>
+        <div class="mini-row">
+          <span>${safe(h.date)}</span>
+          <strong>${safe(h.poids)} g</strong>
+        </div>
       `).join("")}
     </div>
   `;
@@ -348,30 +355,28 @@ function renderHistoriquePoids(historique) {
 
 function renderDocumentsOiseau(documents) {
   if (!documents.length) {
-    return `<p>Aucun document lié.</p>`;
+    return `<p class="muted-line">Aucun document lié.</p>`;
   }
 
   return `
-    <div>
+    <div class="stack-list">
       ${documents.map((docItem) => `
-        <p>
-          <a href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
-            ${safe(docItem.name)}
-          </a>
-        </p>
+        <a class="doc-link" href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
+          ${safe(docItem.name)}
+        </a>
       `).join("")}
     </div>
   `;
 }
 
-function renderEncodagesLies(encodages) {
-  if (!encodages.length) {
-    return `<p>Aucun encodage lié.</p>`;
+function renderPeseesLies(pesees) {
+  if (!pesees.length) {
+    return `<p class="muted-line">Aucune pesée liée.</p>`;
   }
 
   return `
-    <div>
-      ${encodages.map((item) => `
+    <div class="stack-list">
+      ${pesees.map((item) => `
         <div class="sub-item">
           <p><strong>Date :</strong> ${safe(item.date)}</p>
           <p><strong>Poids :</strong> ${safe(item.poids)}</p>
@@ -388,75 +393,99 @@ function renderOiseaux() {
   if (!zone) return;
 
   if (!appData.oiseaux.length) {
-    zone.innerHTML = `<p>Aucun oiseau.</p>`;
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
     return;
   }
 
-  zone.innerHTML = appData.oiseaux.map((oiseau) => {
-    const encodagesLies = getEncodagesLies(oiseau.nom);
+  zone.innerHTML = `
+    <div class="bird-grid">
+      ${appData.oiseaux.map((oiseau) => {
+        const peseesLies = getPeseesLies(oiseau.nom);
 
-    return `
-      <div class="item">
-        <h3>${safe(oiseau.nom)}</h3>
+        return `
+          <article class="bird-card">
+            <div class="bird-card-head">
+              <div>
+                <h3>${safe(oiseau.nom)}</h3>
+                <p class="bird-species">${safe(oiseau.espece || "Espèce non renseignée")}</p>
+              </div>
+              <div class="weight-pill">${safe(oiseau.poidsActuel || "-")} g</div>
+            </div>
 
-        ${oiseau.photoUrl ? `
-          <p>
-            <img src="${safeAttr(oiseau.photoUrl)}" alt="${safeAttr(oiseau.nom)}" class="bird-photo">
-          </p>
-        ` : ""}
+            ${oiseau.photoUrl ? `
+              <img src="${safeAttr(oiseau.photoUrl)}" alt="${safeAttr(oiseau.nom)}" class="bird-photo">
+            ` : `
+              <div class="bird-photo-placeholder">Pas de photo</div>
+            `}
 
-        <p><strong>Espèce :</strong> ${safe(oiseau.espece)}</p>
-        <p><strong>Sexe :</strong> ${safe(oiseau.sexe)}</p>
-        <p><strong>Âge :</strong> ${safe(oiseau.age)}</p>
-        <p><strong>Poids actuel :</strong> ${safe(oiseau.poidsActuel)}</p>
-        <p><strong>Notes :</strong> ${safe(oiseau.notes)}</p>
+            <div class="bird-meta">
+              <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
+              <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
+            </div>
 
-        <hr class="sep">
+            <div class="card-section">
+              <h4>Notes</h4>
+              <p>${safe(oiseau.notes || "Aucune note")}</p>
+            </div>
 
-        <h4>Documents liés</h4>
-        ${renderDocumentsOiseau(oiseau.documents)}
+            <div class="card-section">
+              <h4>Nourriture habituelle</h4>
+              <p>${safe(oiseau.nourritureHabituelle || "Non définie")}</p>
+              <p>Quantité : ${safe(oiseau.quantiteHabituelle || 0)} pièce(s)</p>
+            </div>
 
-        <hr class="sep">
+            <div class="card-section">
+              <h4>Documents liés</h4>
+              ${renderDocumentsOiseau(oiseau.documents)}
+            </div>
 
-        <h4>Historique du poids</h4>
-        ${renderHistoriquePoids(oiseau.historiquePoids)}
+            <div class="card-section">
+              <h4>Historique du poids</h4>
+              ${renderHistoriquePoids(oiseau.historiquePoids)}
+            </div>
 
-        <hr class="sep">
+            <div class="card-section">
+              <h4>Pesées liées</h4>
+              ${renderPeseesLies(peseesLies)}
+            </div>
 
-        <h4>Encodages liés</h4>
-        ${renderEncodagesLies(encodagesLies)}
-
-        <div class="small-actions">
-          <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-        </div>
-      </div>
-    `;
-  }).join("");
+            <div class="small-actions">
+              <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+            </div>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
-function renderEncodages() {
-  const zone = document.getElementById("listeEncodages");
+function renderPesees() {
+  const zone = document.getElementById("listePesees");
   if (!zone) return;
 
-  if (!appData.encodages.length) {
-    zone.innerHTML = `<p>Aucun encodage.</p>`;
+  if (!appData.pesees.length) {
+    zone.innerHTML = `<p class="muted-line">Aucune pesée.</p>`;
     return;
   }
 
-  zone.innerHTML = appData.encodages.map((item) => `
-    <div class="item">
-      <p><strong>Date :</strong> ${safe(item.date)}</p>
-      <p><strong>Nom :</strong> ${safe(item.nom)}</p>
-      <p><strong>Espèce :</strong> ${safe(item.espece)}</p>
-      <p><strong>Poids :</strong> ${safe(item.poids)}</p>
-      <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-      <p><strong>État :</strong> ${safe(item.etat)}</p>
-      <p><strong>Observations :</strong> ${safe(item.observations)}</p>
-      <div class="small-actions">
-        <button class="btn btn-danger" onclick="supprimerEncodage('${item.id}')">Supprimer</button>
-      </div>
+  zone.innerHTML = `
+    <div class="list-grid">
+      ${appData.pesees.map((item) => `
+        <div class="item">
+          <p><strong>Date :</strong> ${safe(item.date)}</p>
+          <p><strong>Nom :</strong> ${safe(item.nom)}</p>
+          <p><strong>Espèce :</strong> ${safe(item.espece)}</p>
+          <p><strong>Poids :</strong> ${safe(item.poids)}</p>
+          <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
+          <p><strong>État :</strong> ${safe(item.etat)}</p>
+          <p><strong>Observations :</strong> ${safe(item.observations)}</p>
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerPesee('${item.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join("")}
     </div>
-  `).join("");
+  `;
 }
 
 function renderDocuments() {
@@ -464,21 +493,25 @@ function renderDocuments() {
   if (!zone) return;
 
   if (!appData.documents.length) {
-    zone.innerHTML = `<p>Aucun document général.</p>`;
+    zone.innerHTML = `<p class="muted-line">Aucun document général.</p>`;
     return;
   }
 
-  zone.innerHTML = appData.documents.map((docItem) => `
-    <div class="item">
-      <h3>${safe(docItem.titre)}</h3>
-      <p><strong>Type :</strong> ${safe(docItem.type)}</p>
-      <p><strong>Description :</strong> ${safe(docItem.description)}</p>
-      ${docItem.lien ? `<p><a href="${safeAttr(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>` : ""}
-      <div class="small-actions">
-        <button class="btn btn-danger" onclick="supprimerDocument('${docItem.id}')">Supprimer</button>
-      </div>
+  zone.innerHTML = `
+    <div class="list-grid">
+      ${appData.documents.map((docItem) => `
+        <div class="item">
+          <h3>${safe(docItem.titre)}</h3>
+          <p><strong>Type :</strong> ${safe(docItem.type)}</p>
+          <p><strong>Description :</strong> ${safe(docItem.description)}</p>
+          ${docItem.lien ? `<p><a class="doc-link" href="${safeAttr(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>` : ""}
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerDocument('${docItem.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join("")}
     </div>
-  `).join("");
+  `;
 }
 
 function getFoodOptionsHtml(selected = "") {
@@ -497,11 +530,20 @@ function renderNourrissageTable() {
   if (!zone) return;
 
   if (!appData.oiseaux.length) {
-    zone.innerHTML = `<p>Aucun oiseau disponible.</p>`;
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau disponible.</p>`;
     return;
   }
 
   zone.innerHTML = `
+    <div class="feed-toolbar">
+      <button class="btn secondary-btn" onclick="appliquerNourritureHabituelle()">
+        Remplir avec nourriture habituelle
+      </button>
+      <button class="btn secondary-btn" onclick="viderTableNourrissage()">
+        Vider le tableau
+      </button>
+    </div>
+
     <div class="feed-table-wrap">
       <table class="feed-table">
         <thead>
@@ -618,7 +660,7 @@ function renderNourrissageHistory() {
   if (!zone) return;
 
   if (!appData.nourrissage.length) {
-    zone.innerHTML = `<p>Aucun nourrissage.</p>`;
+    zone.innerHTML = `<p class="muted-line">Aucun nourrissage.</p>`;
     return;
   }
 
@@ -626,18 +668,22 @@ function renderNourrissageHistory() {
     return (b.date || "").localeCompare(a.date || "");
   });
 
-  zone.innerHTML = sorted.map((item) => `
-    <div class="item">
-      <p><strong>Date :</strong> ${safe(item.date)}</p>
-      <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
-      <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-      <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
-      <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
-      <div class="small-actions">
-        <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-      </div>
+  zone.innerHTML = `
+    <div class="list-grid">
+      ${sorted.map((item) => `
+        <div class="item">
+          <p><strong>Date :</strong> ${safe(item.date)}</p>
+          <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
+          <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
+          <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
+          <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join("")}
     </div>
-  `).join("");
+  `;
 }
 
 function renderNourrissage() {
@@ -672,7 +718,7 @@ function renderAll() {
   refreshStats();
   refreshBirdSelects();
   renderOiseaux();
-  renderEncodages();
+  renderPesees();
   renderDocuments();
   renderNourrissage();
   fillStockForm();
@@ -723,6 +769,8 @@ async function ajouterOiseau() {
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
   const poidsActuel = document.getElementById("oiseauPoids")?.value.trim() || "";
   const notes = document.getElementById("oiseauNotes")?.value.trim() || "";
+  const nourritureHabituelle = document.getElementById("oiseauHabitudeFood")?.value || "";
+  const quantiteHabituelle = toNumber(document.getElementById("oiseauHabitudeQty")?.value || 0);
 
   const photoFile = document.getElementById("oiseauPhotoFile")?.files?.[0] || null;
   const docFile = document.getElementById("oiseauDocFile")?.files?.[0] || null;
@@ -760,6 +808,8 @@ async function ajouterOiseau() {
       age,
       poidsActuel,
       notes,
+      nourritureHabituelle,
+      quantiteHabituelle,
       photoUrl,
       documents,
       historiquePoids: []
@@ -771,11 +821,15 @@ async function ajouterOiseau() {
       "oiseauSexe",
       "oiseauAge",
       "oiseauPoids",
-      "oiseauNotes"
+      "oiseauNotes",
+      "oiseauHabitudeQty"
     ].forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.value = "";
     });
+
+    const habFoodEl = document.getElementById("oiseauHabitudeFood");
+    if (habFoodEl) habFoodEl.value = "";
 
     const photoInput = document.getElementById("oiseauPhotoFile");
     const docInput = document.getElementById("oiseauDocFile");
@@ -792,23 +846,23 @@ async function ajouterOiseau() {
   }
 }
 
-function ajouterEncodage() {
-  const nom = document.getElementById("encNom")?.value || "";
+function ajouterPesee() {
+  const nom = document.getElementById("pesNom")?.value || "";
   if (!nom) return;
 
-  const date = document.getElementById("encDate")?.value || "";
-  const poids = document.getElementById("encPoids")?.value.trim() || "";
+  const date = document.getElementById("pesDate")?.value || "";
+  const poids = document.getElementById("pesPoids")?.value.trim() || "";
 
-  appData.encodages.unshift({
+  appData.pesees.unshift({
     id: makeId(),
     date,
     nom,
-    espece: document.getElementById("encEspece")?.value.trim() || "",
+    espece: document.getElementById("pesEspece")?.value.trim() || "",
     poids,
-    nourriture: document.getElementById("encNourriture")?.value.trim() || "",
-    etat: document.getElementById("encEtat")?.value.trim() || "",
-    lieu: document.getElementById("encLieu")?.value.trim() || "",
-    observations: document.getElementById("encObs")?.value.trim() || ""
+    nourriture: document.getElementById("pesNourriture")?.value.trim() || "",
+    etat: document.getElementById("pesEtat")?.value.trim() || "",
+    lieu: document.getElementById("pesLieu")?.value.trim() || "",
+    observations: document.getElementById("pesObs")?.value.trim() || ""
   });
 
   const oiseau = appData.oiseaux.find(
@@ -823,10 +877,10 @@ function ajouterEncodage() {
     });
   }
 
-  const encDateEl = document.getElementById("encDate");
-  if (encDateEl) encDateEl.value = todayStr();
+  const pesDateEl = document.getElementById("pesDate");
+  if (pesDateEl) pesDateEl.value = todayStr();
 
-  ["encNom","encEspece","encPoids","encNourriture","encEtat","encLieu","encObs"].forEach((id) => {
+  ["pesNom","pesEspece","pesPoids","pesNourriture","pesEtat","pesLieu","pesObs"].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
   });
@@ -919,6 +973,35 @@ function ajouterNourrissage() {
   if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
 }
 
+function appliquerNourritureHabituelle() {
+  appData.oiseaux.forEach((oiseau) => {
+    const foodEl = document.getElementById(`feedFood_${oiseau.id}`);
+    const qtyEl = document.getElementById(`feedQty_${oiseau.id}`);
+
+    if (foodEl && oiseau.nourritureHabituelle) {
+      foodEl.value = oiseau.nourritureHabituelle;
+    }
+
+    if (qtyEl && toNumber(oiseau.quantiteHabituelle) > 0) {
+      qtyEl.value = toNumber(oiseau.quantiteHabituelle);
+    }
+  });
+
+  if (statusEl) statusEl.textContent = "Nourriture habituelle appliquée";
+}
+
+function viderTableNourrissage() {
+  appData.oiseaux.forEach((oiseau) => {
+    const foodEl = document.getElementById(`feedFood_${oiseau.id}`);
+    const qtyEl = document.getElementById(`feedQty_${oiseau.id}`);
+
+    if (foodEl) foodEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+  });
+
+  if (statusEl) statusEl.textContent = "Tableau vidé";
+}
+
 function enregistrerStock() {
   appData.stock = {
     poussin: Math.max(0, toNumber(document.getElementById("stockPoussin")?.value || 0)),
@@ -942,8 +1025,8 @@ function supprimerOiseau(id) {
   renderAll();
 }
 
-function supprimerEncodage(id) {
-  appData.encodages = appData.encodages.filter((e) => e.id !== id);
+function supprimerPesee(id) {
+  appData.pesees = appData.pesees.filter((e) => e.id !== id);
   renderAll();
 }
 
@@ -973,8 +1056,8 @@ function supprimerNourrissage(id) {
   renderAll();
 }
 
-const encDateEl = document.getElementById("encDate");
-if (encDateEl) encDateEl.value = todayStr();
+const pesDateEl = document.getElementById("pesDate");
+if (pesDateEl) pesDateEl.value = todayStr();
 
 const feedDateEl = document.getElementById("feedDate");
 if (feedDateEl) feedDateEl.value = todayStr();
@@ -982,12 +1065,14 @@ if (feedDateEl) feedDateEl.value = todayStr();
 window.showSection = showSection;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
-window.ajouterEncodage = ajouterEncodage;
+window.ajouterPesee = ajouterPesee;
 window.ajouterDocument = ajouterDocument;
 window.ajouterNourrissage = ajouterNourrissage;
+window.appliquerNourritureHabituelle = appliquerNourritureHabituelle;
+window.viderTableNourrissage = viderTableNourrissage;
 window.enregistrerStock = enregistrerStock;
 window.supprimerOiseau = supprimerOiseau;
-window.supprimerEncodage = supprimerEncodage;
+window.supprimerPesee = supprimerPesee;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
 
