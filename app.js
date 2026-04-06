@@ -10,6 +10,7 @@ import {
   deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// Remplace TOUTES ces valeurs par celles de ton projet Firebase
 const firebaseConfig = {
   apiKey: "TON_API_KEY",
   authDomain: "TON_PROJET.firebaseapp.com",
@@ -23,9 +24,12 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("Firebase initialisé OK");
+console.log("URL actuelle :", window.location.href);
+console.log("En ligne :", navigator.onLine);
 
 const statusEl = document.getElementById("status");
 const syncBadge = document.getElementById("syncBadge");
+const offlineMessage = document.getElementById("offlineMessage");
 
 const state = {
   oiseaux: [],
@@ -47,21 +51,32 @@ function setBadge(text, type = "sync-saving") {
   syncBadge.textContent = text;
 }
 
+function showOfflineMessage(show) {
+  if (!offlineMessage) return;
+  offlineMessage.classList.toggle("hidden", !show);
+}
+
 window.showSection = function (sectionName) {
   const sections = ["accueil", "oiseaux", "stock"];
   sections.forEach((name) => {
-    document.getElementById(`section-${name}`).classList.toggle("hidden", name !== sectionName);
-    document.getElementById(`btn-${name}`).classList.toggle("active", name === sectionName);
+    const section = document.getElementById(`section-${name}`);
+    const button = document.getElementById(`btn-${name}`);
+    if (section) section.classList.toggle("hidden", name !== sectionName);
+    if (button) button.classList.toggle("active", name === sectionName);
   });
 };
 
 function renderAccueil() {
-  document.getElementById("statOiseaux").textContent = state.oiseaux.length;
-  document.getElementById("statStock").textContent = Object.keys(state.stock).length;
+  const statOiseaux = document.getElementById("statOiseaux");
+  const statStock = document.getElementById("statStock");
+
+  if (statOiseaux) statOiseaux.textContent = state.oiseaux.length;
+  if (statStock) statStock.textContent = Object.keys(state.stock).length;
 }
 
 function renderOiseaux() {
   const zone = document.getElementById("listeOiseaux");
+  if (!zone) return;
 
   if (!state.oiseaux.length) {
     zone.innerHTML = `<div class="item"><p>Aucun oiseau enregistré.</p></div>`;
@@ -70,9 +85,9 @@ function renderOiseaux() {
 
   zone.innerHTML = state.oiseaux.map((oiseau) => `
     <div class="item">
-      <p><strong>Nom :</strong> ${escapeHtml(oiseau.nom)}</p>
-      <p><strong>Espèce :</strong> ${escapeHtml(oiseau.espece)}</p>
-      <p><strong>Poids :</strong> ${oiseau.poids} g</p>
+      <p><strong>Nom :</strong> ${escapeHtml(oiseau.nom || "")}</p>
+      <p><strong>Espèce :</strong> ${escapeHtml(oiseau.espece || "")}</p>
+      <p><strong>Poids :</strong> ${Number(oiseau.poids || 0)} g</p>
       <button class="btn" onclick="deleteBird('${oiseau.id}')">Supprimer</button>
     </div>
   `).join("");
@@ -80,17 +95,24 @@ function renderOiseaux() {
 
 function renderStock() {
   const zone = document.getElementById("stockResume");
+  if (!zone) return;
+
   zone.innerHTML = `
-    <div class="item"><strong>Poussins :</strong> ${state.stock.poussin}</div>
-    <div class="item"><strong>Cailles :</strong> ${state.stock.caille}</div>
-    <div class="item"><strong>Pigeons :</strong> ${state.stock.pigeon}</div>
-    <div class="item"><strong>Lapins :</strong> ${state.stock.lapin}</div>
+    <div class="item"><strong>Poussins :</strong> ${Number(state.stock.poussin || 0)}</div>
+    <div class="item"><strong>Cailles :</strong> ${Number(state.stock.caille || 0)}</div>
+    <div class="item"><strong>Pigeons :</strong> ${Number(state.stock.pigeon || 0)}</div>
+    <div class="item"><strong>Lapins :</strong> ${Number(state.stock.lapin || 0)}</div>
   `;
 
-  document.getElementById("stockPoussin").value = state.stock.poussin;
-  document.getElementById("stockCaille").value = state.stock.caille;
-  document.getElementById("stockPigeon").value = state.stock.pigeon;
-  document.getElementById("stockLapin").value = state.stock.lapin;
+  const stockPoussin = document.getElementById("stockPoussin");
+  const stockCaille = document.getElementById("stockCaille");
+  const stockPigeon = document.getElementById("stockPigeon");
+  const stockLapin = document.getElementById("stockLapin");
+
+  if (stockPoussin) stockPoussin.value = state.stock.poussin;
+  if (stockCaille) stockCaille.value = state.stock.caille;
+  if (stockPigeon) stockPigeon.value = state.stock.pigeon;
+  if (stockLapin) stockLapin.value = state.stock.lapin;
 }
 
 function renderAll() {
@@ -104,11 +126,12 @@ async function chargerStock() {
   const snap = await getDoc(ref);
 
   if (snap.exists()) {
+    const data = snap.data();
     state.stock = {
-      poussin: Number(snap.data().poussin || 0),
-      caille: Number(snap.data().caille || 0),
-      pigeon: Number(snap.data().pigeon || 0),
-      lapin: Number(snap.data().lapin || 0)
+      poussin: Number(data.poussin || 0),
+      caille: Number(data.caille || 0),
+      pigeon: Number(data.pigeon || 0),
+      lapin: Number(data.lapin || 0)
     };
   }
 
@@ -126,9 +149,9 @@ async function chargerOiseaux() {
 }
 
 window.addBird = async function () {
-  const nom = document.getElementById("birdName").value.trim();
-  const espece = document.getElementById("birdSpecies").value.trim();
-  const poids = Number(document.getElementById("birdWeight").value);
+  const nom = document.getElementById("birdName")?.value.trim() || "";
+  const espece = document.getElementById("birdSpecies")?.value.trim() || "";
+  const poids = Number(document.getElementById("birdWeight")?.value || 0);
 
   if (!nom || !espece || !poids) {
     alert("Merci de remplir nom, espèce et poids.");
@@ -185,10 +208,10 @@ window.deleteBird = async function (id) {
 
 window.enregistrerStock = async function () {
   const stock = {
-    poussin: Number(document.getElementById("stockPoussin").value || 0),
-    caille: Number(document.getElementById("stockCaille").value || 0),
-    pigeon: Number(document.getElementById("stockPigeon").value || 0),
-    lapin: Number(document.getElementById("stockLapin").value || 0)
+    poussin: Number(document.getElementById("stockPoussin")?.value || 0),
+    caille: Number(document.getElementById("stockCaille")?.value || 0),
+    pigeon: Number(document.getElementById("stockPigeon")?.value || 0),
+    lapin: Number(document.getElementById("stockLapin")?.value || 0)
   };
 
   try {
@@ -233,6 +256,7 @@ async function initApp() {
   try {
     setStatus("Connexion à Firebase…");
     setBadge("Lecture…", "sync-online");
+    showOfflineMessage(false);
 
     await chargerStock();
     await chargerOiseaux();
@@ -243,9 +267,35 @@ async function initApp() {
     setBadge("Connecté", "sync-online");
   } catch (error) {
     console.error("Erreur initApp :", error);
+
+    const message = String(error?.message || "");
+
+    if (message.includes("client is offline")) {
+      setStatus("Firestore hors ligne. Ouvre le vrai site GitHub Pages et vide le cache.");
+      setBadge("Hors ligne", "sync-error");
+      showOfflineMessage(true);
+      renderAll();
+      return;
+    }
+
     setStatus("Erreur de chargement Firebase.");
     setBadge("Erreur", "sync-error");
+    showOfflineMessage(false);
   }
 }
+
+window.addEventListener("online", () => {
+  console.log("Connexion revenue");
+  setStatus("Connexion revenue.");
+  setBadge("Connecté", "sync-online");
+  showOfflineMessage(false);
+});
+
+window.addEventListener("offline", () => {
+  console.log("Navigateur hors ligne");
+  setStatus("Navigateur hors ligne.");
+  setBadge("Hors ligne", "sync-error");
+  showOfflineMessage(true);
+});
 
 initApp();

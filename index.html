@@ -207,6 +207,15 @@
       margin:0;
     }
 
+    .warning-box{
+      background:#fff3d8;
+      color:#7a5a00;
+      border:1px solid rgba(122,90,0,0.18);
+      border-radius:14px;
+      padding:14px;
+      margin-top:12px;
+    }
+
     @media (max-width: 700px){
       .nav button,.btn{width:100%}
       .page-title{font-size:28px}
@@ -248,6 +257,10 @@
           <p id="statStock" class="stats-number">0</p>
           <p class="stat-label">Articles suivis</p>
         </div>
+      </div>
+
+      <div id="offlineMessage" class="warning-box hidden">
+        Firestore semble hors ligne. Vérifie que tu ouvres bien le site GitHub Pages, puis vide le cache du navigateur.
       </div>
     </section>
 
