@@ -20,6 +20,7 @@
       --accent:#8aa36b;
       --accent2:#e7dcc6;
       --danger:#b75b52;
+      --info:#91a9d8;
       --card-shadow:0 12px 30px rgba(75,57,30,0.08);
       --radius:18px;
     }
@@ -154,7 +155,7 @@
     }
 
     .btn-view{
-      background:#91a9d8;
+      background:var(--info);
       color:#fff;
     }
 
@@ -240,7 +241,6 @@
     }
 
     .bird-card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
       border:1px solid var(--line);
       border-radius:20px;
       padding:18px;
@@ -283,6 +283,16 @@
       display:block;
       margin-bottom:14px;
       background:#efe6d1;
+    }
+
+    .bird-photo-large{
+      width:100%;
+      max-height:380px;
+      object-fit:cover;
+      border-radius:18px;
+      display:block;
+      background:#efe6d1;
+      margin-top:10px;
     }
 
     .bird-photo-placeholder{
@@ -424,8 +434,46 @@
     .bird-detail-box{
       border:2px solid rgba(96,76,46,0.12);
       border-radius:18px;
-      padding:16px;
+      padding:18px;
       background:#fffdf8;
+    }
+
+    .bird-detail-head{
+      display:grid;
+      grid-template-columns:minmax(280px, 420px) 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .bird-detail-side{
+      display:grid;
+      gap:14px;
+    }
+
+    .chart-wrap{
+      margin-top:14px;
+      padding:14px;
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:14px;
+    }
+
+    .chart-wrap canvas{
+      width:100%;
+      height:260px;
+      display:block;
+      background:#fffdf8;
+      border-radius:12px;
+    }
+
+    .back-row{
+      margin-bottom:12px;
+    }
+
+    @media (max-width: 950px){
+      .bird-detail-head{
+        grid-template-columns:1fr;
+      }
     }
 
     @media (max-width: 900px){
@@ -445,6 +493,7 @@
       .page-title{font-size:28px}
       .app{padding:12px}
       .card{padding:14px}
+      .bird-photo-large{max-height:260px}
     }
   </style>
 </head>
@@ -592,6 +641,9 @@
       </div>
 
       <div class="card hidden" id="birdDetailCard">
+        <div class="back-row">
+          <button class="btn secondary-btn" onclick="fermerFicheOiseau()">← Retour à la liste</button>
+        </div>
         <h2>Fiche individuelle</h2>
         <div id="birdDetailContent"></div>
       </div>
@@ -647,34 +699,44 @@
       </div>
 
       <div class="card">
-        <h2>Historique pesées</h2>
-        <div id="listePesees"></div>
-      </div>
-    </section>
+  <h2>Informations</h2>
+  <div id="listePesees"></div>
+</div>
 
     <section id="section-documents" class="section hidden">
-      <div class="card">
-        <h2>Documents</h2>
+  <div class="card">
+    <h2>Documents</h2>
 
-        <div class="form-grid">
-          <div>
-            <label for="docTitre">Titre</label>
-            <input id="docTitre" placeholder="Titre">
-          </div>
-
-          <div>
-            <label for="docType">Type</label>
-            <input id="docType" placeholder="Type">
-          </div>
-        </div>
-
-        <label for="docDescription">Description</label>
-        <textarea id="docDescription" placeholder="Description"></textarea>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
-        </div>
+    <div class="form-grid">
+      <div>
+        <label for="docTitre">Titre</label>
+        <input id="docTitre" placeholder="Titre">
       </div>
+
+      <div>
+        <label for="docType">Type</label>
+        <input id="docType" placeholder="Type">
+      </div>
+
+      <div>
+        <label for="docFileGeneral">Fichier</label>
+        <input id="docFileGeneral" type="file" accept=".pdf,image/*,.doc,.docx,.xls,.xlsx">
+      </div>
+    </div>
+
+    <label for="docDescription">Description</label>
+    <textarea id="docDescription" placeholder="Description"></textarea>
+
+    <div class="actions">
+      <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Liste des documents</h2>
+    <div id="listeDocuments"></div>
+  </div>
+</section>
 
       <div class="card">
         <h2>Liste des documents</h2>
