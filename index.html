@@ -96,12 +96,6 @@
       border-color:rgba(82,112,61,0.18);
     }
 
-    .sync-offline{
-      background:#f5eadf;
-      color:#8a5a32;
-      border-color:rgba(138,90,50,0.18);
-    }
-
     .sync-saving{
       background:#fff3d8;
       color:#9b6a00;
@@ -196,7 +190,7 @@
       font-weight:700;
     }
 
-    .actions,.small-actions,.feed-toolbar{
+    .actions,.small-actions{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
@@ -321,13 +315,8 @@
       margin:0 0 10px 0;
     }
 
-    .stack-list{
-      display:grid;
-      gap:8px;
-    }
-
     .doc-link{
-      display:block;
+      display:inline-block;
       padding:10px 12px;
       border-radius:10px;
       background:#fffdf8;
@@ -436,9 +425,9 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Version crème • mobile/tablette • cache hors ligne</p>
+        <p class="page-subtitle">Version stable nourrissage + stock</p>
         <div id="status">Chargement…</div>
-        <div id="syncBadge" class="sync-badge sync-saving">Synchronisation…</div>
+        <div id="syncBadge" class="sync-badge sync-saving">Lecture…</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="saveData()">Sauvegarder</button>
@@ -481,95 +470,6 @@
 
     <section id="section-oiseaux" class="section hidden">
       <div class="card">
-        <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
-
-        <input id="oiseauEditId" type="hidden">
-
-        <div class="form-grid">
-          <div>
-            <label for="oiseauNom">Nom</label>
-            <input id="oiseauNom" placeholder="Nom">
-          </div>
-
-          <div>
-            <label for="oiseauEspece">Espèce</label>
-            <input id="oiseauEspece" placeholder="Espèce">
-          </div>
-
-          <div>
-            <label for="oiseauSexe">Sexe</label>
-            <input id="oiseauSexe" placeholder="Sexe">
-          </div>
-
-          <div>
-            <label for="oiseauAge">Âge</label>
-            <input id="oiseauAge" placeholder="Âge">
-          </div>
-
-          <div>
-            <label for="oiseauPoids">Poids</label>
-            <input id="oiseauPoids" placeholder="Poids (g)">
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
-            <select id="oiseauHabitudeFood">
-              <option value="">Choisir</option>
-              <option value="Poussin">Poussin</option>
-              <option value="Caille">Caille</option>
-              <option value="Pigeon">Pigeon</option>
-              <option value="Lapin">Lapin</option>
-              <option value="Poisson">Poisson</option>
-              <option value="Souris">Souris</option>
-              <option value="Cailleteau 30gr">Cailleteau 30gr</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
-            <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeFood2">Nourriture habituelle 2</label>
-            <select id="oiseauHabitudeFood2">
-              <option value="">Choisir</option>
-              <option value="Poussin">Poussin</option>
-              <option value="Caille">Caille</option>
-              <option value="Pigeon">Pigeon</option>
-              <option value="Lapin">Lapin</option>
-              <option value="Poisson">Poisson</option>
-              <option value="Souris">Souris</option>
-              <option value="Cailleteau 30gr">Cailleteau 30gr</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
-            <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
-          </div>
-
-          <div>
-            <label for="oiseauPhotoFile">Photo</label>
-            <input id="oiseauPhotoFile" type="file" accept="image/*">
-          </div>
-
-          <div>
-            <label for="oiseauDocFile">Document</label>
-            <input id="oiseauDocFile" type="file" accept=".pdf,image/*">
-          </div>
-        </div>
-
-        <label for="oiseauNotes">Notes</label>
-        <textarea id="oiseauNotes" placeholder="Notes"></textarea>
-
-        <div class="actions">
-          <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
-          <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
-        </div>
-      </div>
-
-      <div class="card">
         <h2>Fiches oiseaux</h2>
         <div id="listeOiseaux"></div>
       </div>
@@ -577,55 +477,7 @@
 
     <section id="section-pesee" class="section hidden">
       <div class="card">
-        <h2>Nouvelle pesée</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="pesDate">Date</label>
-            <input id="pesDate" type="date">
-          </div>
-
-          <div>
-            <label for="pesNom">Oiseau</label>
-            <select id="pesNom"></select>
-          </div>
-
-          <div>
-            <label for="pesEspece">Espèce</label>
-            <input id="pesEspece" placeholder="Espèce">
-          </div>
-
-          <div>
-            <label for="pesPoids">Poids</label>
-            <input id="pesPoids" placeholder="Poids">
-          </div>
-
-          <div>
-            <label for="pesNourriture">Nourriture</label>
-            <input id="pesNourriture" placeholder="Nourriture">
-          </div>
-
-          <div>
-            <label for="pesEtat">État</label>
-            <input id="pesEtat" placeholder="État">
-          </div>
-
-          <div>
-            <label for="pesLieu">Lieu</label>
-            <input id="pesLieu" placeholder="Lieu">
-          </div>
-        </div>
-
-        <label for="pesObs">Observations</label>
-        <textarea id="pesObs" placeholder="Observations"></textarea>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterPesee()">Ajouter pesée</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Informations</h2>
+        <h2>Pesées oiseaux</h2>
         <div id="listePesees"></div>
       </div>
     </section>
@@ -633,60 +485,42 @@
     <section id="section-documents" class="section hidden">
       <div class="card">
         <h2>Documents</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="docTitre">Titre</label>
-            <input id="docTitre" placeholder="Titre">
-          </div>
-
-          <div>
-            <label for="docType">Type</label>
-            <input id="docType" placeholder="Type">
-          </div>
-        </div>
-
-        <label for="docDescription">Description</label>
-        <textarea id="docDescription" placeholder="Description"></textarea>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Liste des documents</h2>
         <div id="listeDocuments"></div>
       </div>
     </section>
 
     <section id="section-nourrissage" class="section hidden">
       <div class="card">
-        <h2>Nourrissage du jour</h2>
+        <h2>Nourrissage oiseau par oiseau</h2>
 
         <div class="form-grid">
           <div>
             <label for="feedDate">Date</label>
             <input id="feedDate" type="date">
           </div>
-        </div>
 
-        <label for="feedNote">Remarques générales</label>
-        <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
+          <div>
+            <label for="feedNote">Remarques générales</label>
+            <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
+          </div>
+        </div>
 
         <div id="feedTableZone"></div>
 
         <div class="actions">
-          <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
+          <button class="btn" onclick="validerNourrissage()">Valider nourrissage</button>
         </div>
       </div>
 
       <div class="card">
-        <h2>Totaux nourrissage</h2>
+        <h2>Totaux jour / semaine</h2>
         <div id="feedSummaryZone"></div>
       </div>
 
-      <div id="listeNourrissage"></div>
+      <div class="card">
+        <h2>Historique nourrissage</h2>
+        <div id="listeNourrissage"></div>
+      </div>
     </section>
 
     <section id="section-stock" class="section hidden">
@@ -695,50 +529,44 @@
 
         <div class="form-grid">
           <div>
-            <label for="stockBoitePoussinsMoyenne225">Boîtes restantes (calculé)</label>
-            <input id="stockBoitePoussinsMoyenne225" type="number" readonly>
-            <div class="stock-info">Calcul automatique selon le stock réel restant en poussins.</div>
+            <label for="stockBoitePoussinsMoyenne225">Boîtes de poussins (225)</label>
+            <input id="stockBoitePoussinsMoyenne225" type="number" min="0">
+            <div class="stock-info">1 boîte = 225 poussins</div>
           </div>
 
           <div>
-            <label for="stockAjouterBoitesPoussins">Ajouter des boîtes de poussins (225)</label>
-            <input id="stockAjouterBoitesPoussins" type="number" min="0" placeholder="Ex : 1 ou 2">
-            <div class="stock-info">Ajoute de nouvelles boîtes sans écraser le stock restant.</div>
-          </div>
-
-          <div>
-            <label for="stockPoussin">Poussins disponibles</label>
-            <input id="stockPoussin" type="number" readonly>
+            <label for="stockPoussin">Poussins pièce</label>
+            <input id="stockPoussin" type="number" min="0">
           </div>
 
           <div>
             <label for="stockCaille">Caille</label>
-            <input id="stockCaille" type="number" min="0" placeholder="Caille">
+            <input id="stockCaille" type="number" min="0">
           </div>
 
           <div>
             <label for="stockPigeon">Pigeon</label>
-            <input id="stockPigeon" type="number" min="0" placeholder="Pigeon">
+            <input id="stockPigeon" type="number" min="0">
           </div>
 
           <div>
             <label for="stockLapin">Lapin</label>
-            <input id="stockLapin" type="number" min="0" placeholder="Lapin">
+            <input id="stockLapin" type="number" min="0">
           </div>
 
           <div>
             <label for="stockPoisson">Poisson</label>
-            <input id="stockPoisson" type="number" min="0" placeholder="Poisson">
+            <input id="stockPoisson" type="number" min="0">
           </div>
 
           <div>
             <label for="stockSouris">Souris</label>
-            <input id="stockSouris" type="number" min="0" placeholder="Souris">
+            <input id="stockSouris" type="number" min="0">
           </div>
 
           <div>
             <label for="stockCailleteau30gr">Cailleteau 30gr</label>
-            <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
+            <input id="stockCailleteau30gr" type="number" min="0">
           </div>
         </div>
 
@@ -749,6 +577,6 @@
     </section>
   </div>
 
-  <script type="module" src="./app.js?v=reset-20260406-1"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
