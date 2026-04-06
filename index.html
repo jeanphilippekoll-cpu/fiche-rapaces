@@ -4,32 +4,34 @@
   <meta charset="UTF-8">
   <title>Fiche Rapaces</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4ead7">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.png">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
 
   <style>
     :root{
-      --bg:#0b1020;
-      --bg2:#131a2f;
-      --panel:#141c33;
-      --panel2:#19233f;
-      --line:rgba(255,255,255,0.08);
-      --text:#eef2ff;
-      --muted:#aab6d3;
-      --accent:#6ea86a;
-      --accent2:#e9edf7;
-      --danger:#b44545;
-      --card-shadow:0 12px 40px rgba(0,0,0,0.25);
+      --bg:#f7f1e3;
+      --bg2:#efe6d1;
+      --panel:#fffaf0;
+      --panel2:#f6edd8;
+      --line:rgba(96, 76, 46, 0.12);
+      --text:#3d3123;
+      --muted:#7b6b57;
+      --accent:#8aa36b;
+      --accent2:#e7dcc6;
+      --danger:#b75b52;
+      --card-shadow:0 12px 30px rgba(75,57,30,0.08);
       --radius:18px;
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(110,168,106,0.18), transparent 22%),
+        radial-gradient(circle at top left, rgba(138,163,107,0.18), transparent 18%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
       color:var(--text);
     }
@@ -37,7 +39,7 @@
     .app{
       max-width:1360px;
       margin:0 auto;
-      padding:26px;
+      padding:20px;
     }
 
     .topbar{
@@ -46,12 +48,12 @@
       align-items:flex-start;
       gap:18px;
       flex-wrap:wrap;
-      margin-bottom:22px;
+      margin-bottom:20px;
     }
 
     .page-title{
       margin:0;
-      font-size:42px;
+      font-size:38px;
       letter-spacing:-0.03em;
     }
 
@@ -71,7 +73,7 @@
       display:flex;
       flex-wrap:wrap;
       gap:10px;
-      margin:18px 0 28px;
+      margin:18px 0 24px;
     }
 
     .nav button,.btn{
@@ -80,13 +82,9 @@
       padding:12px 16px;
       cursor:pointer;
       background:var(--accent2);
-      color:#1b2235;
+      color:var(--text);
       font-weight:700;
       transition:.2s ease;
-    }
-
-    .nav button:hover,.btn:hover{
-      transform:translateY(-1px);
     }
 
     .nav button.active{
@@ -95,8 +93,8 @@
     }
 
     .secondary-btn{
-      background:#253251;
-      color:#fff;
+      background:#d8ccb4;
+      color:var(--text);
     }
 
     .btn-danger{
@@ -114,13 +112,13 @@
     .hidden{display:none !important}
 
     .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,248,235,0.88));
       border:1px solid var(--line);
       border-radius:var(--radius);
-      padding:20px;
+      padding:18px;
       margin-bottom:18px;
       box-shadow:var(--card-shadow);
-      backdrop-filter:blur(6px);
+      backdrop-filter:blur(4px);
     }
 
     .card h2{margin-top:0;font-size:24px}
@@ -132,9 +130,9 @@
       margin-top:6px;
       margin-bottom:12px;
       border-radius:12px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:#0e1528;
-      color:#fff;
+      border:1px solid rgba(96,76,46,0.14);
+      background:#fffdf8;
+      color:var(--text);
       outline:none;
     }
 
@@ -154,7 +152,7 @@
     }
 
     .item{
-      background:#11192f;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:14px;
       padding:16px;
@@ -176,12 +174,12 @@
 
     .bird-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
       gap:18px;
     }
 
     .bird-card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
       border:1px solid var(--line);
       border-radius:20px;
       padding:18px;
@@ -207,9 +205,9 @@
     }
 
     .weight-pill{
-      background:rgba(110,168,106,0.18);
-      color:#d9f5d7;
-      border:1px solid rgba(110,168,106,0.26);
+      background:rgba(138,163,107,0.18);
+      color:#50613d;
+      border:1px solid rgba(138,163,107,0.3);
       border-radius:999px;
       padding:8px 12px;
       white-space:nowrap;
@@ -218,25 +216,25 @@
 
     .bird-photo{
       width:100%;
-      height:240px;
+      height:220px;
       object-fit:cover;
       border-radius:16px;
       display:block;
       margin-bottom:14px;
-      background:#0d1426;
+      background:#efe6d1;
     }
 
     .bird-photo-placeholder{
       width:100%;
-      height:240px;
+      height:220px;
       border-radius:16px;
       display:flex;
       align-items:center;
       justify-content:center;
       margin-bottom:14px;
-      background:#0d1426;
+      background:#efe6d1;
       color:var(--muted);
-      border:1px dashed rgba(255,255,255,0.15);
+      border:1px dashed rgba(96,76,46,0.16);
     }
 
     .bird-meta{
@@ -247,7 +245,7 @@
     }
 
     .bird-meta div{
-      background:#0f172b;
+      background:#fff8ec;
       border:1px solid var(--line);
       border-radius:12px;
       padding:12px;
@@ -262,7 +260,7 @@
 
     .card-section{
       margin-top:14px;
-      background:#0f172b;
+      background:#fff8ec;
       border:1px solid var(--line);
       border-radius:14px;
       padding:14px;
@@ -281,9 +279,9 @@
       display:block;
       padding:10px 12px;
       border-radius:10px;
-      background:#0b1224;
+      background:#fffdf8;
       border:1px solid var(--line);
-      color:#9ecbff;
+      color:#5b7aa2;
       text-decoration:none;
     }
 
@@ -298,6 +296,7 @@
     .feed-table-wrap{
       overflow-x:auto;
       margin-top:12px;
+      -webkit-overflow-scrolling:touch;
     }
 
     .feed-table{
@@ -316,10 +315,11 @@
       padding:12px;
       text-align:left;
       vertical-align:middle;
+      background:#fffdf8;
     }
 
     .feed-table th{
-      background:#1c2744;
+      background:#f2e8d4;
     }
 
     .summary-grid{
@@ -329,7 +329,7 @@
     }
 
     .summary-card{
-      background:#11192f;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:16px;
       padding:16px;
@@ -350,23 +350,33 @@
 
     .form-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
       gap:14px;
     }
 
     .list-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
       gap:14px;
     }
 
-    @media (max-width: 700px){
+    @media (max-width: 900px){
       .app{padding:16px}
       .page-title{font-size:32px}
-      .bird-photo,.bird-photo-placeholder{height:210px}
+      .bird-grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width: 700px){
+      .nav{gap:8px}
+      .nav button,.btn{width:100%}
+      .bird-photo,.bird-photo-placeholder{height:200px}
       .bird-card-head{flex-direction:column}
       .weight-pill{align-self:flex-start}
       .bird-meta{grid-template-columns:1fr}
+      .form-grid,.grid,.summary-grid,.list-grid{grid-template-columns:1fr}
+      .page-title{font-size:28px}
+      .app{padding:12px}
+      .card{padding:14px}
     }
   </style>
 </head>
@@ -375,7 +385,7 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, documents et stock</p>
+        <p class="page-subtitle">Version crème • mobile/tablette • cache hors ligne</p>
         <div id="status">Chargement…</div>
       </div>
       <div class="actions">

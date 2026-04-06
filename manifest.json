@@ -3,8 +3,8 @@
   "short_name": "Rapaces",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#f4eadb",
-  "theme_color": "#f4eadb",
+  "background_color": "#f7f1e3",
+  "theme_color": "#f4ead7",
   "icons": [
     {
       "src": "icon.png",
@@ -12,7 +12,7 @@
       "type": "image/png"
     },
     {
-      "src": "icon.png",
+      "src": "apple-touch-icon.png",
       "sizes": "512x512",
       "type": "image/png"
     }

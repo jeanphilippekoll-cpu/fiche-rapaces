@@ -2,8 +2,9 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import {
   getFirestore,
   doc,
-  getDoc,
-  setDoc
+  setDoc,
+  onSnapshot,
+  enableMultiTabIndexedDbPersistence
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 import {
   getStorage,
@@ -41,6 +42,7 @@ const ALIMENTS = [
 
 let rawRapacesData = {};
 let editingBirdId = null;
+let unsubscribeRapaces = null;
 
 let appData = {
   oiseaux: [],
@@ -85,6 +87,19 @@ function safeArray(v) {
 function toNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+function setStatus(message) {
+  if (!statusEl) return;
+  statusEl.textContent = message;
+}
+
+function updateConnectivityStatus() {
+  if (navigator.onLine) {
+    setStatus("En ligne");
+  } else {
+    setStatus("Hors ligne — modifications gardées localement");
+  }
 }
 
 function normalizeFoodLabel(value) {
@@ -336,12 +351,6 @@ function refreshBirdSelects() {
   if (pesNom) pesNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
 }
 
-function getPeseesLies(oiseauNom) {
-  return appData.pesees
-    .filter((e) => (e.nom || "").trim().toLowerCase() === (oiseauNom || "").trim().toLowerCase())
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-}
-
 function renderHistoriquePoidsTable(historique) {
   if (!historique.length) {
     return `<p class="muted-line">Aucun poids enregistré.</p>`;
@@ -357,7 +366,9 @@ function renderHistoriquePoidsTable(historique) {
           </tr>
         </thead>
         <tbody>
-          ${historique.map((h) => `
+          ${historique
+            .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+            .map((h) => `
             <tr>
               <td>${safe(h.date)}</td>
               <td>${safe(h.poids)}</td>
@@ -435,7 +446,7 @@ function renderOiseaux() {
 
           <div class="card-section">
             <h4>Poids enregistrés</h4>
-            ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
+            ${renderHistoriquePoidsTable([...oiseau.historiquePoids])}
           </div>
 
           <div class="small-actions">
@@ -522,18 +533,10 @@ function renderNourrissageTable() {
             <tr>
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
-              <td>
-                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select>
-              </td>
-              <td>
-                <input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
-              </td>
-              <td>
-                <select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select>
-              </td>
-              <td>
-                <input id="feedQty2_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
-              </td>
+              <td><select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select></td>
+              <td><input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0"></td>
+              <td><select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select></td>
+              <td><input id="feedQty2_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0"></td>
             </tr>
           `).join("")}
         </tbody>
@@ -682,36 +685,43 @@ function renderAll() {
 
 async function saveData() {
   try {
-    if (statusEl) statusEl.textContent = "Sauvegarde…";
+    setStatus(navigator.onLine ? "Sauvegarde…" : "Hors ligne — sauvegarde locale en attente");
     const payload = buildFirestorePayload();
     await setDoc(doc(db, "rapaces", "data"), payload);
     rawRapacesData = payload;
-    if (statusEl) statusEl.textContent = "Sauvegardé";
+    setStatus(navigator.onLine ? "Sauvegardé" : "Sauvegardé localement — synchronisation en attente");
   } catch (e) {
     console.error(e);
-    if (statusEl) statusEl.textContent = "Erreur sauvegarde";
+    setStatus("Erreur sauvegarde");
   }
 }
 
-async function loadData() {
+function startRealtimeSync() {
   try {
-    if (statusEl) statusEl.textContent = "Chargement…";
     const refDoc = doc(db, "rapaces", "data");
-    const snap = await getDoc(refDoc);
 
-    if (snap.exists()) {
-      rawRapacesData = snap.data();
-      appData = normalizeData(rawRapacesData);
-    } else {
-      rawRapacesData = {};
-      appData = normalizeData({});
-    }
+    unsubscribeRapaces = onSnapshot(
+      refDoc,
+      (snap) => {
+        if (snap.exists()) {
+          rawRapacesData = snap.data();
+          appData = normalizeData(rawRapacesData);
+        } else {
+          rawRapacesData = {};
+          appData = normalizeData({});
+        }
 
-    renderAll();
-    if (statusEl) statusEl.textContent = "Données chargées";
+        renderAll();
+        updateConnectivityStatus();
+      },
+      (error) => {
+        console.error(error);
+        setStatus("Erreur lecture Firestore");
+      }
+    );
   } catch (e) {
     console.error(e);
-    if (statusEl) statusEl.textContent = "Erreur chargement";
+    setStatus("Erreur initialisation synchro");
   }
 }
 
@@ -772,8 +782,6 @@ async function ajouterOiseau() {
   let documents = [];
 
   try {
-    if (statusEl) statusEl.textContent = "Upload des fichiers...";
-
     const existingBird = editingBirdId
       ? appData.oiseaux.find((o) => o.id === editingBirdId)
       : null;
@@ -782,25 +790,35 @@ async function ajouterOiseau() {
     documents = safeArray(existingBird?.documents);
 
     if (photoFile) {
-      photoUrl = await uploadFile(
-        photoFile,
-        `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`
-      );
+      if (!navigator.onLine) {
+        alert("L’upload photo nécessite une connexion internet.");
+      } else {
+        setStatus("Upload photo…");
+        photoUrl = await uploadFile(
+          photoFile,
+          `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`
+        );
+      }
     }
 
     if (docFile) {
-      const docUrl = await uploadFile(
-        docFile,
-        `oiseaux/documents/${nom}_${Date.now()}_${docFile.name}`
-      );
+      if (!navigator.onLine) {
+        alert("L’upload document nécessite une connexion internet.");
+      } else {
+        setStatus("Upload document…");
+        const docUrl = await uploadFile(
+          docFile,
+          `oiseaux/documents/${nom}_${Date.now()}_${docFile.name}`
+        );
 
-      documents = [
-        ...documents,
-        {
-          name: docFile.name,
-          url: docUrl
-        }
-      ];
+        documents = [
+          ...documents,
+          {
+            name: docFile.name,
+            url: docUrl
+          }
+        ];
+      }
     }
 
     if (editingBirdId && existingBird) {
@@ -816,7 +834,7 @@ async function ajouterOiseau() {
       existingBird.quantiteHabituelle2 = quantiteHabituelle2;
       existingBird.photoUrl = photoUrl;
       existingBird.documents = documents;
-      if (statusEl) statusEl.textContent = "Oiseau modifié";
+      setStatus("Oiseau modifié");
     } else {
       appData.oiseaux.unshift({
         id: makeId(),
@@ -834,14 +852,14 @@ async function ajouterOiseau() {
         documents,
         historiquePoids: []
       });
-      if (statusEl) statusEl.textContent = "Oiseau ajouté";
+      setStatus("Oiseau ajouté");
     }
 
     resetBirdForm();
     renderAll();
   } catch (e) {
     console.error("Erreur upload :", e);
-    if (statusEl) statusEl.textContent = "Erreur upload";
+    setStatus("Erreur upload");
     alert("Erreur pendant l'upload de la photo ou du document.");
   }
 }
@@ -883,7 +901,7 @@ function modifierOiseau(id) {
 
 function cancelEditBird() {
   resetBirdForm();
-  if (statusEl) statusEl.textContent = "Modification annulée";
+  setStatus("Modification annulée");
 }
 
 function ajouterPesee() {
@@ -926,7 +944,7 @@ function ajouterPesee() {
   });
 
   renderAll();
-  if (statusEl) statusEl.textContent = "Pesée ajoutée";
+  setStatus("Pesée ajoutée");
 }
 
 function ajouterDocument() {
@@ -1020,11 +1038,12 @@ function ajouterNourrissage() {
   });
 
   viderTableNourrissage(false);
+
   const noteEl = document.getElementById("feedNote");
   if (noteEl) noteEl.value = "";
 
   renderAll();
-  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
+  setStatus(`${lignes.length} nourrissage(s) ajouté(s)`);
 }
 
 function appliquerNourritureHabituelle() {
@@ -1041,7 +1060,7 @@ function appliquerNourritureHabituelle() {
     if (qty2) qty2.value = toNumber(oiseau.quantiteHabituelle2) > 0 ? oiseau.quantiteHabituelle2 : "";
   });
 
-  if (statusEl) statusEl.textContent = "Nourriture habituelle appliquée";
+  setStatus("Nourriture habituelle appliquée");
 }
 
 function viderTableNourrissage(showMessage = true) {
@@ -1057,7 +1076,7 @@ function viderTableNourrissage(showMessage = true) {
     });
   });
 
-  if (showMessage && statusEl) statusEl.textContent = "Tableau vidé";
+  if (showMessage) setStatus("Tableau vidé");
 }
 
 function enregistrerStock() {
@@ -1073,16 +1092,11 @@ function enregistrerStock() {
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
-  if (statusEl) statusEl.textContent = "Stock mis à jour";
+  setStatus("Stock mis à jour");
 }
 
 function supprimerOiseau(id) {
   appData.oiseaux = appData.oiseaux.filter((o) => o.id !== id);
-  renderAll();
-}
-
-function supprimerPesee(id) {
-  appData.pesees = appData.pesees.filter((e) => e.id !== id);
   renderAll();
 }
 
@@ -1128,13 +1142,13 @@ function exportBirdPdf(id) {
       <meta charset="UTF-8">
       <title>Fiche ${safe(bird.nom)}</title>
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px}
+        body{font-family:Arial,Helvetica,sans-serif;color:#222;padding:24px;background:#fffaf0}
         h1,h2{margin-bottom:8px}
-        .top{display:flex;gap:24px;align-items:flex-start}
+        .top{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
         img{max-width:280px;border-radius:12px}
         table{width:100%;border-collapse:collapse;margin-top:12px}
         th,td{border:1px solid #ccc;padding:8px;text-align:left}
-        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px}
+        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fff}
         ul{margin:8px 0 0 20px}
         @media print{button{display:none}}
       </style>
@@ -1168,17 +1182,31 @@ function exportBirdPdf(id) {
 
       <div class="box">
         <h2>Historique des poids</h2>
-        ${
-          poidsRows
-            ? `<table><thead><tr><th>Date</th><th>Poids (g)</th></tr></thead><tbody>${poidsRows}</tbody></table>`
-            : `<p>Aucun poids enregistré.</p>`
-        }
+        ${poidsRows ? `<table><thead><tr><th>Date</th><th>Poids (g)</th></tr></thead><tbody>${poidsRows}</tbody></table>` : `<p>Aucun poids enregistré.</p>`}
       </div>
     </body>
     </html>
   `);
 
   win.document.close();
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+
+  try {
+    await navigator.serviceWorker.register("./sw.js");
+  } catch (e) {
+    console.error("SW registration error:", e);
+  }
+}
+
+async function initOfflineFirestore() {
+  try {
+    await enableMultiTabIndexedDbPersistence(db);
+  } catch (e) {
+    console.warn("Persistance hors ligne non activée :", e);
+  }
 }
 
 const pesDateEl = document.getElementById("pesDate");
@@ -1199,13 +1227,16 @@ window.appliquerNourritureHabituelle = appliquerNourritureHabituelle;
 window.viderTableNourrissage = viderTableNourrissage;
 window.enregistrerStock = enregistrerStock;
 window.supprimerOiseau = supprimerOiseau;
-window.supprimerPesee = supprimerPesee;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
 window.exportBirdPdf = exportBirdPdf;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadData();
+  await registerServiceWorker();
+  await initOfflineFirestore();
+
+  window.addEventListener("online", updateConnectivityStatus);
+  window.addEventListener("offline", updateConnectivityStatus);
 
   const feedDate = document.getElementById("feedDate");
   if (feedDate) {
@@ -1225,5 +1256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   resetBirdForm();
+  startRealtimeSync();
   showSection("accueil");
+  updateConnectivityStatus();
 });

@@ -1,44 +1,55 @@
-const CACHE_NAME = "rapaces-v3";
-
-const FILES_TO_CACHE = [
-  "/fiche-rapaces/",
-  "/fiche-rapaces/index.html",
-  "/fiche-rapaces/style.css",
-  "/fiche-rapaces/app.js?v=3",
-  "/fiche-rapaces/icon.png",
-  "/fiche-rapaces/apple-touch-icon.png",
-  "/fiche-rapaces/manifest.json"
+const CACHE_NAME = "fiche-rapaces-cache-v1";
+const APP_ASSETS = [
+  "./",
+  "./index.html",
+  "./app.js",
+  "./manifest.json",
+  "./icon.png",
+  "./apple-touch-icon.png"
 ];
 
-// INSTALL
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(FILES_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_ASSETS))
   );
+  self.skipWaiting();
 });
 
-// ACTIVATE
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    )
   );
+  self.clients.claim();
 });
 
-// FETCH
 self.addEventListener("fetch", (event) => {
+  const request = event.request;
+
+  if (request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+
+      return fetch(request)
+        .then((response) => {
+          const cloned = response.clone();
+
+          if (request.url.startsWith(self.location.origin)) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, cloned);
+            });
+          }
+
+          return response;
+        })
+        .catch(() => caches.match("./index.html"));
     })
   );
 });
