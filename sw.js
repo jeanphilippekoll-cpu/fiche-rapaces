@@ -1,4 +1,4 @@
-const CACHE_NAME = "fiche-rapaces-cache-v5";
+const CACHE_NAME = "fiche-rapaces-cache-v6";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -18,11 +18,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
+      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -30,7 +26,6 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-
   if (request.method !== "GET") return;
 
   event.respondWith(
@@ -40,13 +35,11 @@ self.addEventListener("fetch", (event) => {
       return fetch(request)
         .then((response) => {
           const cloned = response.clone();
-
           if (request.url.startsWith(self.location.origin)) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, cloned);
             });
           }
-
           return response;
         })
         .catch(() => caches.match("./index.html"));

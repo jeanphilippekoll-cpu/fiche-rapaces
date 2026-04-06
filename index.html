@@ -153,6 +153,11 @@
       color:#fff;
     }
 
+    .btn-view{
+      background:#91a9d8;
+      color:#fff;
+    }
+
     .grid{
       display:grid;
       grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -174,6 +179,11 @@
 
     .card h2{margin-top:0;font-size:24px}
     .card h3{margin-top:0}
+
+    .stat-card-1{background:linear-gradient(180deg,#fff6d9,#f6e8b7)}
+    .stat-card-2{background:linear-gradient(180deg,#e8f4ff,#d6ebff)}
+    .stat-card-3{background:linear-gradient(180deg,#efe8ff,#e2d7ff)}
+    .stat-card-4{background:linear-gradient(180deg,#eaf8ea,#d7f0d7)}
 
     input,select,textarea{
       width:100%;
@@ -411,6 +421,13 @@
       gap:14px;
     }
 
+    .bird-detail-box{
+      border:2px solid rgba(96,76,46,0.12);
+      border-radius:18px;
+      padding:16px;
+      background:#fffdf8;
+    }
+
     @media (max-width: 900px){
       .app{padding:16px}
       .page-title{font-size:32px}
@@ -456,22 +473,22 @@
 
     <section id="section-accueil" class="section">
       <div class="grid">
-        <div class="card">
+        <div class="card stat-card-1">
           <h3>Oiseaux</h3>
           <p id="statOiseaux" class="stats-number">0</p>
           <p class="stat-label">Nombre total</p>
         </div>
-        <div class="card">
+        <div class="card stat-card-2">
           <h3>Pesées oiseaux</h3>
           <p id="statPesees" class="stats-number">0</p>
           <p class="stat-label">Nombre total</p>
         </div>
-        <div class="card">
+        <div class="card stat-card-3">
           <h3>Documents</h3>
           <p id="statDocuments" class="stats-number">0</p>
           <p class="stat-label">Nombre total</p>
         </div>
-        <div class="card">
+        <div class="card stat-card-4">
           <h3>Nourrissages</h3>
           <p id="statNourrissages" class="stats-number">0</p>
           <p class="stat-label">Nombre total</p>
@@ -573,6 +590,11 @@
         <h2>Fiches oiseaux</h2>
         <div id="listeOiseaux"></div>
       </div>
+
+      <div class="card hidden" id="birdDetailCard">
+        <h2>Fiche individuelle</h2>
+        <div id="birdDetailContent"></div>
+      </div>
     </section>
 
     <section id="section-pesee" class="section hidden">
@@ -625,7 +647,7 @@
       </div>
 
       <div class="card">
-        <h2>Informations</h2>
+        <h2>Historique pesées</h2>
         <div id="listePesees"></div>
       </div>
     </section>
