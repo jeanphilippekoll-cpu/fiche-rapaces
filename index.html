@@ -171,8 +171,6 @@
       outline:none;
     }
 
-    textarea{min-height:110px;resize:vertical}
-
     label{
       display:block;
       margin-top:8px;
@@ -207,6 +205,113 @@
       margin:0;
     }
 
+    .bird-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:18px;
+    }
+
+    .bird-card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:var(--card-shadow);
+    }
+
+    .bird-card h3{
+      margin:0 0 10px 0;
+      font-size:24px;
+    }
+
+    .bird-photo{
+      width:100%;
+      height:220px;
+      object-fit:cover;
+      border-radius:16px;
+      display:block;
+      margin-bottom:14px;
+      background:#efe6d1;
+    }
+
+    .bird-photo-placeholder{
+      width:100%;
+      height:220px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      background:#efe6d1;
+      color:var(--muted);
+      border:1px dashed rgba(96,76,46,0.16);
+    }
+
+    .bird-meta{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .bird-meta div{
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .bird-meta span{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:4px;
+    }
+
+    .doc-link{
+      display:inline-block;
+      padding:8px 10px;
+      border-radius:10px;
+      background:#fffdf8;
+      border:1px solid var(--line);
+      color:#5b7aa2;
+      text-decoration:none;
+      margin:4px 6px 0 0;
+    }
+
+    .doc-link:hover{
+      text-decoration:underline;
+    }
+
+    .muted-line{
+      color:var(--muted);
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:14px;
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+    }
+
+    .summary-card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .summary-total{
+      font-size:28px;
+      font-weight:800;
+      margin:8px 0 12px 0;
+    }
+
     .warning-box{
       background:#fff3d8;
       color:#7a5a00;
@@ -216,12 +321,16 @@
       margin-top:12px;
     }
 
+    @media (max-width: 900px){
+      .bird-grid{grid-template-columns:1fr}
+    }
+
     @media (max-width: 700px){
       .nav button,.btn{width:100%}
       .page-title{font-size:28px}
       .app{padding:12px}
       .card{padding:14px}
-      .grid{grid-template-columns:1fr}
+      .grid,.bird-meta,.form-grid,.summary-grid{grid-template-columns:1fr}
     }
   </style>
 </head>
@@ -230,7 +339,7 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Version stable Firebase + GitHub Pages</p>
+        <p class="page-subtitle">Version Firestore reconnectée</p>
         <div id="status">Chargement…</div>
         <div id="syncBadge" class="sync-badge sync-saving">Lecture…</div>
       </div>
@@ -242,6 +351,9 @@
     <nav class="nav">
       <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
       <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+      <button id="btn-pesee" onclick="showSection('pesee')">Pesées</button>
+      <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+      <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
     </nav>
 
@@ -253,38 +365,57 @@
           <p class="stat-label">Nombre total</p>
         </div>
         <div class="card">
-          <h3>Stock</h3>
-          <p id="statStock" class="stats-number">0</p>
-          <p class="stat-label">Articles suivis</p>
+          <h3>Pesées</h3>
+          <p id="statPesees" class="stats-number">0</p>
+          <p class="stat-label">Encodages</p>
+        </div>
+        <div class="card">
+          <h3>Documents</h3>
+          <p id="statDocuments" class="stats-number">0</p>
+          <p class="stat-label">Documents généraux</p>
+        </div>
+        <div class="card">
+          <h3>Nourrissages</h3>
+          <p id="statNourrissages" class="stats-number">0</p>
+          <p class="stat-label">Historique</p>
         </div>
       </div>
 
       <div id="offlineMessage" class="warning-box hidden">
-        Firestore semble hors ligne. Vérifie que tu ouvres bien le site GitHub Pages, puis vide le cache du navigateur.
+        Firestore semble hors ligne. Vérifie que tu ouvres bien le site GitHub Pages, puis vide le cache.
       </div>
     </section>
 
     <section id="section-oiseaux" class="section hidden">
       <div class="card">
-        <h2>Ajouter un oiseau</h2>
+        <h2>Fiches oiseaux</h2>
+        <div id="listeOiseaux"></div>
+      </div>
+    </section>
 
-        <label for="birdName">Nom</label>
-        <input id="birdName" type="text" placeholder="Ex : Buse Harris">
+    <section id="section-pesee" class="section hidden">
+      <div class="card">
+        <h2>Historique des pesées</h2>
+        <div id="listePesees"></div>
+      </div>
+    </section>
 
-        <label for="birdSpecies">Espèce</label>
-        <input id="birdSpecies" type="text" placeholder="Ex : Parabuteo unicinctus">
+    <section id="section-documents" class="section hidden">
+      <div class="card">
+        <h2>Documents généraux</h2>
+        <div id="listeDocuments"></div>
+      </div>
+    </section>
 
-        <label for="birdWeight">Poids (g)</label>
-        <input id="birdWeight" type="number" placeholder="Ex : 850">
-
-        <div class="actions">
-          <button class="btn" onclick="addBird()">Ajouter</button>
-        </div>
+    <section id="section-nourrissage" class="section hidden">
+      <div class="card">
+        <h2>Résumé nourrissage par jour</h2>
+        <div id="feedSummaryZone"></div>
       </div>
 
       <div class="card">
-        <h2>Liste des oiseaux</h2>
-        <div id="listeOiseaux"></div>
+        <h2>Historique nourrissage</h2>
+        <div id="listeNourrissage"></div>
       </div>
     </section>
 
@@ -292,17 +423,47 @@
       <div class="card">
         <h2>Stock nourriture</h2>
 
-        <label for="stockPoussin">Poussins</label>
-        <input id="stockPoussin" type="number" min="0">
+        <div class="form-grid">
+          <div>
+            <label for="stockBoitePoussinsMoyenne225">Boîtes de poussins (225)</label>
+            <input id="stockBoitePoussinsMoyenne225" type="number" min="0">
+          </div>
 
-        <label for="stockCaille">Cailles</label>
-        <input id="stockCaille" type="number" min="0">
+          <div>
+            <label for="stockPoussin">Poussins</label>
+            <input id="stockPoussin" type="number" min="0">
+          </div>
 
-        <label for="stockPigeon">Pigeons</label>
-        <input id="stockPigeon" type="number" min="0">
+          <div>
+            <label for="stockCaille">Cailles</label>
+            <input id="stockCaille" type="number" min="0">
+          </div>
 
-        <label for="stockLapin">Lapins</label>
-        <input id="stockLapin" type="number" min="0">
+          <div>
+            <label for="stockPigeon">Pigeons</label>
+            <input id="stockPigeon" type="number" min="0">
+          </div>
+
+          <div>
+            <label for="stockLapin">Lapins</label>
+            <input id="stockLapin" type="number" min="0">
+          </div>
+
+          <div>
+            <label for="stockPoisson">Poissons</label>
+            <input id="stockPoisson" type="number" min="0">
+          </div>
+
+          <div>
+            <label for="stockSouris">Souris</label>
+            <input id="stockSouris" type="number" min="0">
+          </div>
+
+          <div>
+            <label for="stockCailleteau30gr">Cailleteau 30gr</label>
+            <input id="stockCailleteau30gr" type="number" min="0">
+          </div>
+        </div>
 
         <div class="actions">
           <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>

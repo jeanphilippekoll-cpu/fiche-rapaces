@@ -3,41 +3,49 @@ import {
   getFirestore,
   doc,
   getDoc,
-  setDoc,
-  collection,
-  addDoc,
-  getDocs,
-  deleteDoc
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Remplace TOUTES ces valeurs par celles de ton projet Firebase
 const firebaseConfig = {
   apiKey: "TON_API_KEY",
   authDomain: "TON_PROJET.firebaseapp.com",
   projectId: "TON_PROJECT_ID",
-  storageBucket: "TON_PROJET.appspot.com",
+  storageBucket: "TON_PROJET.firebasestorage.app",
   messagingSenderId: "TON_MESSAGING_SENDER_ID",
   appId: "TON_APP_ID"
 };
 
+const DATA_COLLECTION = "rapaces";
+const DATA_DOC_ID = "data";
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const dataRef = doc(db, DATA_COLLECTION, DATA_DOC_ID);
 
 console.log("Firebase initialisé OK");
 console.log("URL actuelle :", window.location.href);
 console.log("En ligne :", navigator.onLine);
+console.log("Document Firestore visé :", `${DATA_COLLECTION}/${DATA_DOC_ID}`);
 
 const statusEl = document.getElementById("status");
 const syncBadge = document.getElementById("syncBadge");
 const offlineMessage = document.getElementById("offlineMessage");
 
 const state = {
+  documents: [],
+  documentsGeneraux: [],
+  encodages: [],
+  nourrissage: [],
   oiseaux: [],
   stock: {
-    poussin: 0,
+    boitePoussinsMoyenne225: 0,
     caille: 0,
+    cailleteau30gr: 0,
+    lapin: 0,
     pigeon: 0,
-    lapin: 0
+    poisson: 0,
+    poussin: 0,
+    souris: 0
   }
 };
 
@@ -57,7 +65,7 @@ function showOfflineMessage(show) {
 }
 
 window.showSection = function (sectionName) {
-  const sections = ["accueil", "oiseaux", "stock"];
+  const sections = ["accueil", "oiseaux", "pesee", "documents", "nourrissage", "stock"];
   sections.forEach((name) => {
     const section = document.getElementById(`section-${name}`);
     const button = document.getElementById(`btn-${name}`);
@@ -66,12 +74,124 @@ window.showSection = function (sectionName) {
   });
 };
 
-function renderAccueil() {
-  const statOiseaux = document.getElementById("statOiseaux");
-  const statStock = document.getElementById("statStock");
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
 
-  if (statOiseaux) statOiseaux.textContent = state.oiseaux.length;
-  if (statStock) statStock.textContent = Object.keys(state.stock).length;
+function normalizePhotoUrl(photo) {
+  if (!photo) return "";
+  if (typeof photo === "string") return photo;
+  if (typeof photo.url === "string") return photo.url;
+  if (photo.url && typeof photo.url.url === "string") return photo.url.url;
+  return "";
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function compareDateDesc(a, b) {
+  return String(b?.date || "").localeCompare(String(a?.date || ""));
+}
+
+function renderAccueil() {
+  document.getElementById("statOiseaux").textContent = state.oiseaux.length;
+  document.getElementById("statPesees").textContent = state.encodages.length;
+  document.getElementById("statDocuments").textContent = state.documents.length;
+  document.getElementById("statNourrissages").textContent = state.nourrissage.length;
+}
+
+function renderDocuments() {
+  const zone = document.getElementById("listeDocuments");
+  if (!zone) return;
+
+  if (!state.documents.length) {
+    zone.innerHTML = `<div class="item"><p>Aucun document général.</p></div>`;
+    return;
+  }
+
+  zone.innerHTML = state.documents.map((docItem) => `
+    <div class="item">
+      <p><strong>${escapeHtml(docItem.nom || "Document")}</strong></p>
+      <a class="doc-link" href="${escapeHtml(docItem.lien || "#")}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a>
+    </div>
+  `).join("");
+}
+
+function renderPesees() {
+  const zone = document.getElementById("listePesees");
+  if (!zone) return;
+
+  const items = [...state.encodages].sort(compareDateDesc);
+
+  if (!items.length) {
+    zone.innerHTML = `<div class="item"><p>Aucune pesée enregistrée.</p></div>`;
+    return;
+  }
+
+  zone.innerHTML = items.map((p) => `
+    <div class="item">
+      <p><strong>${escapeHtml(p.nom || "Sans nom")}</strong></p>
+      <p><strong>Date :</strong> ${escapeHtml(p.date || "")}</p>
+      <p><strong>Poids :</strong> ${escapeHtml(p.poids || "")} g</p>
+      <p><strong>Espèce :</strong> ${escapeHtml(p.espece || "")}</p>
+      <p><strong>État :</strong> ${escapeHtml(p.etat || "")}</p>
+      <p><strong>Lieu :</strong> ${escapeHtml(p.lieu || "")}</p>
+      <p><strong>Nourriture :</strong> ${escapeHtml(p.nourriture || "")}</p>
+      <p><strong>Observations :</strong> ${escapeHtml(p.observations || "")}</p>
+    </div>
+  `).join("");
+}
+
+function renderNourrissage() {
+  const zone = document.getElementById("listeNourrissage");
+  const summaryZone = document.getElementById("feedSummaryZone");
+  if (!zone || !summaryZone) return;
+
+  const items = [...state.nourrissage].sort(compareDateDesc);
+
+  if (!items.length) {
+    zone.innerHTML = `<div class="item"><p>Aucun nourrissage enregistré.</p></div>`;
+    summaryZone.innerHTML = `<div class="item"><p>Aucun résumé disponible.</p></div>`;
+    return;
+  }
+
+  zone.innerHTML = items.map((n) => `
+    <div class="item">
+      <p><strong>${escapeHtml(n.oiseau || "Sans nom")}</strong></p>
+      <p><strong>Date :</strong> ${escapeHtml(n.date || "")}</p>
+      <p><strong>Nourriture :</strong> ${escapeHtml(n.nourriture || "")}</p>
+      <p><strong>Quantité :</strong> ${Number(n.quantite || 0)}</p>
+      <p><strong>Remarques :</strong> ${escapeHtml(n.remarques || "")}</p>
+    </div>
+  `).join("");
+
+  const grouped = {};
+  items.forEach((n) => {
+    const date = n.date || "Sans date";
+    if (!grouped[date]) grouped[date] = { total: 0, lignes: 0 };
+    grouped[date].total += Number(n.quantite || 0);
+    grouped[date].lignes += 1;
+  });
+
+  const sortedDates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+
+  summaryZone.innerHTML = `
+    <div class="summary-grid">
+      ${sortedDates.map((date) => `
+        <div class="summary-card">
+          <div>${escapeHtml(date)}</div>
+          <div class="summary-total">${grouped[date].total}</div>
+          <div class="muted-line">${grouped[date].lignes} lignes de nourrissage</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderOiseaux() {
@@ -83,174 +203,165 @@ function renderOiseaux() {
     return;
   }
 
-  zone.innerHTML = state.oiseaux.map((oiseau) => `
-    <div class="item">
-      <p><strong>Nom :</strong> ${escapeHtml(oiseau.nom || "")}</p>
-      <p><strong>Espèce :</strong> ${escapeHtml(oiseau.espece || "")}</p>
-      <p><strong>Poids :</strong> ${Number(oiseau.poids || 0)} g</p>
-      <button class="btn" onclick="deleteBird('${oiseau.id}')">Supprimer</button>
+  zone.innerHTML = `
+    <div class="bird-grid">
+      ${state.oiseaux.map((oiseau) => {
+        const photoUrl = normalizePhotoUrl(oiseau.photo);
+        const docs = safeArray(oiseau.documents);
+        const historique = safeArray(oiseau.historiquePoids);
+
+        return `
+          <div class="bird-card">
+            <h3>${escapeHtml(oiseau.nom || "Sans nom")}</h3>
+
+            ${photoUrl
+              ? `<img class="bird-photo" src="${escapeHtml(photoUrl)}" alt="${escapeHtml(oiseau.nom || "Oiseau")}">`
+              : `<div class="bird-photo-placeholder">Pas de photo</div>`
+            }
+
+            <div class="bird-meta">
+              <div><span>Espèce</span>${escapeHtml(oiseau.espece || "")}</div>
+              <div><span>Sexe</span>${escapeHtml(oiseau.sexe || "")}</div>
+              <div><span>Âge</span>${escapeHtml(oiseau.age || "")}</div>
+              <div><span>Poids actuel</span>${escapeHtml(oiseau.poidsActuel || "")}</div>
+              <div><span>Nourriture 1</span>${escapeHtml(oiseau.nourritureHabituelle || "")}</div>
+              <div><span>Quantité 1</span>${Number(oiseau.quantiteHabituelle || 0)}</div>
+              <div><span>Nourriture 2</span>${escapeHtml(oiseau.nourritureHabituelle2 || "")}</div>
+              <div><span>Quantité 2</span>${Number(oiseau.quantiteHabituelle2 || 0)}</div>
+            </div>
+
+            <div class="item">
+              <p><strong>Notes :</strong> ${escapeHtml(oiseau.notes || "")}</p>
+            </div>
+
+            <div class="item">
+              <p><strong>Documents :</strong></p>
+              ${docs.length
+                ? docs.map((d) => `
+                    <a class="doc-link" href="${escapeHtml(d.url || "#")}" target="_blank" rel="noopener noreferrer">
+                      ${escapeHtml(d.name || "Document")}
+                    </a>
+                  `).join("")
+                : `<p class="muted-line">Aucun document</p>`
+              }
+            </div>
+
+            <div class="item">
+              <p><strong>Historique poids :</strong></p>
+              ${historique.length
+                ? historique.map((h) => `
+                    <p>${escapeHtml(h.date || "")} — ${escapeHtml(h.poids || "")} g</p>
+                  `).join("")
+                : `<p class="muted-line">Aucun historique</p>`
+              }
+            </div>
+          </div>
+        `;
+      }).join("")}
     </div>
-  `).join("");
+  `;
 }
 
 function renderStock() {
   const zone = document.getElementById("stockResume");
   if (!zone) return;
 
+  const s = state.stock;
+
   zone.innerHTML = `
-    <div class="item"><strong>Poussins :</strong> ${Number(state.stock.poussin || 0)}</div>
-    <div class="item"><strong>Cailles :</strong> ${Number(state.stock.caille || 0)}</div>
-    <div class="item"><strong>Pigeons :</strong> ${Number(state.stock.pigeon || 0)}</div>
-    <div class="item"><strong>Lapins :</strong> ${Number(state.stock.lapin || 0)}</div>
+    <div class="item"><strong>Boîtes poussins (225) :</strong> ${Number(s.boitePoussinsMoyenne225 || 0)}</div>
+    <div class="item"><strong>Poussins :</strong> ${Number(s.poussin || 0)}</div>
+    <div class="item"><strong>Cailles :</strong> ${Number(s.caille || 0)}</div>
+    <div class="item"><strong>Pigeons :</strong> ${Number(s.pigeon || 0)}</div>
+    <div class="item"><strong>Lapins :</strong> ${Number(s.lapin || 0)}</div>
+    <div class="item"><strong>Poissons :</strong> ${Number(s.poisson || 0)}</div>
+    <div class="item"><strong>Souris :</strong> ${Number(s.souris || 0)}</div>
+    <div class="item"><strong>Cailleteau 30gr :</strong> ${Number(s.cailleteau30gr || 0)}</div>
   `;
 
-  const stockPoussin = document.getElementById("stockPoussin");
-  const stockCaille = document.getElementById("stockCaille");
-  const stockPigeon = document.getElementById("stockPigeon");
-  const stockLapin = document.getElementById("stockLapin");
-
-  if (stockPoussin) stockPoussin.value = state.stock.poussin;
-  if (stockCaille) stockCaille.value = state.stock.caille;
-  if (stockPigeon) stockPigeon.value = state.stock.pigeon;
-  if (stockLapin) stockLapin.value = state.stock.lapin;
+  document.getElementById("stockBoitePoussinsMoyenne225").value = Number(s.boitePoussinsMoyenne225 || 0);
+  document.getElementById("stockPoussin").value = Number(s.poussin || 0);
+  document.getElementById("stockCaille").value = Number(s.caille || 0);
+  document.getElementById("stockPigeon").value = Number(s.pigeon || 0);
+  document.getElementById("stockLapin").value = Number(s.lapin || 0);
+  document.getElementById("stockPoisson").value = Number(s.poisson || 0);
+  document.getElementById("stockSouris").value = Number(s.souris || 0);
+  document.getElementById("stockCailleteau30gr").value = Number(s.cailleteau30gr || 0);
 }
 
 function renderAll() {
   renderAccueil();
+  renderDocuments();
+  renderPesees();
+  renderNourrissage();
   renderOiseaux();
   renderStock();
 }
 
-async function chargerStock() {
-  const ref = doc(db, "appData", "stock");
-  const snap = await getDoc(ref);
+async function chargerData() {
+  const snap = await getDoc(dataRef);
 
-  if (snap.exists()) {
-    const data = snap.data();
-    state.stock = {
-      poussin: Number(data.poussin || 0),
-      caille: Number(data.caille || 0),
-      pigeon: Number(data.pigeon || 0),
-      lapin: Number(data.lapin || 0)
-    };
+  if (!snap.exists()) {
+    throw new Error(`Document introuvable : ${DATA_COLLECTION}/${DATA_DOC_ID}`);
   }
 
-  console.log("Stock chargé :", state.stock);
+  const data = snap.data();
+  console.log("Document Firestore chargé :", data);
+
+  state.documents = safeArray(data.documents);
+  state.documentsGeneraux = safeArray(data.documentsGeneraux);
+  state.encodages = safeArray(data.encodages);
+  state.nourrissage = safeArray(data.nourrissage);
+  state.oiseaux = safeArray(data.oiseaux);
+  state.stock = {
+    boitePoussinsMoyenne225: Number(data.stock?.boitePoussinsMoyenne225 || 0),
+    caille: Number(data.stock?.caille || 0),
+    cailleteau30gr: Number(data.stock?.cailleteau30gr || 0),
+    lapin: Number(data.stock?.lapin || 0),
+    pigeon: Number(data.stock?.pigeon || 0),
+    poisson: Number(data.stock?.poisson || 0),
+    poussin: Number(data.stock?.poussin || 0),
+    souris: Number(data.stock?.souris || 0)
+  };
 }
-
-async function chargerOiseaux() {
-  const snap = await getDocs(collection(db, "oiseaux"));
-  state.oiseaux = snap.docs.map((d) => ({
-    id: d.id,
-    ...d.data()
-  }));
-
-  console.log("Oiseaux chargés :", state.oiseaux);
-}
-
-window.addBird = async function () {
-  const nom = document.getElementById("birdName")?.value.trim() || "";
-  const espece = document.getElementById("birdSpecies")?.value.trim() || "";
-  const poids = Number(document.getElementById("birdWeight")?.value || 0);
-
-  if (!nom || !espece || !poids) {
-    alert("Merci de remplir nom, espèce et poids.");
-    return;
-  }
-
-  try {
-    setBadge("Sauvegarde…", "sync-saving");
-
-    const docRef = await addDoc(collection(db, "oiseaux"), {
-      nom,
-      espece,
-      poids,
-      createdAt: new Date().toISOString()
-    });
-
-    state.oiseaux.push({
-      id: docRef.id,
-      nom,
-      espece,
-      poids
-    });
-
-    document.getElementById("birdName").value = "";
-    document.getElementById("birdSpecies").value = "";
-    document.getElementById("birdWeight").value = "";
-
-    renderAll();
-    setBadge("Sauvegardé", "sync-saved");
-    setStatus("Oiseau ajouté avec succès.");
-  } catch (error) {
-    console.error("Erreur ajout oiseau :", error);
-    setBadge("Erreur", "sync-error");
-    setStatus("Erreur lors de l'ajout de l'oiseau.");
-  }
-};
-
-window.deleteBird = async function (id) {
-  try {
-    setBadge("Suppression…", "sync-saving");
-
-    await deleteDoc(doc(db, "oiseaux", id));
-    state.oiseaux = state.oiseaux.filter((o) => o.id !== id);
-
-    renderAll();
-    setBadge("Sauvegardé", "sync-saved");
-    setStatus("Oiseau supprimé.");
-  } catch (error) {
-    console.error("Erreur suppression oiseau :", error);
-    setBadge("Erreur", "sync-error");
-    setStatus("Erreur lors de la suppression.");
-  }
-};
 
 window.enregistrerStock = async function () {
-  const stock = {
-    poussin: Number(document.getElementById("stockPoussin")?.value || 0),
-    caille: Number(document.getElementById("stockCaille")?.value || 0),
-    pigeon: Number(document.getElementById("stockPigeon")?.value || 0),
-    lapin: Number(document.getElementById("stockLapin")?.value || 0)
+  state.stock = {
+    boitePoussinsMoyenne225: Number(document.getElementById("stockBoitePoussinsMoyenne225").value || 0),
+    caille: Number(document.getElementById("stockCaille").value || 0),
+    cailleteau30gr: Number(document.getElementById("stockCailleteau30gr").value || 0),
+    lapin: Number(document.getElementById("stockLapin").value || 0),
+    pigeon: Number(document.getElementById("stockPigeon").value || 0),
+    poisson: Number(document.getElementById("stockPoisson").value || 0),
+    poussin: Number(document.getElementById("stockPoussin").value || 0),
+    souris: Number(document.getElementById("stockSouris").value || 0)
   };
 
   try {
     setBadge("Sauvegarde…", "sync-saving");
-
-    await setDoc(doc(db, "appData", "stock"), stock);
-    state.stock = stock;
-
-    renderAll();
+    await saveData();
+    renderStock();
+    setStatus("Stock enregistré.");
     setBadge("Sauvegardé", "sync-saved");
-    setStatus("Stock enregistré avec succès.");
   } catch (error) {
     console.error("Erreur enregistrement stock :", error);
-    setBadge("Erreur", "sync-error");
     setStatus("Erreur lors de l'enregistrement du stock.");
+    setBadge("Erreur", "sync-error");
   }
 };
 
 window.saveData = async function () {
-  try {
-    setBadge("Sauvegarde…", "sync-saving");
-    await setDoc(doc(db, "appData", "stock"), state.stock);
-    setBadge("Sauvegardé", "sync-saved");
-    setStatus("Sauvegarde manuelle OK.");
-  } catch (error) {
-    console.error("Erreur saveData :", error);
-    setBadge("Erreur", "sync-error");
-    setStatus("Erreur lors de la sauvegarde manuelle.");
-  }
-};
+  const payload = {
+    documents: state.documents,
+    documentsGeneraux: state.documentsGeneraux,
+    encodages: state.encodages,
+    nourrissage: state.nourrissage,
+    oiseaux: state.oiseaux,
+    stock: state.stock
+  };
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
+  await setDoc(dataRef, payload);
+};
 
 async function initApp() {
   try {
@@ -258,16 +369,13 @@ async function initApp() {
     setBadge("Lecture…", "sync-online");
     showOfflineMessage(false);
 
-    await chargerStock();
-    await chargerOiseaux();
-
+    await chargerData();
     renderAll();
 
     setStatus("Application chargée.");
     setBadge("Connecté", "sync-online");
   } catch (error) {
     console.error("Erreur initApp :", error);
-
     const message = String(error?.message || "");
 
     if (message.includes("client is offline")) {
@@ -278,21 +386,24 @@ async function initApp() {
       return;
     }
 
+    if (message.includes("Document introuvable")) {
+      setStatus("Document Firestore introuvable.");
+      setBadge("Erreur", "sync-error");
+      return;
+    }
+
     setStatus("Erreur de chargement Firebase.");
     setBadge("Erreur", "sync-error");
-    showOfflineMessage(false);
   }
 }
 
 window.addEventListener("online", () => {
-  console.log("Connexion revenue");
   setStatus("Connexion revenue.");
   setBadge("Connecté", "sync-online");
   showOfflineMessage(false);
 });
 
 window.addEventListener("offline", () => {
-  console.log("Navigateur hors ligne");
   setStatus("Navigateur hors ligne.");
   setBadge("Hors ligne", "sync-error");
   showOfflineMessage(true);
