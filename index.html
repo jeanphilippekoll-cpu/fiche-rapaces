@@ -25,7 +25,6 @@
     }
 
     *{box-sizing:border-box}
-
     body{
       margin:0;
       font-family:Arial, Helvetica, sans-serif;
@@ -124,14 +123,8 @@
       backdrop-filter:blur(6px);
     }
 
-    .card h2{
-      margin-top:0;
-      font-size:24px;
-    }
-
-    .card h3{
-      margin-top:0;
-    }
+    .card h2{margin-top:0;font-size:24px}
+    .card h3{margin-top:0}
 
     input,select,textarea{
       width:100%;
@@ -145,10 +138,7 @@
       outline:none;
     }
 
-    textarea{
-      min-height:110px;
-      resize:vertical;
-    }
+    textarea{min-height:110px;resize:vertical}
 
     label{
       display:block;
@@ -171,22 +161,7 @@
       margin-top:12px;
     }
 
-    .sub-item{
-      margin-bottom:10px;
-      padding:12px;
-      border:1px solid var(--line);
-      border-radius:12px;
-      background:#0f172b;
-    }
-
-    .item h3,
-    .item h4{
-      margin-top:0;
-    }
-
-    .item p{
-      margin:6px 0;
-    }
+    .item p{margin:6px 0}
 
     .stats-number{
       font-size:36px;
@@ -302,16 +277,6 @@
       gap:8px;
     }
 
-    .mini-row{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      background:#0b1224;
-      border:1px solid var(--line);
-      border-radius:10px;
-      padding:10px 12px;
-    }
-
     .doc-link{
       display:block;
       padding:10px 12px;
@@ -338,7 +303,11 @@
     .feed-table{
       width:100%;
       border-collapse:collapse;
-      min-width:700px;
+      min-width:760px;
+    }
+
+    .simple-table{
+      min-width:0;
     }
 
     .feed-table th,
@@ -366,10 +335,6 @@
       padding:16px;
     }
 
-    .summary-card h3{
-      margin-top:0;
-    }
-
     .summary-total{
       font-size:28px;
       font-weight:800;
@@ -394,8 +359,6 @@
       grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
       gap:14px;
     }
-
-    a{color:#8ecbff}
 
     @media (max-width: 700px){
       .app{padding:16px}
@@ -456,7 +419,9 @@
 
     <section id="section-oiseaux" class="section hidden">
       <div class="card">
-        <h2>Ajouter un oiseau</h2>
+        <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
+
+        <input id="oiseauEditId" type="hidden">
 
         <div class="form-grid">
           <div>
@@ -485,7 +450,7 @@
           </div>
 
           <div>
-            <label for="oiseauHabitudeFood">Nourriture habituelle</label>
+            <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
             <select id="oiseauHabitudeFood">
               <option value="">Choisir</option>
               <option value="Poussin">Poussin</option>
@@ -499,8 +464,27 @@
           </div>
 
           <div>
-            <label for="oiseauHabitudeQty">Quantité habituelle</label>
+            <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
             <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
+          </div>
+
+          <div>
+            <label for="oiseauHabitudeFood2">Nourriture habituelle 2</label>
+            <select id="oiseauHabitudeFood2">
+              <option value="">Choisir</option>
+              <option value="Poussin">Poussin</option>
+              <option value="Caille">Caille</option>
+              <option value="Pigeon">Pigeon</option>
+              <option value="Lapin">Lapin</option>
+              <option value="Poisson">Poisson</option>
+              <option value="Souris">Souris</option>
+              <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
+            <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
           </div>
 
           <div>
@@ -518,7 +502,8 @@
         <textarea id="oiseauNotes" placeholder="Notes"></textarea>
 
         <div class="actions">
-          <button class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+          <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+          <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
         </div>
       </div>
 
@@ -578,7 +563,7 @@
       </div>
 
       <div class="card">
-        <h2>Liste des pesées</h2>
+        <h2>Informations</h2>
         <div id="listePesees"></div>
       </div>
     </section>
@@ -651,14 +636,14 @@
 
         <div class="form-grid">
           <div>
-            <label for="stockPoussin">Poussin (pièces)</label>
-            <input id="stockPoussin" type="number" min="0" placeholder="Poussin">
-            <div class="stock-info">Les boîtes de poussins moyennes sont calculées automatiquement sur base de 225 pièces.</div>
+            <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
+            <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
+            <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
           </div>
 
           <div>
-            <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
-            <input id="stockBoitePoussinsMoyenne225" type="number" readonly>
+            <label for="stockPoussin">Poussins disponibles (calculé)</label>
+            <input id="stockPoussin" type="number" readonly>
           </div>
 
           <div>
