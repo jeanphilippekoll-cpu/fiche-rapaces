@@ -115,6 +115,7 @@
       margin-top:12px;
     }
     .item h3{margin:0 0 10px 0}
+    .item h4{margin:10px 0 8px 0}
     .item p{margin:6px 0}
     .stats-number{
       font-size:34px;
@@ -194,6 +195,12 @@
 
         <label for="oiseauNotes">Notes</label>
         <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+
+        <label for="oiseauPhotoFile">Photo</label>
+        <input id="oiseauPhotoFile" type="file" accept="image/*">
+
+        <label for="oiseauDocFile">Document</label>
+        <input id="oiseauDocFile" type="file" accept=".pdf,image/*">
 
         <div class="actions">
           <button class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
@@ -328,6 +335,6 @@
     </section>
   </div>
 
- <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

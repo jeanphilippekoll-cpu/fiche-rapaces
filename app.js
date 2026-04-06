@@ -5,6 +5,12 @@ import {
   getDoc,
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -17,6 +23,7 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
+const storage = getStorage(firebaseApp);
 
 const statusEl = document.getElementById("status");
 
@@ -54,6 +61,14 @@ function todayStr() {
 
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
+}
+
+async function uploadFile(file, path) {
+  if (!file) return "";
+
+  const fileRef = ref(storage, path);
+  await uploadBytes(fileRef, file);
+  return await getDownloadURL(fileRef);
 }
 
 function normalizeHistoriquePoids(list) {
@@ -467,29 +482,82 @@ async function loadData() {
   }
 }
 
-function ajouterOiseau() {
+async function ajouterOiseau() {
   const nom = document.getElementById("oiseauNom")?.value.trim() || "";
   if (!nom) return;
 
-  appData.oiseaux.unshift({
-    id: makeId(),
-    nom,
-    espece: document.getElementById("oiseauEspece")?.value.trim() || "",
-    sexe: document.getElementById("oiseauSexe")?.value.trim() || "",
-    age: document.getElementById("oiseauAge")?.value.trim() || "",
-    poidsActuel: document.getElementById("oiseauPoids")?.value.trim() || "",
-    notes: document.getElementById("oiseauNotes")?.value.trim() || "",
-    photoUrl: "",
-    documents: [],
-    historiquePoids: []
-  });
+  const espece = document.getElementById("oiseauEspece")?.value.trim() || "";
+  const sexe = document.getElementById("oiseauSexe")?.value.trim() || "";
+  const age = document.getElementById("oiseauAge")?.value.trim() || "";
+  const poidsActuel = document.getElementById("oiseauPoids")?.value.trim() || "";
+  const notes = document.getElementById("oiseauNotes")?.value.trim() || "";
 
-  ["oiseauNom","oiseauEspece","oiseauSexe","oiseauAge","oiseauPoids","oiseauNotes"].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.value = "";
-  });
+  const photoFile = document.getElementById("oiseauPhotoFile")?.files?.[0] || null;
+  const docFile = document.getElementById("oiseauDocFile")?.files?.[0] || null;
 
-  renderAll();
+  let photoUrl = "";
+  let documents = [];
+
+  try {
+    if (statusEl) statusEl.textContent = "Upload des fichiers...";
+
+    if (photoFile) {
+      photoUrl = await uploadFile(
+        photoFile,
+        `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`
+      );
+    }
+
+    if (docFile) {
+      const docUrl = await uploadFile(
+        docFile,
+        `oiseaux/documents/${nom}_${Date.now()}_${docFile.name}`
+      );
+
+      documents.push({
+        name: docFile.name,
+        url: docUrl
+      });
+    }
+
+    appData.oiseaux.unshift({
+      id: makeId(),
+      nom,
+      espece,
+      sexe,
+      age,
+      poidsActuel,
+      notes,
+      photoUrl,
+      documents,
+      historiquePoids: []
+    });
+
+    [
+      "oiseauNom",
+      "oiseauEspece",
+      "oiseauSexe",
+      "oiseauAge",
+      "oiseauPoids",
+      "oiseauNotes"
+    ].forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    });
+
+    const photoInput = document.getElementById("oiseauPhotoFile");
+    const docInput = document.getElementById("oiseauDocFile");
+    if (photoInput) photoInput.value = "";
+    if (docInput) docInput.value = "";
+
+    renderAll();
+
+    if (statusEl) statusEl.textContent = "Oiseau ajouté";
+  } catch (e) {
+    console.error("Erreur upload :", e);
+    if (statusEl) statusEl.textContent = "Erreur upload";
+    alert("Erreur pendant l'upload de la photo ou du document.");
+  }
 }
 
 function ajouterEncodage() {
