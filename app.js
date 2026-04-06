@@ -27,6 +27,7 @@ const db = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);
 
 const statusEl = document.getElementById("status");
+const syncBadgeEl = document.getElementById("syncBadge");
 
 const BOITE_POUSSIN_CAPACITE = 225;
 
@@ -43,6 +44,9 @@ const ALIMENTS = [
 let rawRapacesData = {};
 let editingBirdId = null;
 let unsubscribeRapaces = null;
+let autosaveTimer = null;
+let autosaveEnabled = true;
+let isSaving = false;
 
 let appData = {
   oiseaux: [],
@@ -94,12 +98,42 @@ function setStatus(message) {
   statusEl.textContent = message;
 }
 
+function setSyncBadge(label, type = "idle") {
+  if (!syncBadgeEl) return;
+
+  syncBadgeEl.textContent = label;
+  syncBadgeEl.className = "sync-badge";
+
+  if (type === "online") syncBadgeEl.classList.add("sync-online");
+  else if (type === "offline") syncBadgeEl.classList.add("sync-offline");
+  else if (type === "saving") syncBadgeEl.classList.add("sync-saving");
+  else if (type === "saved") syncBadgeEl.classList.add("sync-saved");
+  else if (type === "error") syncBadgeEl.classList.add("sync-error");
+  else syncBadgeEl.classList.add("sync-saving");
+}
+
 function updateConnectivityStatus() {
   if (navigator.onLine) {
     setStatus("En ligne");
+    setSyncBadge("En ligne", "online");
   } else {
     setStatus("Hors ligne — modifications gardées localement");
+    setSyncBadge("Hors ligne", "offline");
   }
+}
+
+function scheduleAutoSave(delay = 1200) {
+  if (!autosaveEnabled) return;
+
+  if (autosaveTimer) {
+    clearTimeout(autosaveTimer);
+  }
+
+  setSyncBadge("Synchronisation…", "saving");
+
+  autosaveTimer = setTimeout(async () => {
+    await saveData(true);
+  }, delay);
 }
 
 function normalizeFoodLabel(value) {
@@ -683,16 +717,41 @@ function renderAll() {
   fillStockForm();
 }
 
-async function saveData() {
+async function saveData(isAuto = false) {
   try {
-    setStatus(navigator.onLine ? "Sauvegarde…" : "Hors ligne — sauvegarde locale en attente");
+    if (isSaving) return;
+    isSaving = true;
+
+    if (autosaveTimer) {
+      clearTimeout(autosaveTimer);
+      autosaveTimer = null;
+    }
+
+    if (navigator.onLine) {
+      setStatus(isAuto ? "Synchronisation…" : "Sauvegarde…");
+      setSyncBadge(isAuto ? "Synchronisation…" : "Sauvegarde…", "saving");
+    } else {
+      setStatus("Hors ligne — sauvegarde locale en attente");
+      setSyncBadge("Hors ligne", "offline");
+    }
+
     const payload = buildFirestorePayload();
     await setDoc(doc(db, "rapaces", "data"), payload);
     rawRapacesData = payload;
-    setStatus(navigator.onLine ? "Sauvegardé" : "Sauvegardé localement — synchronisation en attente");
+
+    if (navigator.onLine) {
+      setStatus(isAuto ? "Synchronisé" : "Sauvegardé");
+      setSyncBadge("Sauvegardé", "saved");
+    } else {
+      setStatus("Sauvegardé localement — synchronisation en attente");
+      setSyncBadge("Hors ligne", "offline");
+    }
   } catch (e) {
     console.error(e);
     setStatus("Erreur sauvegarde");
+    setSyncBadge("Erreur", "error");
+  } finally {
+    isSaving = false;
   }
 }
 
@@ -717,11 +776,13 @@ function startRealtimeSync() {
       (error) => {
         console.error(error);
         setStatus("Erreur lecture Firestore");
+        setSyncBadge("Erreur", "error");
       }
     );
   } catch (e) {
     console.error(e);
     setStatus("Erreur initialisation synchro");
+    setSyncBadge("Erreur", "error");
   }
 }
 
@@ -794,6 +855,7 @@ async function ajouterOiseau() {
         alert("L’upload photo nécessite une connexion internet.");
       } else {
         setStatus("Upload photo…");
+        setSyncBadge("Synchronisation…", "saving");
         photoUrl = await uploadFile(
           photoFile,
           `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`
@@ -806,6 +868,7 @@ async function ajouterOiseau() {
         alert("L’upload document nécessite une connexion internet.");
       } else {
         setStatus("Upload document…");
+        setSyncBadge("Synchronisation…", "saving");
         const docUrl = await uploadFile(
           docFile,
           `oiseaux/documents/${nom}_${Date.now()}_${docFile.name}`
@@ -857,9 +920,11 @@ async function ajouterOiseau() {
 
     resetBirdForm();
     renderAll();
+    scheduleAutoSave();
   } catch (e) {
     console.error("Erreur upload :", e);
     setStatus("Erreur upload");
+    setSyncBadge("Erreur", "error");
     alert("Erreur pendant l'upload de la photo ou du document.");
   }
 }
@@ -945,6 +1010,7 @@ function ajouterPesee() {
 
   renderAll();
   setStatus("Pesée ajoutée");
+  scheduleAutoSave();
 }
 
 function ajouterDocument() {
@@ -965,6 +1031,7 @@ function ajouterDocument() {
   });
 
   renderAll();
+  scheduleAutoSave();
 }
 
 function decrementStock(food, qty) {
@@ -1044,6 +1111,7 @@ function ajouterNourrissage() {
 
   renderAll();
   setStatus(`${lignes.length} nourrissage(s) ajouté(s)`);
+  scheduleAutoSave();
 }
 
 function appliquerNourritureHabituelle() {
@@ -1093,16 +1161,19 @@ function enregistrerStock() {
 
   renderAll();
   setStatus("Stock mis à jour");
+  scheduleAutoSave();
 }
 
 function supprimerOiseau(id) {
   appData.oiseaux = appData.oiseaux.filter((o) => o.id !== id);
   renderAll();
+  scheduleAutoSave();
 }
 
 function supprimerDocument(id) {
   appData.documents = appData.documents.filter((d) => d.id !== id);
   renderAll();
+  scheduleAutoSave();
 }
 
 function supprimerNourrissage(id) {
@@ -1110,6 +1181,7 @@ function supprimerNourrissage(id) {
   if (found) restoreStockFromDeletedFeed(found);
   appData.nourrissage = appData.nourrissage.filter((n) => n.id !== id);
   renderAll();
+  scheduleAutoSave();
 }
 
 function exportBirdPdf(id) {

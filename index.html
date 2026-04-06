@@ -14,7 +14,6 @@
       --bg:#f7f1e3;
       --bg2:#efe6d1;
       --panel:#fffaf0;
-      --panel2:#f6edd8;
       --line:rgba(96, 76, 46, 0.12);
       --text:#3d3123;
       --muted:#7b6b57;
@@ -67,6 +66,58 @@
       color:var(--muted);
       font-size:14px;
       margin-top:6px;
+    }
+
+    .sync-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      margin-top:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:700;
+      border:1px solid transparent;
+      width:max-content;
+    }
+
+    .sync-badge::before{
+      content:"";
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      display:inline-block;
+      background:currentColor;
+    }
+
+    .sync-online{
+      background:#eef7e8;
+      color:#52703d;
+      border-color:rgba(82,112,61,0.18);
+    }
+
+    .sync-offline{
+      background:#f5eadf;
+      color:#8a5a32;
+      border-color:rgba(138,90,50,0.18);
+    }
+
+    .sync-saving{
+      background:#fff3d8;
+      color:#9b6a00;
+      border-color:rgba(155,106,0,0.18);
+    }
+
+    .sync-saved{
+      background:#e8f3ea;
+      color:#35624a;
+      border-color:rgba(53,98,74,0.18);
+    }
+
+    .sync-error{
+      background:#fdeaea;
+      color:#a13d3d;
+      border-color:rgba(161,61,61,0.18);
     }
 
     .nav{
@@ -387,6 +438,7 @@
         <h1 class="page-title">Fiche Rapaces</h1>
         <p class="page-subtitle">Version crème • mobile/tablette • cache hors ligne</p>
         <div id="status">Chargement…</div>
+        <div id="syncBadge" class="sync-badge sync-saving">Synchronisation…</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="saveData()">Sauvegarder</button>
