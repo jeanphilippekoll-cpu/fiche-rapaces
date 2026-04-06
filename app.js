@@ -136,6 +136,31 @@ function scheduleAutoSave(delay = 1200) {
   }, delay);
 }
 
+function formatDisplayDate(value) {
+  if (!value) return "";
+
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  const d = new Date(value);
+  if (!Number.isNaN(d.getTime())) {
+    return d.toLocaleDateString("fr-BE");
+  }
+
+  return String(value);
+}
+
+function formatDisplayMonth(value) {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}$/.test(value)) {
+    const [year, month] = value.split("-");
+    return `${month}/${year}`;
+  }
+  return value;
+}
+
 function normalizeFoodLabel(value) {
   return (value || "").trim().toLowerCase();
 }
@@ -161,12 +186,6 @@ function computeBoitesFromPoussins(nbPoussins) {
 
 function syncBoitesFromPoussins() {
   appData.stock.boitePoussinsMoyenne225 = computeBoitesFromPoussins(appData.stock.poussin);
-}
-
-function setPoussinsFromBoxes(boxes) {
-  const nbBoxes = Math.max(0, toNumber(boxes));
-  appData.stock.boitePoussinsMoyenne225 = nbBoxes;
-  appData.stock.poussin = nbBoxes * BOITE_POUSSIN_CAPACITE;
 }
 
 async function uploadFile(file, path) {
@@ -404,7 +423,7 @@ function renderHistoriquePoidsTable(historique) {
             .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
             .map((h) => `
             <tr>
-              <td>${safe(h.date)}</td>
+              <td>${safe(formatDisplayDate(h.date))}</td>
               <td>${safe(h.poids)}</td>
             </tr>
           `).join("")}
@@ -642,9 +661,9 @@ function renderNourrissageSummary() {
 
   zone.innerHTML = `
     <div class="summary-grid">
-      ${renderAggregateBlock(`Jour (${dateRef})`, todayItems)}
+      ${renderAggregateBlock(`Jour (${formatDisplayDate(dateRef)})`, todayItems)}
       ${renderAggregateBlock(`Semaine (${weekRef})`, weekItems)}
-      ${renderAggregateBlock(`Mois (${monthRef})`, monthItems)}
+      ${renderAggregateBlock(`Mois (${formatDisplayMonth(monthRef)})`, monthItems)}
     </div>
   `;
 }
@@ -664,14 +683,11 @@ function renderNourrissageHistory() {
     <div class="list-grid">
       ${sorted.map((item) => `
         <div class="item">
-          <p><strong>Date :</strong> ${safe(item.date)}</p>
+          <p><strong>Date :</strong> ${safe(formatDisplayDate(item.date))}</p>
           <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
           <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
           <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
           <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
-          <div class="small-actions">
-            <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-          </div>
         </div>
       `).join("")}
     </div>
@@ -688,6 +704,7 @@ function fillStockForm() {
   syncBoitesFromPoussins();
 
   const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
+  const stockAddBoxes = document.getElementById("stockAjouterBoitesPoussins");
   const stockPoussin = document.getElementById("stockPoussin");
   const stockCaille = document.getElementById("stockCaille");
   const stockPigeon = document.getElementById("stockPigeon");
@@ -697,6 +714,7 @@ function fillStockForm() {
   const stockCailleteau30gr = document.getElementById("stockCailleteau30gr");
 
   if (stockBoxes) stockBoxes.value = appData.stock.boitePoussinsMoyenne225 ?? 0;
+  if (stockAddBoxes) stockAddBoxes.value = "";
   if (stockPoussin) stockPoussin.value = appData.stock.poussin ?? 0;
   if (stockCaille) stockCaille.value = appData.stock.caille ?? 0;
   if (stockPigeon) stockPigeon.value = appData.stock.pigeon ?? 0;
@@ -1046,17 +1064,6 @@ function decrementStock(food, qty) {
   }
 }
 
-function restoreStockFromDeletedFeed(item) {
-  const stockKey = foodToStockKey(item?.nourriture);
-  if (!stockKey) return;
-
-  appData.stock[stockKey] = toNumber(appData.stock[stockKey]) + toNumber(item?.quantite);
-
-  if (stockKey === "poussin") {
-    syncBoitesFromPoussins();
-  }
-}
-
 function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
@@ -1148,9 +1155,14 @@ function viderTableNourrissage(showMessage = true) {
 }
 
 function enregistrerStock() {
-  const boxes = Math.max(0, toNumber(document.getElementById("stockBoitePoussinsMoyenne225")?.value || 0));
+  const boxesToAdd = Math.max(
+    0,
+    toNumber(document.getElementById("stockAjouterBoitesPoussins")?.value || 0)
+  );
 
-  setPoussinsFromBoxes(boxes);
+  if (boxesToAdd > 0) {
+    appData.stock.poussin += boxesToAdd * BOITE_POUSSIN_CAPACITE;
+  }
 
   appData.stock.caille = Math.max(0, toNumber(document.getElementById("stockCaille")?.value || 0));
   appData.stock.pigeon = Math.max(0, toNumber(document.getElementById("stockPigeon")?.value || 0));
@@ -1159,6 +1171,7 @@ function enregistrerStock() {
   appData.stock.souris = Math.max(0, toNumber(document.getElementById("stockSouris")?.value || 0));
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
+  syncBoitesFromPoussins();
   renderAll();
   setStatus("Stock mis à jour");
   scheduleAutoSave();
@@ -1176,14 +1189,6 @@ function supprimerDocument(id) {
   scheduleAutoSave();
 }
 
-function supprimerNourrissage(id) {
-  const found = appData.nourrissage.find((n) => n.id === id);
-  if (found) restoreStockFromDeletedFeed(found);
-  appData.nourrissage = appData.nourrissage.filter((n) => n.id !== id);
-  renderAll();
-  scheduleAutoSave();
-}
-
 function exportBirdPdf(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -1192,7 +1197,7 @@ function exportBirdPdf(id) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
       <tr>
-        <td>${safe(item.date)}</td>
+        <td>${safe(formatDisplayDate(item.date))}</td>
         <td>${safe(item.poids)}</td>
       </tr>
     `).join("");
@@ -1300,7 +1305,6 @@ window.viderTableNourrissage = viderTableNourrissage;
 window.enregistrerStock = enregistrerStock;
 window.supprimerOiseau = supprimerOiseau;
 window.supprimerDocument = supprimerDocument;
-window.supprimerNourrissage = supprimerNourrissage;
 window.exportBirdPdf = exportBirdPdf;
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -1314,16 +1318,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (feedDate) {
     feedDate.addEventListener("change", () => {
       renderNourrissageSummary();
-    });
-  }
-
-  const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
-  if (stockBoxes) {
-    stockBoxes.addEventListener("input", () => {
-      const previewPieces = document.getElementById("stockPoussin");
-      if (previewPieces) {
-        previewPieces.value = Math.max(0, toNumber(stockBoxes.value || 0)) * BOITE_POUSSIN_CAPACITE;
-      }
     });
   }
 

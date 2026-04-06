@@ -698,13 +698,19 @@
 
         <div class="form-grid">
           <div>
-            <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
-            <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
-            <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
+            <label for="stockBoitePoussinsMoyenne225">Boîtes restantes (calculé)</label>
+            <input id="stockBoitePoussinsMoyenne225" type="number" readonly>
+            <div class="stock-info">Calcul automatique selon le stock réel restant en poussins.</div>
           </div>
 
           <div>
-            <label for="stockPoussin">Poussins disponibles (calculé)</label>
+            <label for="stockAjouterBoitesPoussins">Ajouter des boîtes de poussins (225)</label>
+            <input id="stockAjouterBoitesPoussins" type="number" min="0" placeholder="Ex : 1 ou 2">
+            <div class="stock-info">Ajoute de nouvelles boîtes sans écraser le stock restant.</div>
+          </div>
+
+          <div>
+            <label for="stockPoussin">Poussins disponibles</label>
             <input id="stockPoussin" type="number" readonly>
           </div>
 
