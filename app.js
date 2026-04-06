@@ -43,7 +43,6 @@ const ALIMENTS = [
 
 let rawRapacesData = {};
 let editingBirdId = null;
-let unsubscribeRapaces = null;
 let autosaveTimer = null;
 let autosaveEnabled = true;
 let isSaving = false;
@@ -547,11 +546,50 @@ function renderDocuments() {
 
 function getFoodOptionsHtml(selected = "") {
   return `
-    <option value="">Choisir</option>
     ${ALIMENTS.map((food) => `
       <option value="${safeAttr(food)}" ${food === selected ? "selected" : ""}>${safe(food)}</option>
     `).join("")}
   `;
+}
+
+function applyDefaultFoodForBird(birdId) {
+  const food1 = document.getElementById(`feedFood1_${birdId}`);
+  const qty1 = document.getElementById(`feedQty1_${birdId}`);
+  if (!food1 || !qty1) return;
+
+  const qtyValue = toNumber(qty1.value || 0);
+  if (qtyValue > 0 && !food1.value) {
+    food1.value = "Poussin";
+  }
+}
+
+function attachFeedHandlers() {
+  appData.oiseaux.forEach((oiseau) => {
+    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
+    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
+
+    if (food1 && !food1.value) {
+      food1.value = "Poussin";
+    }
+
+    if (qty1) {
+      qty1.addEventListener("blur", () => applyDefaultFoodForBird(oiseau.id));
+      qty1.addEventListener("change", () => applyDefaultFoodForBird(oiseau.id));
+      qty1.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          applyDefaultFoodForBird(oiseau.id);
+        }
+      });
+    }
+
+    if (food1) {
+      food1.addEventListener("blur", () => {
+        if (!food1.value) {
+          food1.value = "Poussin";
+        }
+      });
+    }
+  });
 }
 
 function renderNourrissageTable() {
@@ -586,16 +624,43 @@ function renderNourrissageTable() {
             <tr>
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
-              <td><select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select></td>
-              <td><input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0"></td>
-              <td><select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select></td>
-              <td><input id="feedQty2_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0"></td>
+              <td>
+                <select id="feedFood1_${safeAttr(oiseau.id)}">
+                  ${getFoodOptionsHtml("Poussin")}
+                </select>
+              </td>
+              <td>
+                <input
+                  id="feedQty1_${safeAttr(oiseau.id)}"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                >
+              </td>
+              <td>
+                <select id="feedFood2_${safeAttr(oiseau.id)}">
+                  <option value="">Choisir</option>
+                  ${ALIMENTS.map((food) => `<option value="${safeAttr(food)}">${safe(food)}</option>`).join("")}
+                </select>
+              </td>
+              <td>
+                <input
+                  id="feedQty2_${safeAttr(oiseau.id)}"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="0"
+                >
+              </td>
             </tr>
           `).join("")}
         </tbody>
       </table>
     </div>
   `;
+
+  attachFeedHandlers();
 }
 
 function sameDay(dateA, dateB) {
@@ -668,8 +733,45 @@ function renderNourrissageSummary() {
   `;
 }
 
-function renderNourrissageHistory() {
+function renderDernierNourrissage() {
   const zone = document.getElementById("listeNourrissage");
+  if (!zone) return;
+
+  if (!appData.nourrissage.length) {
+    zone.innerHTML = `<div class="card"><p class="muted-line">Aucun nourrissage.</p></div>`;
+    return;
+  }
+
+  const sorted = [...appData.nourrissage].sort((a, b) => {
+    if ((b.date || "") !== (a.date || "")) {
+      return (b.date || "").localeCompare(a.date || "");
+    }
+    return 0;
+  });
+
+  const last = sorted[0];
+
+  zone.innerHTML = `
+    <div class="card">
+      <h2>Dernier nourrissage</h2>
+      <p><strong>Date :</strong> ${safe(formatDisplayDate(last.date))}</p>
+      <p><strong>Rapace :</strong> ${safe(last.oiseau)}</p>
+      <p><strong>Nourriture :</strong> ${safe(last.nourriture)}</p>
+      <p><strong>Quantité :</strong> ${safe(last.quantite)}</p>
+      <p><strong>Remarques :</strong> ${safe(last.remarques || "-")}</p>
+    </div>
+
+    <div class="card">
+      <h2>Historique nourrissage</h2>
+      <div id="tableauNourrissage"></div>
+    </div>
+  `;
+
+  renderTableauHistorique();
+}
+
+function renderTableauHistorique() {
+  const zone = document.getElementById("tableauNourrissage");
   if (!zone) return;
 
   if (!appData.nourrissage.length) {
@@ -677,19 +779,37 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const sorted = [...appData.nourrissage].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const oiseaux = appData.oiseaux.map((o) => o.nom);
+  const grouped = {};
+
+  appData.nourrissage.forEach((n) => {
+    if (!grouped[n.date]) grouped[n.date] = {};
+    if (!grouped[n.date][n.oiseau]) grouped[n.date][n.oiseau] = [];
+    grouped[n.date][n.oiseau].push(`${safe(n.quantite)} ${safe(n.nourriture)}`);
+  });
+
+  const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
 
   zone.innerHTML = `
-    <div class="list-grid">
-      ${sorted.map((item) => `
-        <div class="item">
-          <p><strong>Date :</strong> ${safe(formatDisplayDate(item.date))}</p>
-          <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
-          <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-          <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
-          <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
-        </div>
-      `).join("")}
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            ${oiseaux.map((o) => `<th>${safe(o)}</th>`).join("")}
+          </tr>
+        </thead>
+        <tbody>
+          ${dates.map((date) => `
+            <tr>
+              <td>${safe(formatDisplayDate(date))}</td>
+              ${oiseaux.map((o) => `
+                <td>${(grouped[date][o] || []).join("<br>")}</td>
+              `).join("")}
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
     </div>
   `;
 }
@@ -697,7 +817,7 @@ function renderNourrissageHistory() {
 function renderNourrissage() {
   renderNourrissageTable();
   renderNourrissageSummary();
-  renderNourrissageHistory();
+  renderDernierNourrissage();
 }
 
 function fillStockForm() {
@@ -777,7 +897,7 @@ function startRealtimeSync() {
   try {
     const refDoc = doc(db, "rapaces", "data");
 
-    unsubscribeRapaces = onSnapshot(
+    onSnapshot(
       refDoc,
       (snap) => {
         if (snap.exists()) {
@@ -1073,12 +1193,12 @@ function ajouterNourrissage() {
   const lignes = [];
 
   appData.oiseaux.forEach((oiseau) => {
-    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "";
+    let f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
     const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
     const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
     const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
 
-    if (f1 && q1 > 0) {
+    if (q1 > 0) {
       lignes.push({
         id: makeId(),
         date,
@@ -1102,7 +1222,7 @@ function ajouterNourrissage() {
   });
 
   if (!lignes.length) {
-    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
+    alert("Choisis au moins une quantité pour un oiseau.");
     return;
   }
 
@@ -1128,27 +1248,37 @@ function appliquerNourritureHabituelle() {
     const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
     const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
 
-    if (food1) food1.value = oiseau.nourritureHabituelle || "";
-    if (qty1) qty1.value = toNumber(oiseau.quantiteHabituelle) > 0 ? oiseau.quantiteHabituelle : "";
+    if (food1) {
+      food1.value = oiseau.nourritureHabituelle || "Poussin";
+    }
 
-    if (food2) food2.value = oiseau.nourritureHabituelle2 || "";
-    if (qty2) qty2.value = toNumber(oiseau.quantiteHabituelle2) > 0 ? oiseau.quantiteHabituelle2 : "";
+    if (qty1 && !qty1.value) {
+      qty1.value = oiseau.quantiteHabituelle > 0 ? oiseau.quantiteHabituelle : "";
+    }
+
+    if (food2) {
+      food2.value = oiseau.nourritureHabituelle2 || "";
+    }
+
+    if (qty2 && !qty2.value) {
+      qty2.value = oiseau.quantiteHabituelle2 > 0 ? oiseau.quantiteHabituelle2 : "";
+    }
   });
 
-  setStatus("Nourriture habituelle appliquée");
+  setStatus("Nourriture remplie automatiquement");
 }
 
 function viderTableNourrissage(showMessage = true) {
   appData.oiseaux.forEach((oiseau) => {
-    ["feedFood1_", "feedFood2_"].forEach((prefix) => {
-      const el = document.getElementById(`${prefix}${oiseau.id}`);
-      if (el) el.value = "";
-    });
+    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
+    const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
+    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
+    const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
 
-    ["feedQty1_", "feedQty2_"].forEach((prefix) => {
-      const el = document.getElementById(`${prefix}${oiseau.id}`);
-      if (el) el.value = "";
-    });
+    if (food1) food1.value = "Poussin";
+    if (food2) food2.value = "";
+    if (qty1) qty1.value = "";
+    if (qty2) qty2.value = "";
   });
 
   if (showMessage) setStatus("Tableau vidé");

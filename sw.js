@@ -1,4 +1,4 @@
-const CACHE_NAME = "fiche-rapaces-cache-v3";
+const CACHE_NAME = "fiche-rapaces-cache-v5";
 const APP_ASSETS = [
   "./",
   "./index.html",
