@@ -1,12 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import {
   getFirestore,
   doc,
   getDoc,
@@ -23,16 +16,11 @@ const firebaseConfig = {
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
-const authOverlay = document.getElementById("authOverlay");
-const appContent = document.getElementById("appContent");
-const userInfo = document.getElementById("userInfo");
 const statusEl = document.getElementById("status");
-const authError = document.getElementById("authError");
 
-let currentUser = null;
+let rawRapacesData = {};
 
 let appData = {
   oiseaux: [],
@@ -64,47 +52,62 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function normalizeData(data) {
-  const oiseauxSource = Array.isArray(data?.oiseaux) ? data.oiseaux : [];
-  const documentsSource = Array.isArray(data?.documents) ? data.documents : [];
-  const documentsGenerauxSource = Array.isArray(data?.documentsGeneraux) ? data.documentsGeneraux : [];
-  const nourrissageSource = Array.isArray(data?.nourrissage) ? data.nourrissage : [];
+function safeArray(v) {
+  return Array.isArray(v) ? v : [];
+}
 
-  const oiseaux = oiseauxSource.map((o) => ({
-    id: o.id || makeId(),
+function normalizeHistoriquePoids(list) {
+  return safeArray(list).map((item) => ({
+    date: item?.date || "",
+    poids: item?.poids ?? ""
+  }));
+}
+
+function normalizeDocumentsOiseau(list) {
+  return safeArray(list).map((docItem) => ({
+    name: docItem?.name || docItem?.nom || "Document",
+    url: docItem?.url || docItem?.lien || ""
+  }));
+}
+
+function normalizeData(data) {
+  const oiseauxSource = safeArray(data?.oiseaux);
+  const encodagesSource = safeArray(data?.encodages);
+  const documentsSource = safeArray(data?.documents);
+  const documentsGenerauxSource = safeArray(data?.documentsGeneraux);
+  const nourrissageSource = safeArray(data?.nourrissage);
+
+  const oiseaux = oiseauxSource.map((o, index) => ({
+    id: o.id || `oiseau_${index}_${makeId()}`,
     nom: o.nom || "",
     espece: o.espece || "",
     sexe: o.sexe || "",
     age: o.age || "",
-    poidsActuel: o.poidsActuel || "",
+    poidsActuel: o.poidsActuel ?? "",
     notes: o.notes || "",
-    photoUrl: o.photo || o.photoUrl || "",
+    photoUrl: o?.photo?.url || o.photoUrl || o.photo || "",
+    documents: normalizeDocumentsOiseau(o.documents),
+    historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
     alerteBasse: o.alerteBasse || "",
     alerteHaute: o.alerteHaute || "",
     documentNom: o.documentNom || "",
     documentUrl: o.documentUrl || ""
   }));
 
-  const encodages = [];
-  oiseauxSource.forEach((o) => {
-    const encs = Array.isArray(o.encodages) ? o.encodages : [];
-    encs.forEach((e) => {
-      encodages.push({
-        id: e.id || makeId(),
-        date: e.date || "",
-        nom: o.nom || "",
-        espece: o.espece || "",
-        poids: e.poids || "",
-        nourriture: e.nourriture || "",
-        etat: e.exercice || "",
-        lieu: "",
-        observations: e.notes || "",
-        nombre: e.nombre || "",
-        poidsNourriture: e.poidsNourriture || "",
-        variation: e.variation || ""
-      });
-    });
-  });
+  const encodages = encodagesSource.map((e, index) => ({
+    id: e.id || `enc_${index}_${makeId()}`,
+    date: e.date || "",
+    nom: e.nom || "",
+    espece: e.espece || "",
+    poids: e.poids ?? "",
+    nourriture: e.nourriture || "",
+    etat: e.etat || e.exercice || "",
+    lieu: e.lieu || "",
+    observations: e.observations || e.notes || "",
+    nombre: e.nombre || "",
+    poidsNourriture: e.poidsNourriture || "",
+    variation: e.variation || ""
+  }));
 
   const documents = [
     ...documentsSource.map((d) => ({
@@ -112,14 +115,14 @@ function normalizeData(data) {
       titre: d.titre || d.nom || "Document",
       type: d.type || "Document",
       description: d.description || "",
-      lien: d.lien || ""
+      lien: d.lien || d.url || ""
     })),
     ...documentsGenerauxSource.map((d) => ({
       id: d.id || makeId(),
       titre: d.titre || d.nom || "Document général",
       type: d.type || "Document général",
       description: d.description || "",
-      lien: d.lien || ""
+      lien: d.lien || d.url || ""
     }))
   ];
 
@@ -136,6 +139,60 @@ function normalizeData(data) {
       poisson: Number(data?.stock?.poisson || 0),
       souris: Number(data?.stock?.souris || 0)
     }
+  };
+}
+
+function buildFirestorePayload() {
+  const oldBirds = safeArray(rawRapacesData?.oiseaux);
+
+  const oiseaux = appData.oiseaux.map((o) => {
+    const ancien = oldBirds.find((b) => (b?.nom || "") === (o.nom || ""));
+
+    return {
+      ...ancien,
+      nom: o.nom || "",
+      espece: o.espece || "",
+      sexe: o.sexe || "",
+      age: o.age || "",
+      poidsActuel: o.poidsActuel ?? "",
+      notes: o.notes || "",
+      photo: {
+        ...(ancien?.photo || {}),
+        url: o.photoUrl || ""
+      },
+      documents: safeArray(o.documents).map((d) => ({
+        name: d?.name || "Document",
+        url: d?.url || ""
+      })),
+      historiquePoids: safeArray(o.historiquePoids).map((h) => ({
+        date: h?.date || "",
+        poids: h?.poids ?? ""
+      }))
+    };
+  });
+
+  const encodages = appData.encodages.map((e) => ({
+    date: e.date || "",
+    nom: e.nom || "",
+    poids: e.poids ?? "",
+    nourriture: e.nourriture || "",
+    espece: e.espece || "",
+    etat: e.etat || "",
+    lieu: e.lieu || "",
+    observations: e.observations || "",
+    nombre: e.nombre || "",
+    poidsNourriture: e.poidsNourriture || "",
+    variation: e.variation || ""
+  }));
+
+  return {
+    ...rawRapacesData,
+    oiseaux,
+    encodages,
+    nourrissage: appData.nourrissage,
+    stock: appData.stock,
+    documents: rawRapacesData.documents || [],
+    documentsGeneraux: rawRapacesData.documentsGeneraux || []
   };
 }
 
@@ -170,6 +227,63 @@ function refreshBirdSelects() {
   if (feedBird) feedBird.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
 }
 
+function getEncodagesLies(oiseauNom) {
+  return appData.encodages.filter(
+    (e) => (e.nom || "").trim().toLowerCase() === (oiseauNom || "").trim().toLowerCase()
+  );
+}
+
+function renderHistoriquePoids(historique) {
+  if (!historique.length) {
+    return `<p>Aucun historique de poids.</p>`;
+  }
+
+  return `
+    <div>
+      ${historique.map((h) => `
+        <p>• ${safe(h.date)} : ${safe(h.poids)} g</p>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderDocumentsOiseau(documents) {
+  if (!documents.length) {
+    return `<p>Aucun document lié.</p>`;
+  }
+
+  return `
+    <div>
+      ${documents.map((docItem) => `
+        <p>
+          <a href="${safe(docItem.url)}" target="_blank" rel="noopener noreferrer">
+            ${safe(docItem.name)}
+          </a>
+        </p>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderEncodagesLies(encodages) {
+  if (!encodages.length) {
+    return `<p>Aucun encodage lié.</p>`;
+  }
+
+  return `
+    <div>
+      ${encodages.map((item) => `
+        <div style="margin-bottom:10px;padding:10px;border:1px solid #333;border-radius:10px;background:#141414;">
+          <p><strong>Date :</strong> ${safe(item.date)}</p>
+          <p><strong>Poids :</strong> ${safe(item.poids)}</p>
+          <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
+          ${item.observations ? `<p><strong>Observations :</strong> ${safe(item.observations)}</p>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderOiseaux() {
   const zone = document.getElementById("listeOiseaux");
   if (!zone) return;
@@ -179,21 +293,46 @@ function renderOiseaux() {
     return;
   }
 
-  zone.innerHTML = appData.oiseaux.map((oiseau) => `
-    <div class="item">
-      <h3>${safe(oiseau.nom)}</h3>
-      ${oiseau.photoUrl ? `<p><img src="${oiseau.photoUrl}" alt="${safe(oiseau.nom)}" class="bird-photo"></p>` : ""}
-      <p><strong>Espèce :</strong> ${safe(oiseau.espece)}</p>
-      <p><strong>Sexe :</strong> ${safe(oiseau.sexe)}</p>
-      <p><strong>Âge :</strong> ${safe(oiseau.age)}</p>
-      <p><strong>Poids :</strong> ${safe(oiseau.poidsActuel)}</p>
-      <p><strong>Notes :</strong> ${safe(oiseau.notes)}</p>
-      ${oiseau.documentUrl ? `<p><a href="${oiseau.documentUrl}" target="_blank">Voir document lié</a></p>` : ""}
-      <div class="small-actions">
-        <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+  zone.innerHTML = appData.oiseaux.map((oiseau) => {
+    const encodagesLies = getEncodagesLies(oiseau.nom);
+
+    return `
+      <div class="item">
+        <h3>${safe(oiseau.nom)}</h3>
+
+        ${oiseau.photoUrl ? `
+          <p>
+            <img src="${safe(oiseau.photoUrl)}" alt="${safe(oiseau.nom)}" class="bird-photo">
+          </p>
+        ` : ""}
+
+        <p><strong>Espèce :</strong> ${safe(oiseau.espece)}</p>
+        <p><strong>Sexe :</strong> ${safe(oiseau.sexe)}</p>
+        <p><strong>Âge :</strong> ${safe(oiseau.age)}</p>
+        <p><strong>Poids actuel :</strong> ${safe(oiseau.poidsActuel)}</p>
+        <p><strong>Notes :</strong> ${safe(oiseau.notes)}</p>
+
+        <hr style="border-color:#333;margin:14px 0;">
+
+        <h4>Documents liés</h4>
+        ${renderDocumentsOiseau(oiseau.documents)}
+
+        <hr style="border-color:#333;margin:14px 0;">
+
+        <h4>Historique du poids</h4>
+        ${renderHistoriquePoids(oiseau.historiquePoids)}
+
+        <hr style="border-color:#333;margin:14px 0;">
+
+        <h4>Encodages liés</h4>
+        ${renderEncodagesLies(encodagesLies)}
+
+        <div class="small-actions">
+          <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+        </div>
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function renderEncodages() {
@@ -226,7 +365,7 @@ function renderDocuments() {
   if (!zone) return;
 
   if (!appData.documents.length) {
-    zone.innerHTML = `<p>Aucun document.</p>`;
+    zone.innerHTML = `<p>Aucun document général.</p>`;
     return;
   }
 
@@ -235,7 +374,7 @@ function renderDocuments() {
       <h3>${safe(docItem.titre)}</h3>
       <p><strong>Type :</strong> ${safe(docItem.type)}</p>
       <p><strong>Description :</strong> ${safe(docItem.description)}</p>
-      ${docItem.lien ? `<p><a href="${docItem.lien}" target="_blank">Ouvrir le document</a></p>` : ""}
+      ${docItem.lien ? `<p><a href="${safe(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a></p>` : ""}
       <div class="small-actions">
         <button class="btn btn-danger" onclick="supprimerDocument('${docItem.id}')">Supprimer</button>
       </div>
@@ -293,63 +432,39 @@ function renderAll() {
 }
 
 async function saveData() {
-  if (!currentUser) return;
-  await setDoc(doc(db, "users", currentUser.uid), appData);
-  if (statusEl) statusEl.textContent = "Sauvegardé";
+  try {
+    if (statusEl) statusEl.textContent = "Sauvegarde…";
+    const payload = buildFirestorePayload();
+    await setDoc(doc(db, "rapaces", "data"), payload);
+    rawRapacesData = payload;
+    if (statusEl) statusEl.textContent = "Sauvegardé";
+  } catch (e) {
+    console.error(e);
+    if (statusEl) statusEl.textContent = "Erreur sauvegarde";
+  }
 }
 
 async function loadData() {
-  if (!currentUser) return;
-  const refDoc = doc(db, "users", currentUser.uid);
-  const snap = await getDoc(refDoc);
-
-  if (snap.exists()) {
-    appData = normalizeData(snap.data());
-  } else {
-    appData = normalizeData({});
-  }
-
-  renderAll();
-}
-
-async function loginFirebaseOverlay() {
-  const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
-  const password = document.getElementById("loginPasswordOverlay")?.value || "";
-
-  if (authError) authError.textContent = "";
-
-  if (!email || !password) {
-    if (authError) authError.textContent = "Entre email et mot de passe.";
-    return;
-  }
-
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    if (statusEl) statusEl.textContent = "Chargement…";
+
+    const refDoc = doc(db, "rapaces", "data");
+    const snap = await getDoc(refDoc);
+
+    if (snap.exists()) {
+      rawRapacesData = snap.data();
+      appData = normalizeData(rawRapacesData);
+    } else {
+      rawRapacesData = {};
+      appData = normalizeData({});
+    }
+
+    renderAll();
+    if (statusEl) statusEl.textContent = "Données chargées";
   } catch (e) {
-    if (authError) authError.textContent = "Erreur connexion : " + (e.message || "");
+    console.error(e);
+    if (statusEl) statusEl.textContent = "Erreur chargement";
   }
-}
-
-async function registerFirebaseOverlay() {
-  const email = document.getElementById("loginEmailOverlay")?.value.trim() || "";
-  const password = document.getElementById("loginPasswordOverlay")?.value || "";
-
-  if (authError) authError.textContent = "";
-
-  if (!email || !password) {
-    if (authError) authError.textContent = "Entre email et mot de passe.";
-    return;
-  }
-
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-  } catch (e) {
-    if (authError) authError.textContent = "Erreur création compte : " + (e.message || "");
-  }
-}
-
-async function logoutFirebase() {
-  await signOut(auth);
 }
 
 function ajouterOiseau() {
@@ -364,7 +479,9 @@ function ajouterOiseau() {
     age: document.getElementById("oiseauAge")?.value.trim() || "",
     poidsActuel: document.getElementById("oiseauPoids")?.value.trim() || "",
     notes: document.getElementById("oiseauNotes")?.value.trim() || "",
-    photoUrl: ""
+    photoUrl: "",
+    documents: [],
+    historiquePoids: []
   });
 
   ["oiseauNom","oiseauEspece","oiseauSexe","oiseauAge","oiseauPoids","oiseauNotes"].forEach((id) => {
@@ -379,17 +496,32 @@ function ajouterEncodage() {
   const nom = document.getElementById("encNom")?.value || "";
   if (!nom) return;
 
+  const date = document.getElementById("encDate")?.value || "";
+  const poids = document.getElementById("encPoids")?.value.trim() || "";
+
   appData.encodages.unshift({
     id: makeId(),
-    date: document.getElementById("encDate")?.value || "",
+    date,
     nom,
     espece: document.getElementById("encEspece")?.value.trim() || "",
-    poids: document.getElementById("encPoids")?.value.trim() || "",
+    poids,
     nourriture: document.getElementById("encNourriture")?.value.trim() || "",
     etat: document.getElementById("encEtat")?.value.trim() || "",
     lieu: document.getElementById("encLieu")?.value.trim() || "",
     observations: document.getElementById("encObs")?.value.trim() || ""
   });
+
+  const oiseau = appData.oiseaux.find(
+    (o) => (o.nom || "").trim().toLowerCase() === nom.trim().toLowerCase()
+  );
+
+  if (oiseau && poids) {
+    oiseau.poidsActuel = poids;
+    oiseau.historiquePoids.unshift({
+      date,
+      poids
+    });
+  }
 
   const encDateEl = document.getElementById("encDate");
   if (encDateEl) encDateEl.value = todayStr();
@@ -484,27 +616,6 @@ if (encDateEl) encDateEl.value = todayStr();
 const feedDateEl = document.getElementById("feedDate");
 if (feedDateEl) feedDateEl.value = todayStr();
 
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
-
-  if (user) {
-    authOverlay?.classList.add("hidden");
-    appContent?.classList.remove("hidden");
-    if (userInfo) userInfo.textContent = "Connecté : " + user.email;
-    if (statusEl) statusEl.textContent = "";
-    await loadData();
-    showSection("accueil");
-  } else {
-    authOverlay?.classList.remove("hidden");
-    appContent?.classList.add("hidden");
-    if (userInfo) userInfo.textContent = "";
-    if (statusEl) statusEl.textContent = "";
-  }
-});
-
-window.loginFirebaseOverlay = loginFirebaseOverlay;
-window.registerFirebaseOverlay = registerFirebaseOverlay;
-window.logoutFirebase = logoutFirebase;
 window.showSection = showSection;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
@@ -516,15 +627,8 @@ window.supprimerOiseau = supprimerOiseau;
 window.supprimerEncodage = supprimerEncodage;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
-document.addEventListener("DOMContentLoaded", () => {
-  const btnLogin = document.getElementById("btnLoginOverlay");
-  const btnRegister = document.getElementById("btnRegisterOverlay");
 
-  if (btnLogin) {
-    btnLogin.addEventListener("click", loginFirebaseOverlay);
-  }
-
-  if (btnRegister) {
-    btnRegister.addEventListener("click", registerFirebaseOverlay);
-  }
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadData();
+  showSection("accueil");
 });
