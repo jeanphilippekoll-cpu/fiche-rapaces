@@ -15,17 +15,18 @@ const firebaseConfig = {
   appId: "TON_APP_ID"
 };
 
-const DATA_COLLECTION = "rapaces";
-const DATA_DOC_ID = "data";
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const dataRef = doc(db, DATA_COLLECTION, DATA_DOC_ID);
+
+// 1) document principal
+const mainRef = doc(db, "rapaces", "data");
+
+// 2) document user
+const userRef = doc(db, "users", "dQPT9eD5g2c7FkjCb86pJnqh4qF3");
 
 console.log("Firebase initialisé OK");
 console.log("URL actuelle :", window.location.href);
 console.log("En ligne :", navigator.onLine);
-console.log("Document Firestore visé :", `${DATA_COLLECTION}/${DATA_DOC_ID}`);
 
 const statusEl = document.getElementById("status");
 const syncBadge = document.getElementById("syncBadge");
@@ -198,48 +199,50 @@ function renderOiseaux() {
   const zone = document.getElementById("listeOiseaux");
   if (!zone) return;
 
-  if (!state.oiseaux.length) {
+  console.log("state.oiseaux =", state.oiseaux);
+
+  if (!Array.isArray(state.oiseaux) || !state.oiseaux.length) {
     zone.innerHTML = `<div class="item"><p>Aucun oiseau enregistré.</p></div>`;
     return;
   }
 
   zone.innerHTML = `
     <div class="bird-grid">
-      ${state.oiseaux.map((oiseau) => {
-        const photoUrl = normalizePhotoUrl(oiseau.photo);
-        const docs = safeArray(oiseau.documents);
-        const historique = safeArray(oiseau.historiquePoids);
+      ${state.oiseaux.map((oiseau, index) => {
+        const photoUrl = normalizePhotoUrl(oiseau?.photo);
+        const docs = Array.isArray(oiseau?.documents) ? oiseau.documents : [];
+        const historique = Array.isArray(oiseau?.historiquePoids) ? oiseau.historiquePoids : [];
 
         return `
           <div class="bird-card">
-            <h3>${escapeHtml(oiseau.nom || "Sans nom")}</h3>
+            <h3>${escapeHtml(oiseau?.nom || `Oiseau ${index + 1}`)}</h3>
 
             ${photoUrl
-              ? `<img class="bird-photo" src="${escapeHtml(photoUrl)}" alt="${escapeHtml(oiseau.nom || "Oiseau")}">`
+              ? `<img class="bird-photo" src="${escapeHtml(photoUrl)}" alt="${escapeHtml(oiseau?.nom || "Oiseau")}">`
               : `<div class="bird-photo-placeholder">Pas de photo</div>`
             }
 
             <div class="bird-meta">
-              <div><span>Espèce</span>${escapeHtml(oiseau.espece || "")}</div>
-              <div><span>Sexe</span>${escapeHtml(oiseau.sexe || "")}</div>
-              <div><span>Âge</span>${escapeHtml(oiseau.age || "")}</div>
-              <div><span>Poids actuel</span>${escapeHtml(oiseau.poidsActuel || "")}</div>
-              <div><span>Nourriture 1</span>${escapeHtml(oiseau.nourritureHabituelle || "")}</div>
-              <div><span>Quantité 1</span>${Number(oiseau.quantiteHabituelle || 0)}</div>
-              <div><span>Nourriture 2</span>${escapeHtml(oiseau.nourritureHabituelle2 || "")}</div>
-              <div><span>Quantité 2</span>${Number(oiseau.quantiteHabituelle2 || 0)}</div>
+              <div><span>Espèce</span>${escapeHtml(oiseau?.espece || "")}</div>
+              <div><span>Sexe</span>${escapeHtml(oiseau?.sexe || "")}</div>
+              <div><span>Âge</span>${escapeHtml(oiseau?.age || "")}</div>
+              <div><span>Poids actuel</span>${escapeHtml(oiseau?.poidsActuel || "")}</div>
+              <div><span>Nourriture 1</span>${escapeHtml(oiseau?.nourritureHabituelle || "")}</div>
+              <div><span>Quantité 1</span>${Number(oiseau?.quantiteHabituelle || 0)}</div>
+              <div><span>Nourriture 2</span>${escapeHtml(oiseau?.nourritureHabituelle2 || "")}</div>
+              <div><span>Quantité 2</span>${Number(oiseau?.quantiteHabituelle2 || 0)}</div>
             </div>
 
             <div class="item">
-              <p><strong>Notes :</strong> ${escapeHtml(oiseau.notes || "")}</p>
+              <p><strong>Notes :</strong> ${escapeHtml(oiseau?.notes || "")}</p>
             </div>
 
             <div class="item">
               <p><strong>Documents :</strong></p>
               ${docs.length
                 ? docs.map((d) => `
-                    <a class="doc-link" href="${escapeHtml(d.url || "#")}" target="_blank" rel="noopener noreferrer">
-                      ${escapeHtml(d.name || "Document")}
+                    <a class="doc-link" href="${escapeHtml(d?.url || "#")}" target="_blank" rel="noopener noreferrer">
+                      ${escapeHtml(d?.name || d?.nom || "Document")}
                     </a>
                   `).join("")
                 : `<p class="muted-line">Aucun document</p>`
@@ -250,7 +253,7 @@ function renderOiseaux() {
               <p><strong>Historique poids :</strong></p>
               ${historique.length
                 ? historique.map((h) => `
-                    <p>${escapeHtml(h.date || "")} — ${escapeHtml(h.poids || "")} g</p>
+                    <p>${escapeHtml(h?.date || "")} — ${escapeHtml(h?.poids || "")} g</p>
                   `).join("")
                 : `<p class="muted-line">Aucun historique</p>`
               }
@@ -299,30 +302,43 @@ function renderAll() {
 }
 
 async function chargerData() {
-  const snap = await getDoc(dataRef);
+  const [mainSnap, userSnap] = await Promise.all([
+    getDoc(mainRef),
+    getDoc(userRef)
+  ]);
 
-  if (!snap.exists()) {
-    throw new Error(`Document introuvable : ${DATA_COLLECTION}/${DATA_DOC_ID}`);
+  if (!mainSnap.exists()) {
+    throw new Error("Document principal rapaces/data introuvable");
   }
 
-  const data = snap.data();
-  console.log("Document Firestore chargé :", data);
+  const mainData = mainSnap.data();
+  const userData = userSnap.exists() ? userSnap.data() : {};
 
-  state.documents = safeArray(data.documents);
-  state.documentsGeneraux = safeArray(data.documentsGeneraux);
-  state.encodages = safeArray(data.encodages);
-  state.nourrissage = safeArray(data.nourrissage);
-  state.oiseaux = safeArray(data.oiseaux);
+  console.log("mainData =", mainData);
+  console.log("userData =", userData);
+
+  // oiseaux, stock et docs généraux depuis rapaces/data
+  state.oiseaux = safeArray(mainData.oiseaux);
+  state.documents = safeArray(mainData.documents);
+  state.documentsGeneraux = safeArray(mainData.documentsGeneraux);
   state.stock = {
-    boitePoussinsMoyenne225: Number(data.stock?.boitePoussinsMoyenne225 || 0),
-    caille: Number(data.stock?.caille || 0),
-    cailleteau30gr: Number(data.stock?.cailleteau30gr || 0),
-    lapin: Number(data.stock?.lapin || 0),
-    pigeon: Number(data.stock?.pigeon || 0),
-    poisson: Number(data.stock?.poisson || 0),
-    poussin: Number(data.stock?.poussin || 0),
-    souris: Number(data.stock?.souris || 0)
+    boitePoussinsMoyenne225: Number(mainData.stock?.boitePoussinsMoyenne225 || 0),
+    caille: Number(mainData.stock?.caille || 0),
+    cailleteau30gr: Number(mainData.stock?.cailleteau30gr || 0),
+    lapin: Number(mainData.stock?.lapin || 0),
+    pigeon: Number(mainData.stock?.pigeon || 0),
+    poisson: Number(mainData.stock?.poisson || 0),
+    poussin: Number(mainData.stock?.poussin || 0),
+    souris: Number(mainData.stock?.souris || 0)
   };
+
+  // encodages et nourrissage depuis users/...
+  state.encodages = safeArray(userData.encodages);
+  state.nourrissage = safeArray(userData.nourrissage);
+
+  console.log("Oiseaux chargés :", state.oiseaux.length);
+  console.log("Encodages chargés :", state.encodages.length);
+  console.log("Nourrissages chargés :", state.nourrissage.length);
 }
 
 window.enregistrerStock = async function () {
@@ -351,16 +367,15 @@ window.enregistrerStock = async function () {
 };
 
 window.saveData = async function () {
+  // On sauve seulement rapaces/data ici
   const payload = {
     documents: state.documents,
     documentsGeneraux: state.documentsGeneraux,
-    encodages: state.encodages,
-    nourrissage: state.nourrissage,
     oiseaux: state.oiseaux,
     stock: state.stock
   };
 
-  await setDoc(dataRef, payload);
+  await setDoc(mainRef, payload, { merge: true });
 };
 
 async function initApp() {
@@ -382,13 +397,6 @@ async function initApp() {
       setStatus("Firestore hors ligne. Ouvre le vrai site GitHub Pages et vide le cache.");
       setBadge("Hors ligne", "sync-error");
       showOfflineMessage(true);
-      renderAll();
-      return;
-    }
-
-    if (message.includes("Document introuvable")) {
-      setStatus("Document Firestore introuvable.");
-      setBadge("Erreur", "sync-error");
       return;
     }
 
