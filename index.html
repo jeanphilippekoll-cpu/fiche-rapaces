@@ -391,6 +391,7 @@
       <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
       <button id="btn-documents" onclick="showSection('documents')">Documents</button>
       <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
+      <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
     </nav>
 
@@ -588,10 +589,14 @@
         <label for="docDescription">Description</label>
         <textarea id="docDescription" placeholder="Description"></textarea>
 
-        <div class="actions">
-          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
-        </div>
-      </div>
+       <div>
+  <label for="docFile">Fichier</label>
+  <input id="docFile" type="file" accept=".pdf,image/*">
+</div>
+
+<div class="actions">
+  <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
+</div> 
 
       <div class="card">
         <h2>Liste des documents</h2>
@@ -630,6 +635,13 @@
         <div id="listeNourrissage"></div>
       </div>
     </section>
+
+    <section id="section-terrain" class="section hidden">
+  <div class="card">
+    <h2>Mode terrain (nourrissage rapide)</h2>
+    <div id="terrainZone"></div>
+  </div>
+</section>
 
     <section id="section-stock" class="section hidden">
       <div class="card">
