@@ -92,6 +92,13 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatDateFR(dateStr) {
+  if (!dateStr || typeof dateStr !== "string") return "";
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
@@ -381,7 +388,7 @@ function renderHistoriquePoidsTable(historique) {
         <tbody>
           ${historique.map((h) => `
             <tr>
-              <td>${safe(h.date)}</td>
+              <td>${safe(formatDateFR(h.date))}</td>
               <td>${safe(h.poids)}</td>
             </tr>
           `).join("")}
@@ -638,7 +645,7 @@ function renderNourrissageSummary() {
 
   zone.innerHTML = `
     <div class="summary-grid">
-      ${renderAggregateBlock(`Jour (${dateRef})`, todayItems)}
+      ${renderAggregateBlock(`Jour (${formatDateFR(dateRef)})`, todayItems)}
       ${renderAggregateBlock(`Semaine (${weekRef})`, weekItems)}
       ${renderAggregateBlock(`Mois (${monthRef})`, monthItems)}
     </div>
@@ -681,7 +688,7 @@ function renderNourrissageHistory() {
 
     return `
       <div class="card-section">
-        <h4>${safe(date)}</h4>
+        <h4>${safe(formatDateFR(date))}</h4>
         <div class="feed-table-wrap">
           <table class="feed-table">
             <thead>
@@ -1268,7 +1275,7 @@ function exportBirdPdf(id) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
       <tr>
-        <td>${safe(item.date)}</td>
+        <td>${safe(formatDateFR(item.date))}</td>
         <td>${safe(item.poids)}</td>
       </tr>
     `).join("");
