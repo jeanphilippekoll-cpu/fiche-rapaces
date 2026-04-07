@@ -4,23 +4,24 @@
   <meta charset="UTF-8">
   <title>Fiche Rapaces</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="icon.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#f4ead7">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 
   <style>
     :root{
-      --bg:#0b1020;
-      --bg2:#131a2f;
-      --panel:#141c33;
-      --panel2:#19233f;
-      --line:rgba(255,255,255,0.08);
-      --text:#eef2ff;
-      --muted:#aab6d3;
-      --accent:#6ea86a;
-      --accent2:#e9edf7;
-      --danger:#b44545;
-      --card-shadow:0 12px 40px rgba(0,0,0,0.25);
+      --bg:#f7f1e3;
+      --bg2:#efe6d1;
+      --panel:#fffaf0;
+      --panel2:#f8f1e2;
+      --line:rgba(96, 76, 46, 0.12);
+      --text:#3d3123;
+      --muted:#7b6b57;
+      --accent:#8aa36b;
+      --accent2:#e7dcc6;
+      --danger:#b75b52;
+      --card-shadow:0 12px 30px rgba(75,57,30,0.08);
       --radius:18px;
     }
 
@@ -29,7 +30,7 @@
       margin:0;
       font-family:Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(110,168,106,0.18), transparent 22%),
+        radial-gradient(circle at top left, rgba(138,163,107,0.18), transparent 22%),
         linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
       color:var(--text);
     }
@@ -80,7 +81,7 @@
       padding:12px 16px;
       cursor:pointer;
       background:var(--accent2);
-      color:#1b2235;
+      color:var(--text);
       font-weight:700;
       transition:.2s ease;
     }
@@ -95,8 +96,8 @@
     }
 
     .secondary-btn{
-      background:#253251;
-      color:#fff;
+      background:#d8ccb4;
+      color:var(--text);
     }
 
     .btn-danger{
@@ -114,13 +115,13 @@
     .hidden{display:none !important}
 
     .card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,248,235,0.88));
       border:1px solid var(--line);
       border-radius:var(--radius);
       padding:20px;
       margin-bottom:18px;
       box-shadow:var(--card-shadow);
-      backdrop-filter:blur(6px);
+      backdrop-filter:blur(4px);
     }
 
     .card h2{margin-top:0;font-size:24px}
@@ -132,9 +133,9 @@
       margin-top:6px;
       margin-bottom:12px;
       border-radius:12px;
-      border:1px solid rgba(255,255,255,0.12);
-      background:#0e1528;
-      color:#fff;
+      border:1px solid rgba(96,76,46,0.14);
+      background:#fffdf8;
+      color:var(--text);
       outline:none;
     }
 
@@ -154,7 +155,7 @@
     }
 
     .item{
-      background:#11192f;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:14px;
       padding:16px;
@@ -181,7 +182,7 @@
     }
 
     .bird-card{
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
       border:1px solid var(--line);
       border-radius:20px;
       padding:18px;
@@ -207,9 +208,9 @@
     }
 
     .weight-pill{
-      background:rgba(110,168,106,0.18);
-      color:#d9f5d7;
-      border:1px solid rgba(110,168,106,0.26);
+      background:rgba(138,163,107,0.18);
+      color:#50613d;
+      border:1px solid rgba(138,163,107,0.26);
       border-radius:999px;
       padding:8px 12px;
       white-space:nowrap;
@@ -223,7 +224,7 @@
       border-radius:16px;
       display:block;
       margin-bottom:14px;
-      background:#0d1426;
+      background:#efe6d1;
     }
 
     .bird-photo-placeholder{
@@ -234,9 +235,9 @@
       align-items:center;
       justify-content:center;
       margin-bottom:14px;
-      background:#0d1426;
+      background:#efe6d1;
       color:var(--muted);
-      border:1px dashed rgba(255,255,255,0.15);
+      border:1px dashed rgba(96,76,46,0.16);
     }
 
     .bird-meta{
@@ -247,7 +248,7 @@
     }
 
     .bird-meta div{
-      background:#0f172b;
+      background:#fff8ec;
       border:1px solid var(--line);
       border-radius:12px;
       padding:12px;
@@ -262,7 +263,7 @@
 
     .card-section{
       margin-top:14px;
-      background:#0f172b;
+      background:#fff8ec;
       border:1px solid var(--line);
       border-radius:14px;
       padding:14px;
@@ -281,9 +282,9 @@
       display:block;
       padding:10px 12px;
       border-radius:10px;
-      background:#0b1224;
+      background:#fffdf8;
       border:1px solid var(--line);
-      color:#9ecbff;
+      color:#5b7aa2;
       text-decoration:none;
     }
 
@@ -316,10 +317,11 @@
       padding:12px;
       text-align:left;
       vertical-align:middle;
+      background:#fffdf8;
     }
 
     .feed-table th{
-      background:#1c2744;
+      background:#f2e8d4;
     }
 
     .summary-grid{
@@ -329,7 +331,7 @@
     }
 
     .summary-card{
-      background:#11192f;
+      background:var(--panel);
       border:1px solid var(--line);
       border-radius:16px;
       padding:16px;
@@ -375,8 +377,8 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Gestion des oiseaux, pes+�es, nourrissage, documents et stock</p>
-        <div id="status">Chargement�Ǫ</div>
+        <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, documents et stock</p>
+        <div id="status">Chargement…</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="saveData()">Sauvegarder</button>
@@ -386,7 +388,7 @@
     <nav class="nav">
       <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
       <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
-      <button id="btn-pesee" onclick="showSection('pesee')">Pes+�e oiseaux</button>
+      <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
       <button id="btn-documents" onclick="showSection('documents')">Documents</button>
       <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
@@ -400,7 +402,7 @@
           <p class="stat-label">Nombre total</p>
         </div>
         <div class="card">
-          <h3>Pes+�es oiseaux</h3>
+          <h3>Pesées oiseaux</h3>
           <p id="statPesees" class="stats-number">0</p>
           <p class="stat-label">Nombre total</p>
         </div>
@@ -430,8 +432,8 @@
           </div>
 
           <div>
-            <label for="oiseauEspece">Esp+�ce</label>
-            <input id="oiseauEspece" placeholder="Esp+�ce">
+            <label for="oiseauEspece">Espèce</label>
+            <input id="oiseauEspece" placeholder="Espèce">
           </div>
 
           <div>
@@ -440,8 +442,8 @@
           </div>
 
           <div>
-            <label for="oiseauAge">+�ge</label>
-            <input id="oiseauAge" placeholder="+�ge">
+            <label for="oiseauAge">Âge</label>
+            <input id="oiseauAge" placeholder="Âge">
           </div>
 
           <div>
@@ -452,8 +454,7 @@
           <div>
             <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
             <select id="oiseauHabitudeFood">
-              <option value="">Choisir</option>
-              <option value="Poussin">Poussin</option>
+              <option value="Poussin" selected>Poussin</option>
               <option value="Caille">Caille</option>
               <option value="Pigeon">Pigeon</option>
               <option value="Lapin">Lapin</option>
@@ -464,8 +465,8 @@
           </div>
 
           <div>
-            <label for="oiseauHabitudeQty">Quantit+� habituelle 1</label>
-            <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantit+�">
+            <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
+            <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
           </div>
 
           <div>
@@ -483,8 +484,8 @@
           </div>
 
           <div>
-            <label for="oiseauHabitudeQty2">Quantit+� habituelle 2</label>
-            <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantit+�">
+            <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
+            <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
           </div>
 
           <div>
@@ -502,7 +503,7 @@
         <textarea id="oiseauNotes" placeholder="Notes"></textarea>
 
         <div class="actions">
-          <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l���oiseau</button>
+          <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
           <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
         </div>
       </div>
@@ -515,7 +516,7 @@
 
     <section id="section-pesee" class="section hidden">
       <div class="card">
-        <h2>Nouvelle pes+�e</h2>
+        <h2>Nouvelle pesée</h2>
 
         <div class="form-grid">
           <div>
@@ -529,8 +530,8 @@
           </div>
 
           <div>
-            <label for="pesEspece">Esp+�ce</label>
-            <input id="pesEspece" placeholder="Esp+�ce">
+            <label for="pesEspece">Espèce</label>
+            <input id="pesEspece" placeholder="Espèce">
           </div>
 
           <div>
@@ -544,8 +545,8 @@
           </div>
 
           <div>
-            <label for="pesEtat">+�tat</label>
-            <input id="pesEtat" placeholder="+�tat">
+            <label for="pesEtat">État</label>
+            <input id="pesEtat" placeholder="État">
           </div>
 
           <div>
@@ -558,7 +559,7 @@
         <textarea id="pesObs" placeholder="Observations"></textarea>
 
         <div class="actions">
-          <button class="btn" onclick="ajouterPesee()">Ajouter pes+�e</button>
+          <button class="btn" onclick="ajouterPesee()">Ajouter pesée</button>
         </div>
       </div>
 
@@ -609,7 +610,7 @@
           </div>
         </div>
 
-        <label for="feedNote">Remarques g+�n+�rales</label>
+        <label for="feedNote">Remarques générales</label>
         <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
 
         <div id="feedTableZone"></div>
@@ -636,13 +637,13 @@
 
         <div class="form-grid">
           <div>
-            <label for="stockBoitePoussinsMoyenne225">Bo+�tes poussin moyenne (225)</label>
-            <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de bo+�tes">
-            <div class="stock-info">Tu encodes ici le nombre de bo+�tes. Le total de poussins est calcul+� automatiquement.</div>
+            <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
+            <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
+            <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
           </div>
 
           <div>
-            <label for="stockPoussin">Poussins disponibles (calcul+�)</label>
+            <label for="stockPoussin">Poussins disponibles (calculé)</label>
             <input id="stockPoussin" type="number" readonly>
           </div>
 
