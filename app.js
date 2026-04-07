@@ -43,6 +43,7 @@ const ALIMENTS = [
 ];
 
 let rawRapacesData = {};
+let rawUserData = {};
 let editingBirdId = null;
 
 let appData = {
@@ -123,6 +124,17 @@ function setPoussinsFromBoxes(boxes) {
   appData.stock.poussin = nbBoxes * BOITE_POUSSIN_CAPACITE;
 }
 
+function getLatestFeedDate() {
+  if (!appData.nourrissage.length) return todayStr();
+
+  const dates = appData.nourrissage
+    .map((n) => n.date || "")
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a));
+
+  return dates[0] || todayStr();
+}
+
 async function uploadFile(file, path) {
   if (!file) return "";
   const fileRef = ref(storage, path);
@@ -155,12 +167,12 @@ function normalizeNourrissage(list) {
   }));
 }
 
-function normalizeData(data) {
-  const oiseauxSource = safeArray(data?.oiseaux);
-  const peseesSource = safeArray(data?.encodages || data?.pesees);
-  const documentsSource = safeArray(data?.documents);
-  const documentsGenerauxSource = safeArray(data?.documentsGeneraux);
-  const nourrissageSource = safeArray(data?.nourrissage);
+function normalizeData(rapacesData, userData) {
+  const oiseauxSource = safeArray(rapacesData?.oiseaux);
+  const peseesSource = safeArray(userData?.encodages || rapacesData?.encodages || rapacesData?.pesees);
+  const documentsSource = safeArray(rapacesData?.documents);
+  const documentsGenerauxSource = safeArray(rapacesData?.documentsGeneraux);
+  const nourrissageSource = safeArray(userData?.nourrissage || rapacesData?.nourrissage);
 
   const oiseaux = oiseauxSource.map((o, index) => ({
     id: o.id || `oiseau_${index}_${makeId()}`,
@@ -211,14 +223,14 @@ function normalizeData(data) {
   ];
 
   const stock = {
-    poussin: toNumber(data?.stock?.poussin),
-    caille: toNumber(data?.stock?.caille),
-    pigeon: toNumber(data?.stock?.pigeon),
-    lapin: toNumber(data?.stock?.lapin),
-    poisson: toNumber(data?.stock?.poisson),
-    souris: toNumber(data?.stock?.souris),
-    cailleteau30gr: toNumber(data?.stock?.cailleteau30gr),
-    boitePoussinsMoyenne225: toNumber(data?.stock?.boitePoussinsMoyenne225)
+    poussin: toNumber(rapacesData?.stock?.poussin),
+    caille: toNumber(rapacesData?.stock?.caille),
+    pigeon: toNumber(rapacesData?.stock?.pigeon),
+    lapin: toNumber(rapacesData?.stock?.lapin),
+    poisson: toNumber(rapacesData?.stock?.poisson),
+    souris: toNumber(rapacesData?.stock?.souris),
+    cailleteau30gr: toNumber(rapacesData?.stock?.cailleteau30gr),
+    boitePoussinsMoyenne225: toNumber(rapacesData?.stock?.boitePoussinsMoyenne225)
   };
 
   if (stock.boitePoussinsMoyenne225 > 0 && stock.poussin === 0) {
@@ -236,7 +248,7 @@ function normalizeData(data) {
   };
 }
 
-function buildFirestorePayload() {
+function buildRapacesPayload() {
   const oldBirds = safeArray(rawRapacesData?.oiseaux);
 
   const oiseaux = appData.oiseaux.map((o) => {
@@ -269,33 +281,11 @@ function buildFirestorePayload() {
     };
   });
 
-  const encodages = appData.pesees.map((e) => ({
-    date: e.date || "",
-    nom: e.nom || "",
-    poids: e.poids ?? "",
-    nourriture: e.nourriture || "",
-    espece: e.espece || "",
-    etat: e.etat || "",
-    lieu: e.lieu || "",
-    observations: e.observations || ""
-  }));
-
-  const nourrissage = appData.nourrissage.map((n) => ({
-    id: n.id || makeId(),
-    date: n.date || "",
-    oiseau: n.oiseau || "",
-    nourriture: n.nourriture || "",
-    quantite: toNumber(n.quantite),
-    remarques: n.remarques || ""
-  }));
-
   syncBoitesFromPoussins();
 
   return {
     ...rawRapacesData,
     oiseaux,
-    encodages,
-    nourrissage,
     stock: {
       poussin: toNumber(appData.stock.poussin),
       caille: toNumber(appData.stock.caille),
@@ -308,6 +298,31 @@ function buildFirestorePayload() {
     },
     documents: rawRapacesData.documents || [],
     documentsGeneraux: rawRapacesData.documentsGeneraux || []
+  };
+}
+
+function buildUserPayload() {
+  return {
+    ...rawUserData,
+    encodages: appData.pesees.map((e) => ({
+      id: e.id || makeId(),
+      date: e.date || "",
+      nom: e.nom || "",
+      poids: e.poids ?? "",
+      nourriture: e.nourriture || "",
+      espece: e.espece || "",
+      etat: e.etat || "",
+      lieu: e.lieu || "",
+      observations: e.observations || ""
+    })),
+    nourrissage: appData.nourrissage.map((n) => ({
+      id: n.id || makeId(),
+      date: n.date || "",
+      oiseau: n.oiseau || "",
+      nourriture: n.nourriture || "",
+      quantite: toNumber(n.quantite),
+      remarques: n.remarques || ""
+    }))
   };
 }
 
@@ -337,12 +352,6 @@ function refreshBirdSelects() {
 
   const pesNom = document.getElementById("pesNom");
   if (pesNom) pesNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
-}
-
-function getPeseesLies(oiseauNom) {
-  return appData.pesees
-    .filter((e) => (e.nom || "").trim().toLowerCase() === (oiseauNom || "").trim().toLowerCase())
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
 function renderHistoriquePoidsTable(historique) {
@@ -526,7 +535,7 @@ function renderNourrissageTable() {
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
               <td>
-                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select>
+                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("Poussin")}</select>
               </td>
               <td>
                 <input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
@@ -598,7 +607,14 @@ function renderNourrissageSummary() {
   const zone = document.getElementById("feedSummaryZone");
   if (!zone) return;
 
-  const dateRef = document.getElementById("feedDate")?.value || todayStr();
+  const feedDateInput = document.getElementById("feedDate");
+  let dateRef = feedDateInput?.value || "";
+
+  if (!dateRef) {
+    dateRef = getLatestFeedDate();
+    if (feedDateInput) feedDateInput.value = dateRef;
+  }
+
   const weekRef = getWeekKey(dateRef);
   const monthRef = getMonthKey(dateRef);
 
@@ -624,24 +640,53 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const sorted = [...appData.nourrissage].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const groupedByDate = {};
 
-  zone.innerHTML = `
-    <div class="list-grid">
-      ${sorted.map((item) => `
-        <div class="item">
-          <p><strong>Date :</strong> ${safe(item.date)}</p>
-          <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
-          <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-          <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
-          <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
-          <div class="small-actions">
+  appData.nourrissage.forEach((item) => {
+    const date = item.date || "Sans date";
+    if (!groupedByDate[date]) groupedByDate[date] = [];
+    groupedByDate[date].push(item);
+  });
+
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+  zone.innerHTML = sortedDates.map((date) => {
+    const rows = groupedByDate[date]
+      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
+      .map((item) => `
+        <tr>
+          <td>${safe(item.oiseau)}</td>
+          <td>${safe(item.nourriture)}</td>
+          <td>${safe(item.quantite)}</td>
+          <td>${safe(item.remarques || "")}</td>
+          <td>
             <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-          </div>
+          </td>
+        </tr>
+      `).join("");
+
+    return `
+      <div class="card-section">
+        <h4>${safe(date)}</h4>
+        <div class="feed-table-wrap">
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Oiseau</th>
+                <th>Nourriture</th>
+                <th>Quantité</th>
+                <th>Remarques</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
         </div>
-      `).join("")}
-    </div>
-  `;
+      </div>
+    `;
+  }).join("");
 }
 
 function renderNourrissage() {
@@ -686,9 +731,18 @@ function renderAll() {
 async function saveData() {
   try {
     if (statusEl) statusEl.textContent = "Sauvegarde…";
-    const payload = buildFirestorePayload();
-    await setDoc(mainRef, payload);
-    rawRapacesData = payload;
+
+    const rapacesPayload = buildRapacesPayload();
+    const userPayload = buildUserPayload();
+
+    await Promise.all([
+      setDoc(mainRef, rapacesPayload),
+      setDoc(userRef, userPayload, { merge: true })
+    ]);
+
+    rawRapacesData = rapacesPayload;
+    rawUserData = userPayload;
+
     if (statusEl) statusEl.textContent = "Sauvegardé";
   } catch (e) {
     console.error(e);
@@ -705,16 +759,16 @@ async function loadData() {
       getDoc(userRef)
     ]);
 
-    const mainData = mainSnap.exists() ? mainSnap.data() : {};
-    const userData = userSnap.exists() ? userSnap.data() : {};
+    rawRapacesData = mainSnap.exists() ? mainSnap.data() : {};
+    rawUserData = userSnap.exists() ? userSnap.data() : {};
 
-    rawRapacesData = {
-      ...mainData,
-      encodages: userData.encodages || mainData.encodages || [],
-      nourrissage: userData.nourrissage || mainData.nourrissage || []
-    };
+    appData = normalizeData(rawRapacesData, rawUserData);
 
-    appData = normalizeData(rawRapacesData);
+    const feedDateEl = document.getElementById("feedDate");
+    if (feedDateEl) {
+      feedDateEl.value = getLatestFeedDate();
+    }
+
     renderAll();
 
     if (statusEl) statusEl.textContent = "Données chargées";
@@ -769,7 +823,7 @@ async function ajouterOiseau() {
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
   const poidsActuel = document.getElementById("oiseauPoids")?.value.trim() || "";
   const notes = document.getElementById("oiseauNotes")?.value.trim() || "";
-  const nourritureHabituelle = document.getElementById("oiseauHabitudeFood")?.value || "";
+  const nourritureHabituelle = document.getElementById("oiseauHabitudeFood")?.value || "Poussin";
   const quantiteHabituelle = toNumber(document.getElementById("oiseauHabitudeQty")?.value || 0);
   const nourritureHabituelle2 = document.getElementById("oiseauHabitudeFood2")?.value || "";
   const quantiteHabituelle2 = toNumber(document.getElementById("oiseauHabitudeQty2")?.value || 0);
@@ -872,7 +926,7 @@ function modifierOiseau(id) {
   set("oiseauAge", bird.age);
   set("oiseauPoids", bird.poidsActuel);
   set("oiseauNotes", bird.notes);
-  set("oiseauHabitudeFood", bird.nourritureHabituelle);
+  set("oiseauHabitudeFood", bird.nourritureHabituelle || "Poussin");
   set("oiseauHabitudeQty", bird.quantiteHabituelle);
   set("oiseauHabitudeFood2", bird.nourritureHabituelle2);
   set("oiseauHabitudeQty2", bird.quantiteHabituelle2);
@@ -990,7 +1044,7 @@ function ajouterNourrissage() {
   const lignes = [];
 
   appData.oiseaux.forEach((oiseau) => {
-    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "";
+    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
     const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
     const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
     const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
