@@ -45,6 +45,7 @@ const ALIMENTS = [
 let rawRapacesData = {};
 let rawUserData = {};
 let editingBirdId = null;
+let autoSaveTimer = null;
 
 let appData = {
   oiseaux: [],
@@ -137,6 +138,13 @@ function getLatestFeedDate() {
   if (!appData.nourrissage.length) return todayStr();
   const dates = appData.nourrissage.map((n) => n.date || "").filter(Boolean).sort((a, b) => b.localeCompare(a));
   return dates[0] || todayStr();
+}
+
+function triggerAutoSave(delay = 600) {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(async () => {
+    await saveData();
+  }, delay);
 }
 
 async function uploadFile(file, path) {
@@ -695,6 +703,25 @@ function renderNourrissageHistory() {
   }).join("");
 }
 
+function decrementStock(food, qty) {
+  const stockKey = foodToStockKey(food);
+  if (!stockKey) return;
+
+  const current = toNumber(appData.stock[stockKey]);
+  appData.stock[stockKey] = Math.max(0, current - toNumber(qty));
+
+  if (stockKey === "poussin") syncBoitesFromPoussins();
+}
+
+function restoreStockFromDeletedFeed(item) {
+  const stockKey = foodToStockKey(item?.nourriture);
+  if (!stockKey) return;
+
+  appData.stock[stockKey] = toNumber(appData.stock[stockKey]) + toNumber(item?.quantite);
+
+  if (stockKey === "poussin") syncBoitesFromPoussins();
+}
+
 function addQuickFeed(food, qty, bird, note = "Mode terrain") {
   if (!bird || !food || qty <= 0) return;
 
@@ -712,6 +739,8 @@ function addQuickFeed(food, qty, bird, note = "Mode terrain") {
   decrementStock(line.nourriture, line.quantite);
   appData.nourrissage.unshift(line);
   renderAll();
+  triggerAutoSave(200);
+
   if (statusEl) statusEl.textContent = `${bird.nom} : ${qty} ${food}`;
 }
 
@@ -727,7 +756,7 @@ function renderTerrain() {
   zone.innerHTML = `
     <div class="bird-grid">
       ${appData.oiseaux.map((oiseau) => `
-        <article class="bird-card">
+        <article class="bird-card terrain-card">
           <h3>${safe(oiseau.nom)}</h3>
           <p class="bird-species">${safe(oiseau.espece || "")}</p>
 
@@ -738,10 +767,10 @@ function renderTerrain() {
           `}
 
           <div class="actions">
-            <button class="btn" onclick="quickFeed('${oiseau.id}','Poussin',1)">+1 Poussin</button>
-            <button class="btn" onclick="quickFeed('${oiseau.id}','Souris',1)">+1 Souris</button>
-            <button class="btn" onclick="quickFeed('${oiseau.id}','Caille',1)">+1 Caille</button>
-            <button class="btn secondary-btn" onclick="rationHabituelleTerrain('${oiseau.id}')">Ration habituelle</button>
+            <button class="btn terrain-poussin" onclick="quickFeed('${oiseau.id}','Poussin',1)">+1 Poussin</button>
+            <button class="btn terrain-souris" onclick="quickFeed('${oiseau.id}','Souris',1)">+1 Souris</button>
+            <button class="btn terrain-cailleteau" onclick="quickFeed('${oiseau.id}','Cailleteau 30gr',1)">+1 Cailleteau</button>
+            <button class="btn terrain-ration" onclick="rationHabituelleTerrain('${oiseau.id}')">Ration habituelle</button>
           </div>
         </article>
       `).join("")}
@@ -950,6 +979,7 @@ async function ajouterOiseau() {
 
     resetBirdForm();
     renderAll();
+    triggerAutoSave();
   } catch (e) {
     console.error("Erreur upload :", e);
     if (statusEl) statusEl.textContent = "Erreur upload";
@@ -1034,6 +1064,7 @@ function ajouterPesee() {
   });
 
   renderAll();
+  triggerAutoSave();
   if (statusEl) statusEl.textContent = "Pesée ajoutée";
 }
 
@@ -1067,30 +1098,13 @@ async function ajouterDocument() {
     });
 
     renderAll();
+    triggerAutoSave();
+
     if (statusEl) statusEl.textContent = "Document ajouté";
   } catch (e) {
     console.error(e);
     if (statusEl) statusEl.textContent = "Erreur document";
   }
-}
-
-function decrementStock(food, qty) {
-  const stockKey = foodToStockKey(food);
-  if (!stockKey) return;
-
-  const current = toNumber(appData.stock[stockKey]);
-  appData.stock[stockKey] = Math.max(0, current - toNumber(qty));
-
-  if (stockKey === "poussin") syncBoitesFromPoussins();
-}
-
-function restoreStockFromDeletedFeed(item) {
-  const stockKey = foodToStockKey(item?.nourriture);
-  if (!stockKey) return;
-
-  appData.stock[stockKey] = toNumber(appData.stock[stockKey]) + toNumber(item?.quantite);
-
-  if (stockKey === "poussin") syncBoitesFromPoussins();
 }
 
 function ajouterNourrissage() {
@@ -1145,6 +1159,7 @@ function ajouterNourrissage() {
   if (noteEl) noteEl.value = "";
 
   renderAll();
+  triggerAutoSave();
   if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
 }
 
@@ -1192,17 +1207,20 @@ function enregistrerStock() {
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
+  triggerAutoSave();
   if (statusEl) statusEl.textContent = "Stock mis à jour";
 }
 
 function supprimerOiseau(id) {
   appData.oiseaux = appData.oiseaux.filter((o) => o.id !== id);
   renderAll();
+  triggerAutoSave();
 }
 
 function supprimerDocument(id) {
   appData.documents = appData.documents.filter((d) => d.id !== id);
   renderAll();
+  triggerAutoSave();
 }
 
 function supprimerNourrissage(id) {
@@ -1210,6 +1228,7 @@ function supprimerNourrissage(id) {
   if (found) restoreStockFromDeletedFeed(found);
   appData.nourrissage = appData.nourrissage.filter((n) => n.id !== id);
   renderAll();
+  triggerAutoSave();
 }
 
 function quickFeed(id, food, qty) {
@@ -1223,11 +1242,21 @@ function rationHabituelleTerrain(id) {
   if (!bird) return;
 
   if (bird.nourritureHabituelle && toNumber(bird.quantiteHabituelle) > 0) {
-    addQuickFeed(bird.nourritureHabituelle, toNumber(bird.quantiteHabituelle), bird, "Ration habituelle terrain");
+    addQuickFeed(
+      bird.nourritureHabituelle,
+      toNumber(bird.quantiteHabituelle),
+      bird,
+      "Ration habituelle terrain"
+    );
   }
 
   if (bird.nourritureHabituelle2 && toNumber(bird.quantiteHabituelle2) > 0) {
-    addQuickFeed(bird.nourritureHabituelle2, toNumber(bird.quantiteHabituelle2), bird, "Ration habituelle terrain");
+    addQuickFeed(
+      bird.nourritureHabituelle2,
+      toNumber(bird.quantiteHabituelle2),
+      bird,
+      "Ration habituelle terrain"
+    );
   }
 }
 

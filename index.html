@@ -26,6 +26,7 @@
     }
 
     *{box-sizing:border-box}
+
     body{
       margin:0;
       font-family:Arial, Helvetica, sans-serif;
@@ -362,6 +363,58 @@
       gap:14px;
     }
 
+    .terrain-poussin{
+      background:#f3d9a4 !important;
+      color:#5a3d13 !important;
+    }
+
+    .terrain-souris{
+      background:#d8e6d0 !important;
+      color:#35533a !important;
+    }
+
+    .terrain-cailleteau{
+      background:#f0cfc8 !important;
+      color:#6d3a33 !important;
+    }
+
+    .terrain-ration{
+      background:#d8ccb4 !important;
+      color:#3d3123 !important;
+    }
+
+    .terrain-card{
+      border-left:8px solid #8aa36b;
+    }
+
+    .bird-card:nth-child(4n+1){
+      border-top:6px solid #8aa36b;
+    }
+
+    .bird-card:nth-child(4n+2){
+      border-top:6px solid #c58b6d;
+    }
+
+    .bird-card:nth-child(4n+3){
+      border-top:6px solid #7aa7a6;
+    }
+
+    .bird-card:nth-child(4n+4){
+      border-top:6px solid #b592c8;
+    }
+
+    .summary-card:nth-child(1){
+      border-top:6px solid #8aa36b;
+    }
+
+    .summary-card:nth-child(2){
+      border-top:6px solid #c58b6d;
+    }
+
+    .summary-card:nth-child(3){
+      border-top:6px solid #7aa7a6;
+    }
+
     @media (max-width: 700px){
       .app{padding:16px}
       .page-title{font-size:32px}
@@ -369,6 +422,7 @@
       .bird-card-head{flex-direction:column}
       .weight-pill{align-self:flex-start}
       .bird-meta{grid-template-columns:1fr}
+      .nav button,.btn{width:100%}
     }
   </style>
 </head>
@@ -589,14 +643,15 @@
         <label for="docDescription">Description</label>
         <textarea id="docDescription" placeholder="Description"></textarea>
 
-       <div>
-  <label for="docFile">Fichier</label>
-  <input id="docFile" type="file" accept=".pdf,image/*">
-</div>
+        <div>
+          <label for="docFile">Fichier</label>
+          <input id="docFile" type="file" accept=".pdf,image/*">
+        </div>
 
-<div class="actions">
-  <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
-</div> 
+        <div class="actions">
+          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
+        </div>
+      </div>
 
       <div class="card">
         <h2>Liste des documents</h2>
@@ -637,11 +692,11 @@
     </section>
 
     <section id="section-terrain" class="section hidden">
-  <div class="card">
-    <h2>Mode terrain (nourrissage rapide)</h2>
-    <div id="terrainZone"></div>
-  </div>
-</section>
+      <div class="card">
+        <h2>Mode terrain (nourrissage rapide)</h2>
+        <div id="terrainZone"></div>
+      </div>
+    </section>
 
     <section id="section-stock" class="section hidden">
       <div class="card">
