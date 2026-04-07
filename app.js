@@ -7,12 +7,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "TON_API_KEY",
-  authDomain: "TON_PROJET.firebaseapp.com",
-  projectId: "TON_PROJECT_ID",
-  storageBucket: "TON_PROJET.firebasestorage.app",
-  messagingSenderId: "TON_MESSAGING_SENDER_ID",
-  appId: "TON_APP_ID"
+  apiKey: "AIzaSyA2vS8VflBxsN8F8PexqF0aU4_sLFQU3qsA",
+  authDomain: "fiche-rapaces.firebaseapp.com",
+  projectId: "fiche-rapaces",
+  storageBucket: "fiche-rapaces.firebasestorage.app",
+  messagingSenderId: "881543403206",
+  appId: "1:881543403206:web:17915a78ddbde9a1929c7"
 };
 
 const app = initializeApp(firebaseConfig);
