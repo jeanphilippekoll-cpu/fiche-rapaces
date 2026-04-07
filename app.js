@@ -24,8 +24,8 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);
-// 🔥 CHEMINS FIRESTORE CORRIGÉS
-const mainRef = doc(db, "rapaces", "data")
+
+const mainRef = doc(db, "rapaces", "data");
 const userRef = doc(db, "users", "dQPT9eD5g2c7FkjCb86pJnqh4qF3");
 
 const statusEl = document.getElementById("status");
@@ -404,7 +404,7 @@ function renderOiseaux() {
           <div class="bird-card-head">
             <div>
               <h3>${safe(oiseau.nom)}</h3>
-              <p class="bird-species">${safe(oiseau.espece || "Espéce non renseignée")}</p>
+              <p class="bird-species">${safe(oiseau.espece || "Espèce non renseignée")}</p>
             </div>
             <div class="weight-pill">${safe(oiseau.poidsActuel || "-")} g</div>
           </div>
@@ -417,7 +417,7 @@ function renderOiseaux() {
 
           <div class="bird-meta">
             <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-            <div><span>ége</span><strong>${safe(oiseau.age || "-")}</strong></div>
+            <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
           </div>
 
           <div class="card-section">
@@ -427,8 +427,8 @@ function renderOiseaux() {
 
           <div class="card-section">
             <h4>Nourriture habituelle</h4>
-            <p>${safe(oiseau.nourritureHabituelle || "Non définie")} ’ ${safe(oiseau.quantiteHabituelle || 0)} piéce(s)</p>
-            <p>${safe(oiseau.nourritureHabituelle2 || "Aucune")} ${oiseau.nourritureHabituelle2 ? "’ " + safe(oiseau.quantiteHabituelle2 || 0) + " piéce(s)" : ""}</p>
+            <p>${safe(oiseau.nourritureHabituelle || "Non définie")} — ${safe(oiseau.quantiteHabituelle || 0)} pièce(s)</p>
+            <p>${safe(oiseau.nourritureHabituelle2 || "Aucune")}${oiseau.nourritureHabituelle2 ? " — " + safe(oiseau.quantiteHabituelle2 || 0) + " pièce(s)" : ""}</p>
           </div>
 
           <div class="card-section">
@@ -513,7 +513,7 @@ function renderNourrissageTable() {
         <thead>
           <tr>
             <th>Oiseau</th>
-            <th>Espéce</th>
+            <th>Espèce</th>
             <th>Nourriture 1</th>
             <th>Qté 1</th>
             <th>Nourriture 2</th>
@@ -588,7 +588,7 @@ function renderAggregateBlock(title, items) {
   return `
     <div class="summary-card">
       <h3>${safe(title)}</h3>
-      <p class="summary-total">${agg.total} piéce(s)</p>
+      <p class="summary-total">${agg.total} pièce(s)</p>
       ${foods.length ? foods.map(([food, qty]) => `<p>${safe(food)} : ${safe(qty)}</p>`).join("") : `<p>Aucun nourrissage.</p>`}
     </div>
   `;
@@ -687,7 +687,7 @@ async function saveData() {
   try {
     if (statusEl) statusEl.textContent = "Sauvegarde…";
     const payload = buildFirestorePayload();
-    await setDoc(doc(db, "rapaces", "data"), payload);
+    await setDoc(mainRef, payload);
     rawRapacesData = payload;
     if (statusEl) statusEl.textContent = "Sauvegardé";
   } catch (e) {
@@ -699,18 +699,24 @@ async function saveData() {
 async function loadData() {
   try {
     if (statusEl) statusEl.textContent = "Chargement…";
-    const refDoc = doc(db, "rapaces", "data");
-    const snap = await getDoc(refDoc);
 
-    if (snap.exists()) {
-      rawRapacesData = snap.data();
-      appData = normalizeData(rawRapacesData);
-    } else {
-      rawRapacesData = {};
-      appData = normalizeData({});
-    }
+    const [mainSnap, userSnap] = await Promise.all([
+      getDoc(mainRef),
+      getDoc(userRef)
+    ]);
 
+    const mainData = mainSnap.exists() ? mainSnap.data() : {};
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    rawRapacesData = {
+      ...mainData,
+      encodages: userData.encodages || mainData.encodages || [],
+      nourrissage: userData.nourrissage || mainData.nourrissage || []
+    };
+
+    appData = normalizeData(rawRapacesData);
     renderAll();
+
     if (statusEl) statusEl.textContent = "Données chargées";
   } catch (e) {
     console.error(e);
@@ -744,7 +750,7 @@ function resetBirdForm() {
   const btn = document.getElementById("oiseauSubmitBtn");
   const cancelBtn = document.getElementById("cancelEditBirdBtn");
 
-  if (food1) food1.value = "";
+  if (food1) food1.value = "Poussin";
   if (food2) food2.value = "";
   if (photoInput) photoInput.value = "";
   if (docInput) docInput.value = "";
@@ -775,7 +781,7 @@ async function ajouterOiseau() {
   let documents = [];
 
   try {
-    if (statusEl) statusEl.textContent = "Upload des fichiers...";
+    if (statusEl) statusEl.textContent = "Upload des fichiers…";
 
     const existingBird = editingBirdId
       ? appData.oiseaux.find((o) => o.id === editingBirdId)
@@ -1037,7 +1043,7 @@ function appliquerNourritureHabituelle() {
     const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
     const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
 
-    if (food1) food1.value = oiseau.nourritureHabituelle || "";
+    if (food1) food1.value = oiseau.nourritureHabituelle || "Poussin";
     if (qty1) qty1.value = toNumber(oiseau.quantiteHabituelle) > 0 ? oiseau.quantiteHabituelle : "";
 
     if (food2) food2.value = oiseau.nourritureHabituelle2 || "";
@@ -1049,15 +1055,15 @@ function appliquerNourritureHabituelle() {
 
 function viderTableNourrissage(showMessage = true) {
   appData.oiseaux.forEach((oiseau) => {
-    ["feedFood1_", "feedFood2_"].forEach((prefix) => {
-      const el = document.getElementById(`${prefix}${oiseau.id}`);
-      if (el) el.value = "";
-    });
+    const f1 = document.getElementById(`feedFood1_${oiseau.id}`);
+    const f2 = document.getElementById(`feedFood2_${oiseau.id}`);
+    const q1 = document.getElementById(`feedQty1_${oiseau.id}`);
+    const q2 = document.getElementById(`feedQty2_${oiseau.id}`);
 
-    ["feedQty1_", "feedQty2_"].forEach((prefix) => {
-      const el = document.getElementById(`${prefix}${oiseau.id}`);
-      if (el) el.value = "";
-    });
+    if (f1) f1.value = "Poussin";
+    if (f2) f2.value = "";
+    if (q1) q1.value = "";
+    if (q2) q2.value = "";
   });
 
   if (showMessage && statusEl) statusEl.textContent = "Tableau vidé";
@@ -1076,7 +1082,7 @@ function enregistrerStock() {
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
-  if (statusEl) statusEl.textContent = "Stock mis é jour";
+  if (statusEl) statusEl.textContent = "Stock mis à jour";
 }
 
 function supprimerOiseau(id) {
@@ -1120,7 +1126,7 @@ function exportBirdPdf(id) {
 
   const win = window.open("", "_blank");
   if (!win) {
-    alert("Le navigateur bloque la fenétre PDF.");
+    alert("Le navigateur bloque la fenêtre PDF.");
     return;
   }
 
@@ -1150,12 +1156,12 @@ function exportBirdPdf(id) {
           ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
         </div>
         <div>
-          <p><strong>Espéce :</strong> ${safe(bird.espece)}</p>
+          <p><strong>Espèce :</strong> ${safe(bird.espece)}</p>
           <p><strong>Sexe :</strong> ${safe(bird.sexe)}</p>
-          <p><strong>ége :</strong> ${safe(bird.age)}</p>
+          <p><strong>Âge :</strong> ${safe(bird.age)}</p>
           <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel)} g</p>
-          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle)} (${safe(bird.quantiteHabituelle)} piéce(s))</p>
-          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2)} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2)} piéce(s))` : ""}</p>
+          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle)} (${safe(bird.quantiteHabituelle)} pièce(s))</p>
+          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2)} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2)} pièce(s))` : ""}</p>
         </div>
       </div>
 
