@@ -203,8 +203,8 @@ function normalizeData(data) {
     })),
     ...documentsGenerauxSource.map((d) => ({
       id: d.id || makeId(),
-      titre: d.titre || d.nom || "Document g+�n+�ral",
-      type: d.type || "Document g+�n+�ral",
+      titre: d.titre || d.nom || "Document général",
+      type: d.type || "Document général",
       description: d.description || "",
       lien: d.lien || d.url || ""
     }))
@@ -347,7 +347,7 @@ function getPeseesLies(oiseauNom) {
 
 function renderHistoriquePoidsTable(historique) {
   if (!historique.length) {
-    return `<p class="muted-line">Aucun poids enregistr+�.</p>`;
+    return `<p class="muted-line">Aucun poids enregistré.</p>`;
   }
 
   return `
@@ -374,7 +374,7 @@ function renderHistoriquePoidsTable(historique) {
 
 function renderDocumentsOiseau(documents) {
   if (!documents.length) {
-    return `<p class="muted-line">Aucun document li+�.</p>`;
+    return `<p class="muted-line">Aucun document lié.</p>`;
   }
 
   return `
@@ -404,7 +404,7 @@ function renderOiseaux() {
           <div class="bird-card-head">
             <div>
               <h3>${safe(oiseau.nom)}</h3>
-              <p class="bird-species">${safe(oiseau.espece || "Esp+�ce non renseign+�e")}</p>
+              <p class="bird-species">${safe(oiseau.espece || "Espéce non renseignée")}</p>
             </div>
             <div class="weight-pill">${safe(oiseau.poidsActuel || "-")} g</div>
           </div>
@@ -417,7 +417,7 @@ function renderOiseaux() {
 
           <div class="bird-meta">
             <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-            <div><span>+�ge</span><strong>${safe(oiseau.age || "-")}</strong></div>
+            <div><span>ége</span><strong>${safe(oiseau.age || "-")}</strong></div>
           </div>
 
           <div class="card-section">
@@ -427,17 +427,17 @@ function renderOiseaux() {
 
           <div class="card-section">
             <h4>Nourriture habituelle</h4>
-            <p>${safe(oiseau.nourritureHabituelle || "Non d+�finie")} ��� ${safe(oiseau.quantiteHabituelle || 0)} pi+�ce(s)</p>
-            <p>${safe(oiseau.nourritureHabituelle2 || "Aucune")} ${oiseau.nourritureHabituelle2 ? "��� " + safe(oiseau.quantiteHabituelle2 || 0) + " pi+�ce(s)" : ""}</p>
+            <p>${safe(oiseau.nourritureHabituelle || "Non définie")} ’ ${safe(oiseau.quantiteHabituelle || 0)} piéce(s)</p>
+            <p>${safe(oiseau.nourritureHabituelle2 || "Aucune")} ${oiseau.nourritureHabituelle2 ? "’ " + safe(oiseau.quantiteHabituelle2 || 0) + " piéce(s)" : ""}</p>
           </div>
 
           <div class="card-section">
-            <h4>Documents li+�s</h4>
+            <h4>Documents liés</h4>
             ${renderDocumentsOiseau(oiseau.documents)}
           </div>
 
           <div class="card-section">
-            <h4>Poids enregistr+�s</h4>
+            <h4>Poids enregistrés</h4>
             ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
           </div>
 
@@ -455,7 +455,7 @@ function renderOiseaux() {
 function renderPesees() {
   const zone = document.getElementById("listePesees");
   if (!zone) return;
-  zone.innerHTML = `<p class="muted-line">Les poids sont enregistr+�s directement dans la fiche de chaque oiseau.</p>`;
+  zone.innerHTML = `<p class="muted-line">Les poids sont enregistrés directement dans la fiche de chaque oiseau.</p>`;
 }
 
 function renderDocuments() {
@@ -463,7 +463,7 @@ function renderDocuments() {
   if (!zone) return;
 
   if (!appData.documents.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun document g+�n+�ral.</p>`;
+    zone.innerHTML = `<p class="muted-line">Aucun document général.</p>`;
     return;
   }
 
@@ -513,11 +513,11 @@ function renderNourrissageTable() {
         <thead>
           <tr>
             <th>Oiseau</th>
-            <th>Esp+�ce</th>
+            <th>Espéce</th>
             <th>Nourriture 1</th>
-            <th>Qt+� 1</th>
+            <th>Qté 1</th>
             <th>Nourriture 2</th>
-            <th>Qt+� 2</th>
+            <th>Qté 2</th>
           </tr>
         </thead>
         <tbody>
@@ -588,7 +588,7 @@ function renderAggregateBlock(title, items) {
   return `
     <div class="summary-card">
       <h3>${safe(title)}</h3>
-      <p class="summary-total">${agg.total} pi+�ce(s)</p>
+      <p class="summary-total">${agg.total} piéce(s)</p>
       ${foods.length ? foods.map(([food, qty]) => `<p>${safe(food)} : ${safe(qty)}</p>`).join("") : `<p>Aucun nourrissage.</p>`}
     </div>
   `;
@@ -633,7 +633,7 @@ function renderNourrissageHistory() {
           <p><strong>Date :</strong> ${safe(item.date)}</p>
           <p><strong>Oiseau :</strong> ${safe(item.oiseau)}</p>
           <p><strong>Nourriture :</strong> ${safe(item.nourriture)}</p>
-          <p><strong>Quantit+� :</strong> ${safe(item.quantite)}</p>
+          <p><strong>Quantité :</strong> ${safe(item.quantite)}</p>
           <p><strong>Remarques :</strong> ${safe(item.remarques)}</p>
           <div class="small-actions">
             <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
@@ -685,11 +685,11 @@ function renderAll() {
 
 async function saveData() {
   try {
-    if (statusEl) statusEl.textContent = "Sauvegarde�Ǫ";
+    if (statusEl) statusEl.textContent = "Sauvegarde…";
     const payload = buildFirestorePayload();
     await setDoc(doc(db, "rapaces", "data"), payload);
     rawRapacesData = payload;
-    if (statusEl) statusEl.textContent = "Sauvegard+�";
+    if (statusEl) statusEl.textContent = "Sauvegardé";
   } catch (e) {
     console.error(e);
     if (statusEl) statusEl.textContent = "Erreur sauvegarde";
@@ -698,7 +698,7 @@ async function saveData() {
 
 async function loadData() {
   try {
-    if (statusEl) statusEl.textContent = "Chargement�Ǫ";
+    if (statusEl) statusEl.textContent = "Chargement…";
     const refDoc = doc(db, "rapaces", "data");
     const snap = await getDoc(refDoc);
 
@@ -711,7 +711,7 @@ async function loadData() {
     }
 
     renderAll();
-    if (statusEl) statusEl.textContent = "Donn+�es charg+�es";
+    if (statusEl) statusEl.textContent = "Données chargées";
   } catch (e) {
     console.error(e);
     if (statusEl) statusEl.textContent = "Erreur chargement";
@@ -750,7 +750,7 @@ function resetBirdForm() {
   if (docInput) docInput.value = "";
   if (hiddenId) hiddenId.value = "";
   if (title) title.textContent = "Ajouter un oiseau";
-  if (btn) btn.textContent = "Ajouter l���oiseau";
+  if (btn) btn.textContent = "Ajouter l’oiseau";
   if (cancelBtn) cancelBtn.classList.add("hidden");
 }
 
@@ -819,7 +819,7 @@ async function ajouterOiseau() {
       existingBird.quantiteHabituelle2 = quantiteHabituelle2;
       existingBird.photoUrl = photoUrl;
       existingBird.documents = documents;
-      if (statusEl) statusEl.textContent = "Oiseau modifi+�";
+      if (statusEl) statusEl.textContent = "Oiseau modifié";
     } else {
       appData.oiseaux.unshift({
         id: makeId(),
@@ -837,7 +837,7 @@ async function ajouterOiseau() {
         documents,
         historiquePoids: []
       });
-      if (statusEl) statusEl.textContent = "Oiseau ajout+�";
+      if (statusEl) statusEl.textContent = "Oiseau ajouté";
     }
 
     resetBirdForm();
@@ -876,7 +876,7 @@ function modifierOiseau(id) {
   const btn = document.getElementById("oiseauSubmitBtn");
   const cancelBtn = document.getElementById("cancelEditBirdBtn");
 
-  if (title) title.textContent = `Modifier l���oiseau : ${bird.nom}`;
+  if (title) title.textContent = `Modifier l’oiseau : ${bird.nom}`;
   if (btn) btn.textContent = "Enregistrer les modifications";
   if (cancelBtn) cancelBtn.classList.remove("hidden");
 
@@ -886,7 +886,7 @@ function modifierOiseau(id) {
 
 function cancelEditBird() {
   resetBirdForm();
-  if (statusEl) statusEl.textContent = "Modification annul+�e";
+  if (statusEl) statusEl.textContent = "Modification annulée";
 }
 
 function ajouterPesee() {
@@ -929,7 +929,7 @@ function ajouterPesee() {
   });
 
   renderAll();
-  if (statusEl) statusEl.textContent = "Pes+�e ajout+�e";
+  if (statusEl) statusEl.textContent = "Pesée ajoutée";
 }
 
 function ajouterDocument() {
@@ -1013,7 +1013,7 @@ function ajouterNourrissage() {
   });
 
   if (!lignes.length) {
-    alert("Choisis au moins une nourriture et une quantit+� pour un oiseau.");
+    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
     return;
   }
 
@@ -1027,7 +1027,7 @@ function ajouterNourrissage() {
   if (noteEl) noteEl.value = "";
 
   renderAll();
-  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajout+�(s)`;
+  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
 }
 
 function appliquerNourritureHabituelle() {
@@ -1044,7 +1044,7 @@ function appliquerNourritureHabituelle() {
     if (qty2) qty2.value = toNumber(oiseau.quantiteHabituelle2) > 0 ? oiseau.quantiteHabituelle2 : "";
   });
 
-  if (statusEl) statusEl.textContent = "Nourriture habituelle appliqu+�e";
+  if (statusEl) statusEl.textContent = "Nourriture habituelle appliquée";
 }
 
 function viderTableNourrissage(showMessage = true) {
@@ -1060,7 +1060,7 @@ function viderTableNourrissage(showMessage = true) {
     });
   });
 
-  if (showMessage && statusEl) statusEl.textContent = "Tableau vid+�";
+  if (showMessage && statusEl) statusEl.textContent = "Tableau vidé";
 }
 
 function enregistrerStock() {
@@ -1076,7 +1076,7 @@ function enregistrerStock() {
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
-  if (statusEl) statusEl.textContent = "Stock mis +� jour";
+  if (statusEl) statusEl.textContent = "Stock mis é jour";
 }
 
 function supprimerOiseau(id) {
@@ -1120,7 +1120,7 @@ function exportBirdPdf(id) {
 
   const win = window.open("", "_blank");
   if (!win) {
-    alert("Le navigateur bloque la fen+�tre PDF.");
+    alert("Le navigateur bloque la fenétre PDF.");
     return;
   }
 
@@ -1150,12 +1150,12 @@ function exportBirdPdf(id) {
           ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
         </div>
         <div>
-          <p><strong>Esp+�ce :</strong> ${safe(bird.espece)}</p>
+          <p><strong>Espéce :</strong> ${safe(bird.espece)}</p>
           <p><strong>Sexe :</strong> ${safe(bird.sexe)}</p>
-          <p><strong>+�ge :</strong> ${safe(bird.age)}</p>
+          <p><strong>ége :</strong> ${safe(bird.age)}</p>
           <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel)} g</p>
-          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle)} (${safe(bird.quantiteHabituelle)} pi+�ce(s))</p>
-          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2)} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2)} pi+�ce(s))` : ""}</p>
+          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle)} (${safe(bird.quantiteHabituelle)} piéce(s))</p>
+          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2)} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2)} piéce(s))` : ""}</p>
         </div>
       </div>
 
@@ -1165,7 +1165,7 @@ function exportBirdPdf(id) {
       </div>
 
       <div class="box">
-        <h2>Documents li+�s</h2>
+        <h2>Documents liés</h2>
         ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
       </div>
 
@@ -1174,7 +1174,7 @@ function exportBirdPdf(id) {
         ${
           poidsRows
             ? `<table><thead><tr><th>Date</th><th>Poids (g)</th></tr></thead><tbody>${poidsRows}</tbody></table>`
-            : `<p>Aucun poids enregistr+�.</p>`
+            : `<p>Aucun poids enregistré.</p>`
         }
       </div>
     </body>
