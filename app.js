@@ -82,6 +82,19 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function getSafeUrl(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  if (typeof value.url === "string") return value.url;
+  if (value.url && typeof value.url.url === "string") return value.url.url;
+  if (typeof value.lien === "string") return value.lien;
+  return "";
+}
+
+function getSafePhotoUrl(value) {
+  return getSafeUrl(value);
+}
+
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
@@ -152,7 +165,7 @@ function normalizeHistoriquePoids(list) {
 function normalizeDocumentsOiseau(list) {
   return safeArray(list).map((docItem) => ({
     name: docItem?.name || docItem?.nom || "Document",
-    url: docItem?.url || docItem?.lien || ""
+   url: getSafeUrl(docItem)
   }));
 }
 
@@ -182,7 +195,7 @@ function normalizeData(rapacesData, userData) {
     age: o.age || "",
     poidsActuel: o.poidsActuel ?? "",
     notes: o.notes || "",
-    photoUrl: o?.photo?.url || o.photoUrl || o.photo || "",
+    photoUrl: getSafePhotoUrl(o?.photo) || getSafePhotoUrl(o?.photoUrl) || getSafePhotoUrl(o?.photo) || "",
     documents: normalizeDocumentsOiseau(o.documents),
     historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
     nourritureHabituelle: o.nourritureHabituelle || "",
@@ -493,9 +506,13 @@ function renderDocuments() {
   `;
 }
 
-function getFoodOptionsHtml(selected = "") {
+function getFoodOptionsHtml(selected = "", includeEmpty = true) {
+  const emptyOption = includeEmpty
+    ? `<option value="" ${selected === "" ? "selected" : ""}>Choisir</option>`
+    : "";
+
   return `
-    <option value="">Choisir</option>
+    ${emptyOption}
     ${ALIMENTS.map((food) => `
       <option value="${safeAttr(food)}" ${food === selected ? "selected" : ""}>${safe(food)}</option>
     `).join("")}
@@ -535,13 +552,13 @@ function renderNourrissageTable() {
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
               <td>
-                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("Poussin")}</select>
+                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("Poussin", false)}</select>
               </td>
               <td>
                 <input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
               </td>
               <td>
-                <select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml()}</select>
+                <select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("", true)}</select>
               </td>
               <td>
                 <input id="feedQty2_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
