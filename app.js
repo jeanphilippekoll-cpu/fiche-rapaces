@@ -1328,7 +1328,7 @@ function exportBirdPdf(id) {
     `).join("");
 
   const docsRows = safeArray(bird.documents)
-    .map((doc) => `<li><a href="${safeAttr(doc.url)}" target="_blank">${safe(doc.name)}</a></li>`)
+    .map((docItem) => `<li><a href="${safeAttr(docItem.url)}" target="_blank">${safe(docItem.name)}</a></li>`)
     .join("");
 
   const totalFeeds = birdFeeds.reduce((sum, item) => sum + toNumber(item.quantite), 0);
@@ -1338,6 +1338,143 @@ function exportBirdPdf(id) {
     alert("Le navigateur bloque la fenêtre PDF.");
     return;
   }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Fiche complète ${safe(bird.nom)}</title>
+      <style>
+        body{
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111;
+          padding:24px;
+          line-height:1.45;
+        }
+        h1,h2,h3{margin-bottom:8px}
+        .top{
+          display:flex;
+          gap:24px;
+          align-items:flex-start;
+          margin-bottom:18px;
+        }
+        img{max-width:280px;border-radius:12px}
+        table{width:100%;border-collapse:collapse;margin-top:12px}
+        th,td{
+          border:1px solid #ccc;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+        th{background:#f2f2f2}
+        .box{
+          margin-top:18px;
+          padding:14px;
+          border:1px solid #ddd;
+          border-radius:10px;
+        }
+        ul{margin:8px 0 0 20px}
+        .muted{color:#666}
+        .resume{
+          display:grid;
+          grid-template-columns:repeat(2, minmax(220px, 1fr));
+          gap:10px;
+          margin-top:10px;
+        }
+        .resume div{
+          border:1px solid #ddd;
+          border-radius:8px;
+          padding:10px;
+          background:#fafafa;
+        }
+        @media print{
+          button{display:none}
+          body{padding:10px}
+        }
+      </style>
+    </head>
+    <body>
+      <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+
+      <h1>Fiche complète oiseau : ${safe(bird.nom)}</h1>
+
+      <div class="top">
+        <div>
+          ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
+        </div>
+        <div style="flex:1">
+          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
+          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
+          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
+          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
+          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
+          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Notes</h2>
+        <p>${safe(bird.notes || "Aucune note")}</p>
+      </div>
+
+      <div class="box">
+        <h2>Résumé</h2>
+        <div class="resume">
+          <div><strong>Nombre de pesées :</strong><br>${safeArray(bird.historiquePoids).length}</div>
+          <div><strong>Nombre de nourrissages :</strong><br>${birdFeeds.length}</div>
+          <div><strong>Total pièces nourries :</strong><br>${totalFeeds}</div>
+          <div><strong>Documents liés :</strong><br>${safeArray(bird.documents).length}</div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h2>Documents liés</h2>
+        ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
+        <p class="muted">Les liens restent cliquables dans le PDF exporté selon le navigateur.</p>
+      </div>
+
+      <div class="box">
+        <h2>Historique des poids</h2>
+        ${
+          poidsRows
+            ? `<table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Poids (g)</th>
+                  </tr>
+                </thead>
+                <tbody>${poidsRows}</tbody>
+              </table>`
+            : `<p>Aucun poids enregistré.</p>`
+        }
+      </div>
+
+      <div class="box">
+        <h2>Historique des nourrissages</h2>
+        ${
+          feedRows
+            ? `<table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Nourriture</th>
+                    <th>Quantité</th>
+                    <th>Remarques</th>
+                  </tr>
+                </thead>
+                <tbody>${feedRows}</tbody>
+              </table>`
+            : `<p>Aucun nourrissage enregistré pour cet oiseau.</p>`
+        }
+      </div>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
 
   win.document.write(`
     <!DOCTYPE html>
