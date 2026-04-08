@@ -1626,7 +1626,7 @@ function exportBirdPdf(id) {
   `);
 
   win.document.close();
-}
+  
 
 function partagerFicheOiseau(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
