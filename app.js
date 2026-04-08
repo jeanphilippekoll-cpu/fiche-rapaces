@@ -1,4 +1,3 @@
-console.log("VERSION PARTAGER OK");
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
 import {
   getFirestore,
@@ -1571,7 +1570,8 @@ function partagerFicheOiseau(id) {
   `);
 
   win.document.close();
-  
+}
+
 const pesDateEl = document.getElementById("pesDate");
 if (pesDateEl) pesDateEl.value = todayStr();
 
