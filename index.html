@@ -21,6 +21,8 @@
       --accent:#8aa36b;
       --accent2:#e7dcc6;
       --danger:#b75b52;
+      --info:#7aa7a6;
+      --warn:#c58b6d;
       --card-shadow:0 12px 30px rgba(75,57,30,0.08);
       --radius:18px;
     }
@@ -99,6 +101,16 @@
     .secondary-btn{
       background:#d8ccb4;
       color:var(--text);
+    }
+
+    .info-btn{
+      background:var(--info);
+      color:#fff;
+    }
+
+    .warn-btn{
+      background:var(--warn);
+      color:#fff;
     }
 
     .btn-danger{
@@ -189,6 +201,11 @@
       padding:18px;
       box-shadow:var(--card-shadow);
     }
+
+    .bird-card:nth-child(4n+1){border-top:6px solid #8aa36b;}
+    .bird-card:nth-child(4n+2){border-top:6px solid #c58b6d;}
+    .bird-card:nth-child(4n+3){border-top:6px solid #7aa7a6;}
+    .bird-card:nth-child(4n+4){border-top:6px solid #b592c8;}
 
     .bird-card-head{
       display:flex;
@@ -289,13 +306,9 @@
       text-decoration:none;
     }
 
-    .doc-link:hover{
-      text-decoration:underline;
-    }
+    .doc-link:hover{text-decoration:underline;}
 
-    .muted-line{
-      color:var(--muted);
-    }
+    .muted-line{color:var(--muted);}
 
     .feed-table-wrap{
       overflow-x:auto;
@@ -308,9 +321,7 @@
       min-width:760px;
     }
 
-    .simple-table{
-      min-width:0;
-    }
+    .simple-table{min-width:0;}
 
     .feed-table th,
     .feed-table td{
@@ -363,57 +374,11 @@
       gap:14px;
     }
 
-    .terrain-poussin{
-      background:#f3d9a4 !important;
-      color:#5a3d13 !important;
-    }
-
-    .terrain-souris{
-      background:#d8e6d0 !important;
-      color:#35533a !important;
-    }
-
-    .terrain-cailleteau{
-      background:#f0cfc8 !important;
-      color:#6d3a33 !important;
-    }
-
-    .terrain-ration{
-      background:#d8ccb4 !important;
-      color:#3d3123 !important;
-    }
-
-    .terrain-card{
-      border-left:8px solid #8aa36b;
-    }
-
-    .bird-card:nth-child(4n+1){
-      border-top:6px solid #8aa36b;
-    }
-
-    .bird-card:nth-child(4n+2){
-      border-top:6px solid #c58b6d;
-    }
-
-    .bird-card:nth-child(4n+3){
-      border-top:6px solid #7aa7a6;
-    }
-
-    .bird-card:nth-child(4n+4){
-      border-top:6px solid #b592c8;
-    }
-
-    .summary-card:nth-child(1){
-      border-top:6px solid #8aa36b;
-    }
-
-    .summary-card:nth-child(2){
-      border-top:6px solid #c58b6d;
-    }
-
-    .summary-card:nth-child(3){
-      border-top:6px solid #7aa7a6;
-    }
+    .terrain-poussin{background:#f3d9a4 !important;color:#5a3d13 !important;}
+    .terrain-souris{background:#d8e6d0 !important;color:#35533a !important;}
+    .terrain-cailleteau{background:#f0cfc8 !important;color:#6d3a33 !important;}
+    .terrain-ration{background:#d8ccb4 !important;color:#3d3123 !important;}
+    .terrain-card{border-left:8px solid #8aa36b;}
 
     .pin-overlay{
       position:fixed;
@@ -447,9 +412,7 @@
       min-height:22px;
     }
 
-    .locked{
-      overflow:hidden;
-    }
+    .locked{overflow:hidden;}
 
     @media (max-width: 700px){
       .app{padding:16px}
@@ -467,14 +430,11 @@
     <div class="pin-card">
       <h2>Accès protégé</h2>
       <p>Entre le code PIN pour ouvrir l’application.</p>
-
       <label for="pinInput">Code PIN</label>
       <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-
       <div class="actions">
         <button class="btn" onclick="checkPin()">Ouvrir</button>
       </div>
-
       <p id="pinError" class="pin-error"></p>
     </div>
   </div>
@@ -483,7 +443,7 @@
     <header class="topbar">
       <div>
         <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, documents et stock</p>
+        <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, terrain, vétérinaire, documents et stock</p>
         <div id="status">Chargement…</div>
       </div>
       <div class="actions">
@@ -498,6 +458,7 @@
       <button id="btn-documents" onclick="showSection('documents')">Documents</button>
       <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
       <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
+      <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
     </nav>
 
@@ -529,7 +490,6 @@
     <section id="section-oiseaux" class="section hidden">
       <div class="card">
         <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
-
         <input id="oiseauEditId" type="hidden">
 
         <div class="form-grid">
@@ -601,8 +561,8 @@
           </div>
 
           <div>
-            <label for="oiseauDocFile">Document</label>
-            <input id="oiseauDocFile" type="file" accept=".pdf,image/*">
+            <label for="oiseauDocFiles">Documents oiseau</label>
+            <input id="oiseauDocFiles" type="file" accept=".pdf,image/*" multiple>
           </div>
         </div>
 
@@ -747,6 +707,64 @@
       <div class="card">
         <h2>Mode terrain (nourrissage rapide)</h2>
         <div id="terrainZone"></div>
+      </div>
+    </section>
+
+    <section id="section-veterinaire" class="section hidden">
+      <div class="card">
+        <h2>Nouveau suivi vétérinaire</h2>
+
+        <div class="form-grid">
+          <div>
+            <label for="vetBird">Oiseau</label>
+            <select id="vetBird"></select>
+          </div>
+
+          <div>
+            <label for="vetDate">Date consultation</label>
+            <input id="vetDate" type="date">
+          </div>
+
+          <div>
+            <label for="vetNom">Vétérinaire</label>
+            <input id="vetNom" placeholder="Nom du vétérinaire">
+          </div>
+
+          <div>
+            <label for="vetMotif">Motif</label>
+            <input id="vetMotif" placeholder="Motif">
+          </div>
+
+          <div>
+            <label for="vetDiagnostic">Diagnostic</label>
+            <input id="vetDiagnostic" placeholder="Diagnostic">
+          </div>
+
+          <div>
+            <label for="vetTraitement">Traitement</label>
+            <input id="vetTraitement" placeholder="Traitement">
+          </div>
+        </div>
+
+        <label for="vetProtocole">Protocole</label>
+        <textarea id="vetProtocole" placeholder="Protocole"></textarea>
+
+        <label for="vetObservations">Observations</label>
+        <textarea id="vetObservations" placeholder="Observations"></textarea>
+
+        <div>
+          <label for="vetFiles">Fichiers vétérinaires</label>
+          <input id="vetFiles" type="file" accept=".pdf,image/*" multiple>
+        </div>
+
+        <div class="actions">
+          <button class="btn" onclick="ajouterSuiviVeterinaire()">Ajouter le suivi vétérinaire</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Historique vétérinaire</h2>
+        <div id="listeVeterinaire"></div>
       </div>
     </section>
 
