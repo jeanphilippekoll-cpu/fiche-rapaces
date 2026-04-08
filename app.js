@@ -620,6 +620,45 @@ function openBirdSheet(id) {
   win.document.close();
 }
 
+function getVetForBird(birdName) {
+  return safeArray(appData.veterinaire || [])
+    .filter((v) => (v.oiseau || "").trim().toLowerCase() === (birdName || "").trim().toLowerCase())
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+function renderVetForBird(birdName) {
+  const items = getVetForBird(birdName);
+
+  if (!items.length) {
+    return `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
+  }
+
+  return items.map((item) => `
+    <div class="item">
+      <p><strong>Date :</strong> ${safe(formatDateFR(item.date || ""))}</p>
+      <p><strong>Vétérinaire :</strong> ${safe(item.veterinaire || "")}</p>
+      <p><strong>Motif :</strong> ${safe(item.motif || "")}</p>
+      <p><strong>Diagnostic :</strong> ${safe(item.diagnostic || "")}</p>
+      <p><strong>Traitement :</strong> ${safe(item.traitement || "")}</p>
+      <p><strong>Protocole :</strong> ${safe(item.protocole || "")}</p>
+      <p><strong>Observations :</strong> ${safe(item.observations || "")}</p>
+      ${
+        safeArray(item.fichiers).length
+          ? `
+            <div class="stack-list">
+              ${safeArray(item.fichiers).map((f) => `
+                <a class="doc-link" href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer">
+                  ${safe(f.name)}
+                </a>
+              `).join("")}
+            </div>
+          `
+          : `<p class="muted-line">Aucun fichier.</p>`
+      }
+    </div>
+  `).join("");
+}
+
 function renderOiseaux() {
   const zone = document.getElementById("listeOiseaux");
   if (!zone) return;
@@ -655,6 +694,11 @@ function renderOiseaux() {
           <div class="card-section">
             <h4>Notes</h4>
             <p>${safe(oiseau.notes || "Aucune note")}</p>
+          </div>
+
+          <div class="card-section">
+            <h4>Suivi vétérinaire</h4>
+            ${renderVetForBird(oiseau.nom)}
           </div>
 
           <div class="card-section">
@@ -1133,7 +1177,7 @@ function resetBirdForm() {
   const food1 = document.getElementById("oiseauHabitudeFood");
   const food2 = document.getElementById("oiseauHabitudeFood2");
   const photoInput = document.getElementById("oiseauPhotoFile");
-  const docsInput = document.getElementById("oiseauDocFiles");
+  const docInput = document.getElementById("oiseauDocFiles");
   const hiddenId = document.getElementById("oiseauEditId");
   const title = document.getElementById("oiseauFormTitle");
   const btn = document.getElementById("oiseauSubmitBtn");
@@ -1180,12 +1224,24 @@ async function ajouterOiseau() {
     documents = safeArray(existingBird?.documents);
 
     if (photoFile) {
-      photoUrl = await uploadFile(photoFile, `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`);
+      photoUrl = await uploadFile(
+        photoFile,
+        `oiseaux/photos/${nom}_${Date.now()}_${photoFile.name}`
+      );
     }
 
     if (docFiles && docFiles.length) {
-      const newDocs = await uploadMultipleFiles(docFiles, `oiseaux/documents/${nom}`);
-      documents = [...documents, ...newDocs];
+      for (const file of Array.from(docFiles)) {
+        const url = await uploadFile(
+          file,
+          `oiseaux/documents/${nom}_${Date.now()}_${file.name}`
+        );
+
+        documents.push({
+          name: file.name,
+          url
+        });
+      }
     }
 
     if (editingBirdId && existingBird) {
@@ -1201,6 +1257,7 @@ async function ajouterOiseau() {
       existingBird.quantiteHabituelle2 = quantiteHabituelle2;
       existingBird.photoUrl = photoUrl;
       existingBird.documents = documents;
+
       if (statusEl) statusEl.textContent = "Oiseau modifié";
     } else {
       appData.oiseaux.unshift({
@@ -1219,6 +1276,7 @@ async function ajouterOiseau() {
         documents,
         historiquePoids: []
       });
+
       if (statusEl) statusEl.textContent = "Oiseau ajouté";
     }
 
