@@ -31,7 +31,8 @@ const userRef = doc(db, "users", "dQPT9eD5g2c7FkjCb86pJnqh4qF3");
 const statusEl = document.getElementById("status");
 
 const APP_PIN = "0212";
-let appUnlocked = false;
+let autoSaveTimer = null;
+let editingBirdId = null;
 
 const BOITE_POUSSIN_CAPACITE = 225;
 
@@ -47,8 +48,6 @@ const ALIMENTS = [
 
 let rawRapacesData = {};
 let rawUserData = {};
-let editingBirdId = null;
-let autoSaveTimer = null;
 
 let appData = {
   oiseaux: [],
@@ -146,7 +145,10 @@ function setPoussinsFromBoxes(boxes) {
 
 function getLatestFeedDate() {
   if (!appData.nourrissage.length) return todayStr();
-  const dates = appData.nourrissage.map((n) => n.date || "").filter(Boolean).sort((a, b) => b.localeCompare(a));
+  const dates = appData.nourrissage
+    .map((n) => n.date || "")
+    .filter(Boolean)
+    .sort((a, b) => b.localeCompare(a));
   return dates[0] || todayStr();
 }
 
@@ -158,7 +160,6 @@ function triggerAutoSave(delay = 600) {
 }
 
 function unlockApp() {
-  appUnlocked = true;
   const overlay = document.getElementById("pinOverlay");
   if (overlay) overlay.classList.add("hidden");
   document.body.classList.remove("locked");
@@ -216,10 +217,10 @@ function normalizeNourrissage(list) {
 
 function normalizeData(rapacesData, userData) {
   const oiseauxSource = safeArray(rapacesData?.oiseaux);
-  const peseesSource = safeArray(userData?.encodages || rapacesData?.encodages || rapacesData?.pesees);
+  const peseesSource = safeArray(userData?.encodages || rapacesData?.encodages || []);
   const documentsSource = safeArray(rapacesData?.documents);
   const documentsGenerauxSource = safeArray(rapacesData?.documentsGeneraux);
-  const nourrissageSource = safeArray(userData?.nourrissage || rapacesData?.nourrissage);
+  const nourrissageSource = safeArray(userData?.nourrissage || rapacesData?.nourrissage || []);
 
   const oiseaux = oiseauxSource.map((o, index) => ({
     id: o.id || `oiseau_${index}_${makeId()}`,
@@ -229,10 +230,10 @@ function normalizeData(rapacesData, userData) {
     age: o.age || "",
     poidsActuel: o.poidsActuel ?? "",
     notes: o.notes || "",
-    photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || getSafeUrl(o?.photo),
+    photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
     documents: normalizeDocumentsOiseau(o.documents),
     historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
-    nourritureHabituelle: o.nourritureHabituelle || "",
+    nourritureHabituelle: o.nourritureHabituelle || "Poussin",
     quantiteHabituelle: toNumber(o.quantiteHabituelle),
     nourritureHabituelle2: o.nourritureHabituelle2 || "",
     quantiteHabituelle2: toNumber(o.quantiteHabituelle2)
@@ -307,7 +308,7 @@ function buildRapacesPayload() {
       age: o.age || "",
       poidsActuel: o.poidsActuel ?? "",
       notes: o.notes || "",
-      nourritureHabituelle: o.nourritureHabituelle || "",
+      nourritureHabituelle: o.nourritureHabituelle || "Poussin",
       quantiteHabituelle: toNumber(o.quantiteHabituelle),
       nourritureHabituelle2: o.nourritureHabituelle2 || "",
       quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
@@ -495,12 +496,10 @@ function renderOiseaux() {
             ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
           </div>
 
-         <div class="small-actions">
-  <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-  <button class="btn secondary-btn" onclick="exportBirdPdf('${oiseau.id}')">PDF</button>
-  <button class="btn secondary-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
-  <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-</div>
+          <div class="small-actions">
+            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+          </div>
         </article>
       `).join("")}
     </div>
@@ -891,9 +890,7 @@ async function loadData() {
     appData = normalizeData(rawRapacesData, rawUserData);
 
     const feedDateEl = document.getElementById("feedDate");
-    if (feedDateEl) {
-      feedDateEl.value = getLatestFeedDate();
-    }
+    if (feedDateEl) feedDateEl.value = getLatestFeedDate();
 
     renderAll();
 
@@ -1091,8 +1088,8 @@ function ajouterPesee() {
     oiseau.historiquePoids.unshift({ date, poids });
   }
 
-  const pesDateEl = document.getElementById("pesDate");
-  if (pesDateEl) pesDateEl.value = todayStr();
+  const pesDateInput = document.getElementById("pesDate");
+  if (pesDateInput) pesDateInput.value = todayStr();
 
   ["pesNom", "pesEspece", "pesPoids", "pesNourriture", "pesEtat", "pesLieu", "pesObs"].forEach((id) => {
     const el = document.getElementById(id);
@@ -1191,6 +1188,7 @@ function ajouterNourrissage() {
   });
 
   viderTableNourrissage(false);
+
   const noteEl = document.getElementById("feedNote");
   if (noteEl) noteEl.value = "";
 
@@ -1296,419 +1294,6 @@ function rationHabituelleTerrain(id) {
   }
 }
 
-function getFeedsForBird(birdName) {
-  return safeArray(appData.nourrissage)
-    .filter((n) => (n.oiseau || "").trim().toLowerCase() === (birdName || "").trim().toLowerCase())
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-}
-
-function exportBirdPdf(id) {
-  const bird = appData.oiseaux.find((o) => o.id === id);
-  if (!bird) return;
-
-  const birdFeeds = getFeedsForBird(bird.nom);
-
-  const poidsRows = safeArray(bird.historiquePoids)
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-    .map((item) => `
-      <tr>
-        <td>${safe(formatDateFR(item.date))}</td>
-        <td>${safe(item.poids)}</td>
-      </tr>
-    `).join("");
-
-  const feedRows = birdFeeds
-    .map((item) => `
-      <tr>
-        <td>${safe(formatDateFR(item.date))}</td>
-        <td>${safe(item.nourriture)}</td>
-        <td>${safe(item.quantite)}</td>
-        <td>${safe(item.remarques || "")}</td>
-      </tr>
-    `).join("");
-
-  const docsRows = safeArray(bird.documents)
-    .map((docItem) => `<li><a href="${safeAttr(docItem.url)}" target="_blank">${safe(docItem.name)}</a></li>`)
-    .join("");
-
-  const totalFeeds = birdFeeds.reduce((sum, item) => sum + toNumber(item.quantite), 0);
-
-  const win = window.open("", "_blank");
-  if (!win) {
-    alert("Le navigateur bloque la fenêtre PDF.");
-    return;
-  }
-
-  win.document.write(`
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <title>Fiche complète ${safe(bird.nom)}</title>
-      <style>
-        body{
-          font-family:Arial,Helvetica,sans-serif;
-          color:#111;
-          padding:24px;
-          line-height:1.45;
-        }
-        h1,h2,h3{margin-bottom:8px}
-        .top{
-          display:flex;
-          gap:24px;
-          align-items:flex-start;
-          margin-bottom:18px;
-        }
-        img{max-width:280px;border-radius:12px}
-        table{width:100%;border-collapse:collapse;margin-top:12px}
-        th,td{
-          border:1px solid #ccc;
-          padding:8px;
-          text-align:left;
-          vertical-align:top;
-        }
-        th{background:#f2f2f2}
-        .box{
-          margin-top:18px;
-          padding:14px;
-          border:1px solid #ddd;
-          border-radius:10px;
-        }
-        ul{margin:8px 0 0 20px}
-        .muted{color:#666}
-        .resume{
-          display:grid;
-          grid-template-columns:repeat(2, minmax(220px, 1fr));
-          gap:10px;
-          margin-top:10px;
-        }
-        .resume div{
-          border:1px solid #ddd;
-          border-radius:8px;
-          padding:10px;
-          background:#fafafa;
-        }
-        @media print{
-          button{display:none}
-          body{padding:10px}
-        }
-      </style>
-    </head>
-    <body>
-      <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-
-      <h1>Fiche complète oiseau : ${safe(bird.nom)}</h1>
-
-      <div class="top">
-        <div>
-          ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
-        </div>
-        <div style="flex:1">
-          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
-          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
-          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
-          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
-          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
-          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
-        </div>
-      </div>
-
-      <div class="box">
-        <h2>Notes</h2>
-        <p>${safe(bird.notes || "Aucune note")}</p>
-      </div>
-
-      <div class="box">
-        <h2>Résumé</h2>
-        <div class="resume">
-          <div><strong>Nombre de pesées :</strong><br>${safeArray(bird.historiquePoids).length}</div>
-          <div><strong>Nombre de nourrissages :</strong><br>${birdFeeds.length}</div>
-          <div><strong>Total pièces nourries :</strong><br>${totalFeeds}</div>
-          <div><strong>Documents liés :</strong><br>${safeArray(bird.documents).length}</div>
-        </div>
-      </div>
-
-      <div class="box">
-        <h2>Documents liés</h2>
-        ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
-        <p class="muted">Les liens restent cliquables dans le PDF exporté selon le navigateur.</p>
-      </div>
-
-      <div class="box">
-        <h2>Historique des poids</h2>
-        ${
-          poidsRows
-            ? `<table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Poids (g)</th>
-                  </tr>
-                </thead>
-                <tbody>${poidsRows}</tbody>
-              </table>`
-            : `<p>Aucun poids enregistré.</p>`
-        }
-      </div>
-
-      <div class="box">
-        <h2>Historique des nourrissages</h2>
-        ${
-          feedRows
-            ? `<table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Nourriture</th>
-                    <th>Quantité</th>
-                    <th>Remarques</th>
-                  </tr>
-                </thead>
-                <tbody>${feedRows}</tbody>
-              </table>`
-            : `<p>Aucun nourrissage enregistré pour cet oiseau.</p>`
-        }
-      </div>
-    </body>
-    </html>
-  `);
-
-  win.document.close();
-}
-
-  win.document.write(`
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <title>Fiche complète ${safe(bird.nom)}</title>
-      <style>
-        body{
-          font-family:Arial,Helvetica,sans-serif;
-          color:#111;
-          padding:24px;
-          line-height:1.45;
-        }
-        h1,h2,h3{
-          margin-bottom:8px;
-        }
-        .top{
-          display:flex;
-          gap:24px;
-          align-items:flex-start;
-          margin-bottom:18px;
-        }
-        img{
-          max-width:280px;
-          border-radius:12px;
-        }
-        table{
-          width:100%;
-          border-collapse:collapse;
-          margin-top:12px;
-        }
-        th,td{
-          border:1px solid #ccc;
-          padding:8px;
-          text-align:left;
-          vertical-align:top;
-        }
-        th{
-          background:#f2f2f2;
-        }
-        .box{
-          margin-top:18px;
-          padding:14px;
-          border:1px solid #ddd;
-          border-radius:10px;
-        }
-        ul{
-          margin:8px 0 0 20px;
-        }
-        .muted{
-          color:#666;
-        }
-        .resume{
-          display:grid;
-          grid-template-columns:repeat(2, minmax(220px, 1fr));
-          gap:10px;
-          margin-top:10px;
-        }
-        .resume div{
-          border:1px solid #ddd;
-          border-radius:8px;
-          padding:10px;
-          background:#fafafa;
-        }
-        @media print{
-          button{display:none}
-          body{padding:10px}
-        }
-      </style>
-    </head>
-    <body>
-      <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-
-      <h1>Fiche complète oiseau : ${safe(bird.nom)}</h1>
-
-      <div class="top">
-        <div>
-          ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
-        </div>
-        <div style="flex:1">
-          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
-          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
-          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
-          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
-          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
-          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
-        </div>
-      </div>
-
-      <div class="box">
-        <h2>Notes</h2>
-        <p>${safe(bird.notes || "Aucune note")}</p>
-      </div>
-
-      <div class="box">
-        <h2>Résumé</h2>
-        <div class="resume">
-          <div><strong>Nombre de pesées :</strong><br>${safeArray(bird.historiquePoids).length}</div>
-          <div><strong>Nombre de nourrissages :</strong><br>${birdFeeds.length}</div>
-          <div><strong>Total pièces nourries :</strong><br>${totalFeeds}</div>
-          <div><strong>Documents liés :</strong><br>${safeArray(bird.documents).length}</div>
-        </div>
-      </div>
-
-      <div class="box">
-        <h2>Documents liés</h2>
-        ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
-        <p class="muted">Les liens restent cliquables dans le PDF exporté selon le navigateur.</p>
-      </div>
-
-      <div class="box">
-        <h2>Historique des poids</h2>
-        ${
-          poidsRows
-            ? `<table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Poids (g)</th>
-                  </tr>
-                </thead>
-                <tbody>${poidsRows}</tbody>
-              </table>`
-            : `<p>Aucun poids enregistré.</p>`
-        }
-      </div>
-
-      <div class="box">
-        <h2>Historique des nourrissages</h2>
-        ${
-          feedRows
-            ? `<table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Nourriture</th>
-                    <th>Quantité</th>
-                    <th>Remarques</th>
-                  </tr>
-                </thead>
-                <tbody>${feedRows}</tbody>
-              </table>`
-            : `<p>Aucun nourrissage enregistré pour cet oiseau.</p>`
-        }
-      </div>
-    </body>
-    </html>
-  `);
-
-  win.document.close();
-  
-
-function partagerFicheOiseau(id) {
-  const bird = appData.oiseaux.find((o) => o.id === id);
-  if (!bird) return;
-
-  const text = `Fiche oiseau : ${bird.nom}`;
-
-  // On ouvre le PDF d'abord
-  const url = window.location.href;
-
-  if (navigator.share) {
-    navigator.share({
-      title: text,
-      text: text,
-      url: url
-    }).catch((err) => console.log("Erreur partage", err));
-  } else {
-    navigator.clipboard.writeText(url);
-    alert("Lien copié ! Tu peux maintenant le coller pour partager.");
-  }
-}
-
-  win.document.write(`
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <title>Fiche ${safe(bird.nom)}</title>
-      <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px}
-        h1,h2{margin-bottom:8px}
-        .top{display:flex;gap:24px;align-items:flex-start}
-        img{max-width:280px;border-radius:12px}
-        table{width:100%;border-collapse:collapse;margin-top:12px}
-        th,td{border:1px solid #ccc;padding:8px;text-align:left}
-        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px}
-        ul{margin:8px 0 0 20px}
-        @media print{button{display:none}}
-      </style>
-    </head>
-    <body>
-      <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-      <h1>Fiche oiseau : ${safe(bird.nom)}</h1>
-      <div class="top">
-        <div>
-          ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
-        </div>
-        <div>
-          <p><strong>Espèce :</strong> ${safe(bird.espece)}</p>
-          <p><strong>Sexe :</strong> ${safe(bird.sexe)}</p>
-          <p><strong>Âge :</strong> ${safe(bird.age)}</p>
-          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel)} g</p>
-          <p><strong>Nourriture habituelle 1 :</strong> ${safe(bird.nourritureHabituelle)} (${safe(bird.quantiteHabituelle)} pièce(s))</p>
-          <p><strong>Nourriture habituelle 2 :</strong> ${safe(bird.nourritureHabituelle2)} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2)} pièce(s))` : ""}</p>
-        </div>
-      </div>
-
-      <div class="box">
-        <h2>Notes</h2>
-        <p>${safe(bird.notes || "Aucune note")}</p>
-      </div>
-
-      <div class="box">
-        <h2>Documents liés</h2>
-        ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
-      </div>
-
-      <div class="box">
-        <h2>Historique des poids</h2>
-        ${
-          poidsRows
-            ? `<table><thead><tr><th>Date</th><th>Poids (g)</th></tr></thead><tbody>${poidsRows}</tbody></table>`
-            : `<p>Aucun poids enregistré.</p>`
-        }
-      </div>
-    </body>
-    </html>
-  `);
-
-  win.document.close();
-}
-
 const pesDateEl = document.getElementById("pesDate");
 if (pesDateEl) pesDateEl.value = todayStr();
 
@@ -1729,11 +1314,9 @@ window.enregistrerStock = enregistrerStock;
 window.supprimerOiseau = supprimerOiseau;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
-window.exportBirdPdf = exportBirdPdf;
 window.quickFeed = quickFeed;
 window.rationHabituelleTerrain = rationHabituelleTerrain;
 window.checkPin = checkPin;
-window.partagerFicheOiseau = partagerFicheOiseau;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
