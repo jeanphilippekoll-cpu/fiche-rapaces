@@ -529,8 +529,15 @@ function openBirdSheet(id) {
   `).join("");
 
   const docsRows = safeArray(bird.documents)
-    .map((docItem) => `<li><a href="${safeAttr(docItem.url)}" target="_blank">${safe(docItem.name)}</a></li>`)
-    .join("");
+  .map((doc) => `
+    <li>
+      ${safe(doc.name)}<br>
+      <small style="word-break:break-all;">
+        ${safe(doc.url)}
+      </small>
+    </li>
+  `)
+  .join("");
 
   const win = window.open("", "_blank");
   if (!win) {
