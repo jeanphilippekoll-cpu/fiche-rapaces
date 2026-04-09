@@ -1171,7 +1171,7 @@ function resetBirdForm() {
   const food1 = document.getElementById("oiseauHabitudeFood");
   const food2 = document.getElementById("oiseauHabitudeFood2");
   const photoInput = document.getElementById("oiseauPhotoFile");
-  const docInput = document.getElementById("oiseauDocFiles");
+  const docsInput = document.getElementById("oiseauDocFiles");
   const hiddenId = document.getElementById("oiseauEditId");
   const title = document.getElementById("oiseauFormTitle");
   const btn = document.getElementById("oiseauSubmitBtn");
