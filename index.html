@@ -459,6 +459,7 @@
       <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
       <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
       <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
+      <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
     </nav>
 
@@ -521,7 +522,7 @@
              <option value="Annexe B">Annexe B</option>
            </select>
          </div>
-         
+
           <div>
             <label for="oiseauPoids">Poids</label>
             <input id="oiseauPoids" placeholder="Poids (g)">
@@ -775,6 +776,20 @@
         <div id="listeVeterinaire"></div>
       </div>
     </section>
+
+    <section id="section-inventaire" class="section hidden">
+  <div class="card">
+    <h2>Inventaire oiseaux présents sur site</h2>
+
+    <div class="actions">
+      <button class="btn info-btn" onclick="ouvrirInventaire()">Ouvrir inventaire</button>
+      <button class="btn warn-btn" onclick="imprimerInventaire()">Imprimer</button>
+      <button class="btn secondary-btn" onclick="partagerInventaire()">Partager</button>
+    </div>
+
+     <div id="inventaireZone"></div>
+    </div>
+   </section>  
 
     <section id="section-stock" class="section hidden">
       <div class="card">

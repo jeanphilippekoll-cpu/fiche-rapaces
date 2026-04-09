@@ -1197,6 +1197,204 @@ function fillStockForm() {
   if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
 }
 
+function renderInventaire() {
+  const zone = document.getElementById("inventaireZone");
+  if (!zone) return;
+
+  if (!appData.oiseaux.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
+    return;
+  }
+
+  const rows = appData.oiseaux
+    .slice()
+    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+    .map((oiseau) => `
+      <tr>
+        <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.espece || "")}</td>
+        <td>${safe(oiseau.age || "")}</td>
+        <td>${safe(oiseau.sexe || "")}</td>
+        <td>${safe(oiseau.annexe || "-")}</td>
+        <td>${safe(oiseau.poidsActuel || "")}</td>
+        <td>
+          ${
+            safeArray(oiseau.documents).length
+              ? safeArray(oiseau.documents).map((doc) => `
+                  <a class="doc-link" href="${safeAttr(doc.url)}" target="_blank" rel="noopener noreferrer">
+                    ${safe(doc.name)}
+                  </a>
+                `).join("")
+              : `<span class="muted-line">Aucun</span>`
+          }
+        </td>
+      </tr>
+    `).join("");
+
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Espèce</th>
+            <th>Âge</th>
+            <th>Sexe</th>
+            <th>Annexe</th>
+            <th>Poids</th>
+            <th>Documents</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getInventaireHtml() {
+  const rows = appData.oiseaux
+    .slice()
+    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+    .map((oiseau) => `
+      <tr>
+        <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.espece || "")}</td>
+        <td>${safe(oiseau.age || "")}</td>
+        <td>${safe(oiseau.sexe || "")}</td>
+        <td>${safe(oiseau.annexe || "-")}</td>
+        <td>${safe(oiseau.poidsActuel || "")}</td>
+        <td>
+          ${
+            safeArray(oiseau.documents).length
+              ? safeArray(oiseau.documents).map((doc) => `
+                  <div style="margin-bottom:8px;">
+                    <div>${safe(doc.name)}</div>
+                    <div style="font-size:12px;word-break:break-all;color:#666;">${safe(doc.url)}</div>
+                  </div>
+                `).join("")
+              : `Aucun`
+          }
+        </td>
+      </tr>
+    `).join("");
+
+  return `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Inventaire oiseaux</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;background:#faf7f2}
+        h1{margin-bottom:8px}
+        .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+        .btn{
+          display:inline-block;
+          padding:12px 16px;
+          border:none;
+          border-radius:10px;
+          text-decoration:none;
+          font-weight:700;
+          cursor:pointer;
+          background:#8aa36b;
+          color:#fff;
+        }
+        table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}
+        th,td{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}
+        th{background:#f2e8d4}
+        @media print{
+          .actions{display:none}
+          body{padding:10px;background:#fff}
+        }
+      </style>
+    </head>
+    <body>
+      <div class="actions">
+        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+      </div>
+
+      <h1>Inventaire oiseaux présents sur site</h1>
+      <p>Date : ${safe(formatDateFR(todayStr()))}</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Espèce</th>
+            <th>Âge</th>
+            <th>Sexe</th>
+            <th>Annexe</th>
+            <th>Poids</th>
+            <th>Documents</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+}
+
+function ouvrirInventaire() {
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre inventaire.");
+    return;
+  }
+
+  win.document.write(getInventaireHtml());
+  win.document.close();
+}
+
+function imprimerInventaire() {
+  ouvrirInventaire();
+}
+
+function partagerInventaire() {
+  let texte = `Inventaire oiseaux présents sur site\n`;
+  texte += `Date : ${formatDateFR(todayStr())}\n\n`;
+
+  appData.oiseaux
+    .slice()
+    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+    .forEach((oiseau) => {
+      texte += `- ${oiseau.nom || ""}\n`;
+      texte += `  Espèce : ${oiseau.espece || "-"}\n`;
+      texte += `  Âge : ${oiseau.age || "-"}\n`;
+      texte += `  Sexe : ${oiseau.sexe || "-"}\n`;
+      texte += `  Annexe : ${oiseau.annexe || "-"}\n`;
+      texte += `  Poids : ${oiseau.poidsActuel || "-"} g\n`;
+
+      if (safeArray(oiseau.documents).length) {
+        texte += `  Documents :\n`;
+        safeArray(oiseau.documents).forEach((doc) => {
+          texte += `    * ${doc.name}\n`;
+          texte += `      ${doc.url}\n`;
+        });
+      }
+      texte += `\n`;
+    });
+
+  if (navigator.share) {
+    navigator.share({
+      title: "Inventaire oiseaux",
+      text: texte
+    }).catch((err) => {
+      console.log("Partage annulé ou impossible :", err);
+    });
+    return;
+  }
+
+  navigator.clipboard.writeText(texte)
+    .then(() => alert("Inventaire copié dans le presse-papiers."))
+    .catch(() => alert("Impossible de partager automatiquement sur cet appareil."));
+}
+
 function renderAll() {
   syncBoitesFromPoussins();
   refreshStats();
@@ -1206,6 +1404,7 @@ function renderAll() {
   renderDocuments();
   renderNourrissage();
   renderVeterinaire();
+  renderInventaire();
   fillStockForm();
 }
 
@@ -1751,6 +1950,9 @@ window.rationHabituelleTerrain = rationHabituelleTerrain;
 window.openBirdSheet = openBirdSheet;
 window.checkPin = checkPin;
 window.partagerFicheOiseau = partagerFicheOiseau;
+window.ouvrirInventaire = ouvrirInventaire;
+window.imprimerInventaire = imprimerInventaire;
+window.partagerInventaire = partagerInventaire;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
