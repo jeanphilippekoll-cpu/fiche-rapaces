@@ -433,9 +433,11 @@ function refreshBirdSelects() {
 
   const pesNom = document.getElementById("pesNom");
   const vetBird = document.getElementById("vetBird");
+  const vetFilterBird = document.getElementById("vetFilterBird");
 
   if (pesNom) pesNom.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
   if (vetBird) vetBird.innerHTML = `<option value="">Choisir un oiseau</option>${birds}`;
+  if (vetFilterBird) vetFilterBird.innerHTML = `<option value="">Tous les oiseaux</option>${birds}`;
 }
 
 function renderHistoriquePoidsTable(historique) {

@@ -771,11 +771,19 @@
         </div>
       </div>
 
-      <div class="card">
-        <h2>Historique vétérinaire</h2>
-        <div id="listeVeterinaire"></div>
-      </div>
-    </section>
+     <div class="card">
+  <h2>Historique vétérinaire</h2>
+
+  <div class="form-grid">
+    <div>
+      <label for="vetFilterBird">Filtrer par oiseau</label>
+      <select id="vetFilterBird" onchange="renderVeterinaire()"></select>
+    </div>
+  </div>
+
+  <div id="listeVeterinaire"></div>
+ </div> 
+</section>
 
     <section id="section-inventaire" class="section hidden">
   <div class="card">
