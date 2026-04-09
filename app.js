@@ -2081,6 +2081,37 @@ window.imprimerInventaire = imprimerInventaire;
 window.partagerInventaire = partagerInventaire;
 window.renderVeterinaire = renderVeterinaire;
 
+function ouvrirFicheOiseau(id) {
+  showSection("oiseaux");
+  setTimeout(() => {
+    const el = document.querySelector(`[onclick="modifierOiseau('${id}')"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 300);
+}
+
+function ouvrirVetoOiseau(nom) {
+  showSection("veterinaire");
+
+  setTimeout(() => {
+    const select = document.getElementById("vetFilterBird");
+    if (select) {
+      select.value = nom;
+      renderVeterinaire();
+    }
+  }, 300);
+}
+
+function ouvrirFicheOiseau(id) {
+  showSection("oiseaux");
+  setTimeout(() => {
+    const el = document.querySelector(`[onclick="modifierOiseau('${id}')"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 300);
+}
+
+window.ouvrirFicheOiseau = ouvrirFicheOiseau;
+window.ouvrirVetoOiseau = ouvrirVetoOiseau;
+
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
   await loadData();
