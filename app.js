@@ -1655,22 +1655,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderNourrissageSummary();
     });
   }
-  
-  resetBirdForm();
-  showSection("accueil");
-});
-
-  
-
-  const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
-  if (stockBoxes) {
-    stockBoxes.addEventListener("input", () => {
-      const previewPieces = document.getElementById("stockPoussin");
-      if (previewPieces) {
-        previewPieces.value = Math.max(0, toNumber(stockBoxes.value || 0)) * BOITE_POUSSIN_CAPACITE;
-      }
-    });
-  }
 
   resetBirdForm();
   showSection("accueil");
