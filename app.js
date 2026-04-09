@@ -53,6 +53,7 @@ let appData = {
   documents: [],
   nourrissage: [],
   veterinaire: [],
+  entretien: [],
   stock: {
     poussin: 0,
     caille: 0,
@@ -315,6 +316,7 @@ function normalizeData(rapacesData, userData) {
     documents,
     nourrissage: normalizeNourrissage(nourrissageSource),
     veterinaire: normalizeVeterinaire(veterinaireSource),
+    entretien: safeArray(userData?.entretien || rapacesData?.entretien),
     stock
   };
 }
@@ -403,7 +405,8 @@ function buildUserPayload() {
       protocole: v.protocole || "",
       observations: v.observations || "",
       fichiers: normalizeDocuments(v.fichiers)
-    }))
+    })),
+    entretien: safeArray(appData.entretien)
   };
 }
 

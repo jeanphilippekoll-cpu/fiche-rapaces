@@ -773,6 +773,7 @@
       <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
       <button id="btn-vacances" onclick="showSection('vacances')">Vacances</button>
+      <button id="btn-entretien" onclick="showSection('entretien')">Entretien</button>
     </nav>
 
     <section id="section-accueil" class="section">
@@ -1186,6 +1187,48 @@
     </div>
 
     <div id="tableVacances"></div>
+  </div>
+</section>
+
+<section id="section-entretien" class="section hidden">
+  <div class="card">
+    <h2>Nouvel entretien</h2>
+
+    <div class="form-grid">
+      <div>
+        <label for="entretienDate">Date</label>
+        <input id="entretienDate" type="date">
+      </div>
+
+      <div>
+        <label for="entretienType">Type d’entretien</label>
+        <select id="entretienType">
+          <option value="">Choisir</option>
+          <option value="Changement eau">Changement eau</option>
+          <option value="Nettoyage bac eau">Nettoyage bac eau</option>
+          <option value="Nettoyage espace oiseaux">Nettoyage espace oiseaux</option>
+          <option value="Désinfection">Désinfection</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="entretienZone">Zone</label>
+        <input id="entretienZone" placeholder="Zone concernée">
+      </div>
+    </div>
+
+    <label for="entretienDetails">Détails / remarques</label>
+    <textarea id="entretienDetails" placeholder="Détails"></textarea>
+
+    <div class="actions">
+      <button class="btn" onclick="ajouterEntretien()">Ajouter entretien</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Historique entretien</h2>
+    <div id="listeEntretien"></div>
   </div>
 </section>
 
