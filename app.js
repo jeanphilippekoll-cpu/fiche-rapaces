@@ -1141,30 +1141,100 @@ function renderVeterinaire() {
     return;
   }
 
+  const groupes = {};
+
+  appData.veterinaire.forEach((item) => {
+    const nomOiseau = item.oiseau || "Sans oiseau";
+    if (!groupes[nomOiseau]) groupes[nomOiseau] = [];
+    groupes[nomOiseau].push(item);
+  });
+
+  const oiseauxTries = Object.keys(groupes).sort((a, b) => a.localeCompare(b));
+
+  const totalSuivis = appData.veterinaire.length;
+  const totalOiseaux = oiseauxTries.length;
+
   zone.innerHTML = `
-    <div class="list-grid">
-      ${appData.veterinaire
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-        .map((item) => `
-          <div class="item">
-            <h3>${safe(item.oiseau)}</h3>
-            <p><strong>Date :</strong> ${safe(formatDateFR(item.date))}</p>
-            <p><strong>Vétérinaire :</strong> ${safe(item.veterinaire)}</p>
-            <p><strong>Motif :</strong> ${safe(item.motif)}</p>
-            <p><strong>Diagnostic :</strong> ${safe(item.diagnostic)}</p>
-            <p><strong>Traitement :</strong> ${safe(item.traitement)}</p>
-            <p><strong>Protocole :</strong> ${safe(item.protocole)}</p>
-            <p><strong>Observations :</strong> ${safe(item.observations)}</p>
-            <div class="card-section">
-              <h4>Fichiers</h4>
-              ${renderDocumentsList(item.fichiers)}
-            </div>
-            <div class="small-actions">
-              <button class="btn btn-danger" onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
-            </div>
-          </div>
-        `).join("")}
+    <div class="summary-grid" style="margin-bottom:18px;">
+      <div class="summary-card">
+        <div>Nombre de suivis vétérinaires</div>
+        <div class="summary-total">${totalSuivis}</div>
+      </div>
+      <div class="summary-card">
+        <div>Oiseaux concernés</div>
+        <div class="summary-total">${totalOiseaux}</div>
+      </div>
     </div>
+
+    ${oiseauxTries.map((nomOiseau) => {
+      const suivis = groupes[nomOiseau]
+        .slice()
+        .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+      return `
+        <div class="card-section" style="margin-bottom:18px;">
+          <h3 style="margin-top:0;">${safe(nomOiseau)}</h3>
+          <p class="muted-line" style="margin-top:-4px;">
+            ${suivis.length} suivi(s) vétérinaire(s)
+          </p>
+
+          <div class="list-grid">
+            ${suivis.map((item) => `
+              <div class="item">
+                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+                  <div>
+                    <p style="margin:0 0 8px 0;font-size:18px;font-weight:700;">
+                      ${safe(formatDateFR(item.date))}
+                    </p>
+                    <p><strong>Vétérinaire :</strong> ${safe(item.veterinaire || "-")}</p>
+                    <p><strong>Motif :</strong> ${safe(item.motif || "-")}</p>
+                    <p><strong>Diagnostic :</strong> ${safe(item.diagnostic || "-")}</p>
+                    <p><strong>Traitement :</strong> ${safe(item.traitement || "-")}</p>
+                  </div>
+                </div>
+
+                <div class="card-section">
+                  <h4>Protocole</h4>
+                  <p>${safe(item.protocole || "Aucun protocole")}</p>
+                </div>
+
+                <div class="card-section">
+                  <h4>Observations</h4>
+                  <p>${safe(item.observations || "Aucune observation")}</p>
+                </div>
+
+                <div class="card-section">
+                  <h4>Fichiers vétérinaires</h4>
+                  ${
+                    safeArray(item.fichiers).length
+                      ? `
+                        <div class="stack-list">
+                          ${safeArray(item.fichiers).map((f) => `
+                            <div class="item" style="margin-top:0;">
+                              <p style="margin-top:0;"><strong>${safe(f.name)}</strong></p>
+                              <div class="actions">
+                                <a class="doc-link" href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer">Ouvrir</a>
+                              </div>
+                              <p class="muted-line" style="word-break:break-all;font-size:12px;">
+                                ${safe(f.url)}
+                              </p>
+                            </div>
+                          `).join("")}
+                        </div>
+                      `
+                      : `<p class="muted-line">Aucun fichier.</p>`
+                  }
+                </div>
+
+                <div class="small-actions">
+                  <button class="btn btn-danger" onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("")}
   `;
 }
 
