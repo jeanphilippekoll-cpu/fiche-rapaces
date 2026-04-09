@@ -485,12 +485,6 @@ function getFeedsForBird(birdName) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
-function getVetForBird(birdName) {
-  return safeArray(appData.veterinaire)
-    .filter((v) => (v.oiseau || "").trim().toLowerCase() === (birdName || "").trim().toLowerCase())
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-}
-
 function openBirdSheet(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -1654,6 +1648,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     pinInput.focus();
   }
+
+  resetBirdForm();
+  showSection("accueil");
+});
 
   const feedDate = document.getElementById("feedDate");
   if (feedDate) {
