@@ -2104,39 +2104,101 @@ function ouvrirVetoOiseau(nom) {
 
 function exportControle() {
   const win = window.open("", "_blank");
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre d’export.");
+    return;
+  }
 
   const contenu = `
-    <html>
+    <!DOCTYPE html>
+    <html lang="fr">
     <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Export contrôle élevage</title>
       <style>
-        body { font-family: Arial; padding:20px; }
-        h1 { margin-bottom:0; }
-        h2 { margin-top:30px; }
-        .card { border:1px solid #ccc; padding:10px; margin-bottom:10px; }
-        .small { font-size:12px; word-break:break-all; }
+        body { font-family: Arial, Helvetica, sans-serif; padding: 20px; background:#faf7f2; color:#222; }
+        h1 { margin-bottom: 6px; }
+        h2 { margin-top: 28px; margin-bottom: 10px; }
+        h3 { margin-top: 18px; margin-bottom: 8px; }
+        .top-actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:20px; }
+        .btn {
+          display:inline-block;
+          padding:12px 16px;
+          border:none;
+          border-radius:10px;
+          background:#8aa36b;
+          color:#fff;
+          text-decoration:none;
+          font-weight:700;
+          cursor:pointer;
+        }
+        .btn.secondary { background:#7aa7a6; }
+        .card {
+          border:1px solid #ccc;
+          border-radius:12px;
+          padding:14px;
+          margin-bottom:16px;
+          background:#fff;
+        }
+        .doc-box {
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:10px;
+          margin-bottom:10px;
+          background:#fcfcfc;
+        }
+        .small {
+          font-size:12px;
+          word-break:break-all;
+          color:#666;
+          margin-top:6px;
+        }
+        .doc-link-btn {
+          display:inline-block;
+          padding:10px 14px;
+          border-radius:8px;
+          background:#5f88b3;
+          color:#fff;
+          text-decoration:none;
+          font-weight:700;
+          margin-top:6px;
+        }
+        @media print {
+          .top-actions { display:none; }
+          body { background:#fff; padding:10px; }
+        }
       </style>
     </head>
     <body>
 
-      <h1>Inventaire élevage</h1>
-      <p>Date : ${new Date().toLocaleDateString()}</p>
+      <div class="top-actions">
+        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+        <button class="btn secondary" onclick="shareExport()">Partager</button>
+      </div>
+
+      <h1>Export contrôle élevage</h1>
+      <p>Date : ${safe(formatDateFR(todayStr()))}</p>
 
       ${appData.oiseaux.map(o => `
         <div class="card">
           <h2>${safe(o.nom)}</h2>
 
-          <p><strong>Espèce :</strong> ${safe(o.espece)}</p>
-          <p><strong>Sexe :</strong> ${safe(o.sexe)}</p>
-          <p><strong>Age :</strong> ${safe(o.age)}</p>
+          <p><strong>Espèce :</strong> ${safe(o.espece || "-")}</p>
+          <p><strong>Sexe :</strong> ${safe(o.sexe || "-")}</p>
+          <p><strong>Âge :</strong> ${safe(o.age || "-")}</p>
           <p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
+          <p><strong>Poids :</strong> ${safe(o.poidsActuel || "-")} g</p>
 
           <h3>Documents</h3>
           ${
             safeArray(o.documents).length
               ? safeArray(o.documents).map(d => `
-                  <p>${safe(d.name)}</p>
-                  <p class="small">${safe(d.url)}</p>
+                  <div class="doc-box">
+                    <div><strong>${safe(d.name)}</strong></div>
+                    <a class="doc-link-btn" href="${safeAttr(d.url)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a>
+                    <div class="small">${safe(d.url)}</div>
+                  </div>
                 `).join("")
               : "<p>Aucun document</p>"
           }
@@ -2144,19 +2206,51 @@ function exportControle() {
           <h3>Suivi vétérinaire</h3>
           ${
             safeArray(appData.veterinaire)
-              .filter(v => v.oiseau === o.nom)
+              .filter(v => (v.oiseau || "").trim().toLowerCase() === (o.nom || "").trim().toLowerCase())
               .map(v => `
                 <div class="card">
-                  <p><strong>Date :</strong> ${safe(formatDateFR(v.date))}</p>
-                  <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire)}</p>
-                  <p><strong>Diagnostic :</strong> ${safe(v.diagnostic)}</p>
-                  <p><strong>Traitement :</strong> ${safe(v.traitement)}</p>
+                  <p><strong>Date :</strong> ${safe(formatDateFR(v.date || ""))}</p>
+                  <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire || "-")}</p>
+                  <p><strong>Motif :</strong> ${safe(v.motif || "-")}</p>
+                  <p><strong>Diagnostic :</strong> ${safe(v.diagnostic || "-")}</p>
+                  <p><strong>Traitement :</strong> ${safe(v.traitement || "-")}</p>
+                  <p><strong>Protocole :</strong> ${safe(v.protocole || "-")}</p>
+                  <p><strong>Observations :</strong> ${safe(v.observations || "-")}</p>
+
+                  ${
+                    safeArray(v.fichiers).length
+                      ? safeArray(v.fichiers).map(f => `
+                          <div class="doc-box">
+                            <div><strong>${safe(f.name)}</strong></div>
+                            <a class="doc-link-btn" href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer">Ouvrir le fichier</a>
+                            <div class="small">${safe(f.url)}</div>
+                          </div>
+                        `).join("")
+                      : "<p>Aucun fichier vétérinaire</p>"
+                  }
                 </div>
               `).join("") || "<p>Aucun suivi</p>"
           }
-
         </div>
       `).join("")}
+
+      <script>
+        function shareExport() {
+          const text = document.body.innerText;
+
+          if (navigator.share) {
+            navigator.share({
+              title: "Export contrôle élevage",
+              text
+            }).catch(() => {});
+            return;
+          }
+
+          navigator.clipboard.writeText(text)
+            .then(() => alert("Export copié dans le presse-papiers."))
+            .catch(() => alert("Impossible de partager automatiquement."));
+        }
+      </script>
 
     </body>
     </html>
