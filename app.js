@@ -1016,12 +1016,40 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const groupedByDate = {};
+  const groupedByDateAndBird = {};
 
   appData.nourrissage.forEach((item) => {
     const date = item.date || "Sans date";
-    if (!groupedByDate[date]) groupedByDate[date] = [];
-    groupedByDate[date].push(item);
+    const oiseau = item.oiseau || "Sans oiseau";
+    const key = `${date}__${oiseau}`;
+
+    if (!groupedByDateAndBird[key]) {
+      groupedByDateAndBird[key] = {
+        date,
+        oiseau,
+        total: 0,
+        remarques: [],
+        aliments: {}
+      };
+    }
+
+    const qty = toNumber(item.quantite);
+    const nourriture = item.nourriture || "Inconnu";
+
+    groupedByDateAndBird[key].total += qty;
+    groupedByDateAndBird[key].aliments[nourriture] =
+      (groupedByDateAndBird[key].aliments[nourriture] || 0) + qty;
+
+    if (item.remarques && !groupedByDateAndBird[key].remarques.includes(item.remarques)) {
+      groupedByDateAndBird[key].remarques.push(item.remarques);
+    }
+  });
+
+  const groupedByDate = {};
+
+  Object.values(groupedByDateAndBird).forEach((entry) => {
+    if (!groupedByDate[entry.date]) groupedByDate[entry.date] = [];
+    groupedByDate[entry.date].push(entry);
   });
 
   const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
@@ -1029,17 +1057,24 @@ function renderNourrissageHistory() {
   zone.innerHTML = sortedDates.map((date) => {
     const rows = groupedByDate[date]
       .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
-      .map((item) => `
-        <tr>
-          <td>${safe(item.oiseau)}</td>
-          <td>${safe(item.nourriture)}</td>
-          <td>${safe(item.quantite)}</td>
-          <td>${safe(item.remarques || "")}</td>
-          <td>
-            <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-          </td>
-        </tr>
-      `).join("");
+      .map((entry) => {
+        const detailNourriture = Object.entries(entry.aliments)
+          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
+          .join(" | ");
+
+        const remarques = entry.remarques.length
+          ? entry.remarques.map((r) => safe(r)).join(" | ")
+          : "-";
+
+        return `
+          <tr>
+            <td>${safe(entry.oiseau)}</td>
+            <td>${detailNourriture}</td>
+            <td>${safe(entry.total)}</td>
+            <td>${remarques}</td>
+          </tr>
+        `;
+      }).join("");
 
     return `
       <div class="card-section">
@@ -1049,13 +1084,14 @@ function renderNourrissageHistory() {
             <thead>
               <tr>
                 <th>Oiseau</th>
-                <th>Nourriture</th>
-                <th>Quantité</th>
+                <th>Nourriture donnée</th>
+                <th>Total du jour</th>
                 <th>Remarques</th>
-                <th>Action</th>
               </tr>
             </thead>
-            <tbody>${rows}</tbody>
+            <tbody>
+              ${rows}
+            </tbody>
           </table>
         </div>
       </div>
