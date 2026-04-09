@@ -251,6 +251,7 @@ function normalizeData(rapacesData, userData) {
     espece: o.espece || "",
     sexe: o.sexe || "",
     age: o.age || "",
+    annexe: o.annexe || "",
     poidsActuel: o.poidsActuel ?? "",
     notes: o.notes || "",
     photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
@@ -330,6 +331,7 @@ function buildRapacesPayload() {
       espece: o.espece || "",
       sexe: o.sexe || "",
       age: o.age || "",
+      annexe: o.annexe || "",
       poidsActuel: o.poidsActuel ?? "",
       notes: o.notes || "",
       nourritureHabituelle: o.nourritureHabituelle || "Poussin",
@@ -788,9 +790,10 @@ function renderOiseaux() {
           `}
 
           <div class="bird-meta">
-            <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-            <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
-          </div>
+  <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
+  <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
+  <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
+</div>
 
           <div class="card-section">
             <h4>Notes</h4>
