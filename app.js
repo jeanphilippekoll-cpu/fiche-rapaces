@@ -1136,16 +1136,25 @@ function renderTerrain() {
 
 function renderVeterinaire() {
   const zone = document.getElementById("listeVeterinaire");
+  const filtre = document.getElementById("vetFilterBird")?.value || "";
   if (!zone) return;
 
-  if (!appData.veterinaire.length) {
+  let liste = safeArray(appData.veterinaire);
+
+  if (filtre) {
+    liste = liste.filter((item) =>
+      (item.oiseau || "").trim().toLowerCase() === filtre.trim().toLowerCase()
+    );
+  }
+
+  if (!liste.length) {
     zone.innerHTML = `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
     return;
   }
 
   const groupes = {};
 
-  appData.veterinaire.forEach((item) => {
+  liste.forEach((item) => {
     const nomOiseau = item.oiseau || "Sans oiseau";
     if (!groupes[nomOiseau]) groupes[nomOiseau] = [];
     groupes[nomOiseau].push(item);
@@ -1153,7 +1162,7 @@ function renderVeterinaire() {
 
   const oiseauxTries = Object.keys(groupes).sort((a, b) => a.localeCompare(b));
 
-  const totalSuivis = appData.veterinaire.length;
+  const totalSuivis = liste.length;
   const totalOiseaux = oiseauxTries.length;
 
   zone.innerHTML = `
