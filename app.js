@@ -485,6 +485,67 @@ function getFeedsForBird(birdName) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
+function partagerFicheOiseau(id) {
+  const bird = appData.oiseaux.find((o) => o.id === id);
+  if (!bird) return;
+
+  const birdFeeds = getFeedsForBird(bird.nom);
+  const birdVet = getVetForBird(bird.nom);
+
+  let texte = `Fiche oiseau : ${bird.nom}\n`;
+  texte += `Espèce : ${bird.espece || "-"}\n`;
+  texte += `Sexe : ${bird.sexe || "-"}\n`;
+  texte += `Âge : ${bird.age || "-"}\n`;
+  texte += `Poids actuel : ${bird.poidsActuel || "-"} g\n`;
+  texte += `Nourriture 1 : ${bird.nourritureHabituelle || "-"} (${bird.quantiteHabituelle || 0})\n`;
+
+  if (bird.nourritureHabituelle2) {
+    texte += `Nourriture 2 : ${bird.nourritureHabituelle2} (${bird.quantiteHabituelle2 || 0})\n`;
+  }
+
+  texte += `\nNotes : ${bird.notes || "Aucune note"}\n`;
+
+  if (safeArray(bird.documents).length) {
+    texte += `\nDocuments liés :\n`;
+    safeArray(bird.documents).forEach((doc) => {
+      texte += `- ${doc.name}\n${doc.url}\n`;
+    });
+  }
+
+  if (birdFeeds.length) {
+    texte += `\nHistorique nourrissage :\n`;
+    birdFeeds.slice(0, 10).forEach((item) => {
+      texte += `- ${formatDateFR(item.date)} : ${item.nourriture} x${item.quantite}`;
+      if (item.remarques) texte += ` (${item.remarques})`;
+      texte += `\n`;
+    });
+  }
+
+  if (birdVet.length) {
+    texte += `\nSuivi vétérinaire :\n`;
+    birdVet.forEach((v) => {
+      texte += `- ${formatDateFR(v.date)} | ${v.veterinaire || "-"} | ${v.motif || "-"} | ${v.diagnostic || "-"}\n`;
+      safeArray(v.fichiers).forEach((f) => {
+        texte += `  * ${f.name}\n  ${f.url}\n`;
+      });
+    });
+  }
+
+  if (navigator.share) {
+    navigator.share({
+      title: `Fiche ${bird.nom}`,
+      text: texte
+    }).catch((err) => {
+      console.log("Partage annulé ou impossible :", err);
+    });
+    return;
+  }
+
+  navigator.clipboard.writeText(texte)
+    .then(() => alert("Fiche copiée dans le presse-papiers."))
+    .catch(() => alert("Impossible de partager automatiquement sur cet appareil."));
+}
+
 function openBirdSheet(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -522,22 +583,41 @@ function openBirdSheet(id) {
       <p><strong>Observations :</strong> ${safe(v.observations)}</p>
       ${
         safeArray(v.fichiers).length
-          ? `<ul>${safeArray(v.fichiers).map((f) => `<li><a href="${safeAttr(f.url)}" target="_blank">${safe(f.name)}</a></li>`).join("")}</ul>`
+          ? `
+            <div style="display:grid;gap:8px;margin-top:10px;">
+              ${safeArray(v.fichiers).map((f) => `
+                <div style="border:1px solid #ddd;border-radius:8px;padding:10px;">
+                  <div style="font-weight:700;margin-bottom:8px;">${safe(f.name)}</div>
+                  <a href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer"
+                     style="display:inline-block;padding:10px 14px;border-radius:8px;background:#7aa7a6;color:#fff;text-decoration:none;font-weight:700;">
+                    Ouvrir le fichier
+                  </a>
+                  <div style="margin-top:8px;font-size:12px;word-break:break-all;color:#666;">${safe(f.url)}</div>
+                </div>
+              `).join("")}
+            </div>
+          `
           : `<p>Aucun fichier.</p>`
       }
     </div>
   `).join("");
 
   const docsRows = safeArray(bird.documents)
-  .map((doc) => `
-    <li>
-      ${safe(doc.name)}<br>
-      <small style="word-break:break-all;">
-        ${safe(doc.url)}
-      </small>
-    </li>
-  `)
-  .join("");
+    .map((doc) => `
+      <li style="margin-bottom:14px;">
+        <div style="font-weight:700;">${safe(doc.name)}</div>
+        <div style="margin-top:8px;">
+          <a href="${safeAttr(doc.url)}" target="_blank" rel="noopener noreferrer"
+             style="display:inline-block;padding:10px 14px;border-radius:8px;background:#8aa36b;color:#fff;text-decoration:none;font-weight:700;">
+            Ouvrir le document
+          </a>
+        </div>
+        <div style="margin-top:8px;font-size:12px;word-break:break-all;color:#666;">
+          ${safe(doc.url)}
+        </div>
+      </li>
+    `)
+    .join("");
 
   const win = window.open("", "_blank");
   if (!win) {
@@ -551,21 +631,41 @@ function openBirdSheet(id) {
     <head>
       <meta charset="UTF-8">
       <title>Fiche ${safe(bird.nom)}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;line-height:1.45}
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;line-height:1.45;background:#faf7f2}
         h1,h2{margin-bottom:8px}
-        .top{display:flex;gap:24px;align-items:flex-start;margin-bottom:18px}
+        .top{display:flex;gap:24px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap}
         img{max-width:280px;border-radius:12px}
         table{width:100%;border-collapse:collapse;margin-top:12px}
         th,td{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}
         th{background:#f2f2f2}
-        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px}
+        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fff}
         ul{margin:8px 0 0 20px}
-        @media print{button{display:none}body{padding:10px}}
+        .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+        .btn{
+          display:inline-block;
+          padding:12px 16px;
+          border:none;
+          border-radius:10px;
+          text-decoration:none;
+          font-weight:700;
+          cursor:pointer;
+        }
+        .btn-print{background:#8aa36b;color:#fff;}
+        .btn-share{background:#7aa7a6;color:#fff;}
+        @media print{
+          .actions{display:none}
+          body{padding:10px;background:#fff}
+        }
       </style>
     </head>
     <body>
-      <button onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+      <div class="actions">
+        <button class="btn btn-print" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+        <button class="btn btn-share" onclick="navigator.clipboard.writeText(window.location.href).catch(()=>{}); alert('Pour partager sur le terrain : utilise le bouton Partager dans l’application principale.')">Info partage</button>
+      </div>
+
       <h1>Fiche oiseau : ${safe(bird.nom)}</h1>
 
       <div class="top">
@@ -718,11 +818,12 @@ function renderOiseaux() {
             ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
           </div>
 
-          <div class="small-actions">
-            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-            <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
-            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-          </div>
+         <div class="small-actions">
+          <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
+          <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
+          <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
+          <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+        </div> 
         </article>
       `).join("")}
     </div>
@@ -1643,6 +1744,7 @@ window.quickFeed = quickFeed;
 window.rationHabituelleTerrain = rationHabituelleTerrain;
 window.openBirdSheet = openBirdSheet;
 window.checkPin = checkPin;
+window.partagerFicheOiseau = partagerFicheOiseau;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
