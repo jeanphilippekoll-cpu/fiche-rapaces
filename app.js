@@ -1649,16 +1649,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     pinInput.focus();
   }
 
-  resetBirdForm();
-  showSection("accueil");
-});
-
   const feedDate = document.getElementById("feedDate");
   if (feedDate) {
     feedDate.addEventListener("change", () => {
       renderNourrissageSummary();
     });
   }
+  
+  resetBirdForm();
+  showSection("accueil");
+});
+
+  
 
   const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
   if (stockBoxes) {
