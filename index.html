@@ -772,6 +772,7 @@
       <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
       <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
       <button id="btn-stock" onclick="showSection('stock')">Stock</button>
+      <button id="btn-vacances" onclick="showSection('vacances')">Vacances</button>
     </nav>
 
     <section id="section-accueil" class="section">
@@ -1175,6 +1176,18 @@
       </div>
     </section>
   </div>
+<section id="section-vacances" class="section hidden">
+  <div class="card">
+    <h2>Nourrissage vacances</h2>
+
+    <div class="actions" style="margin-bottom:12px;">
+      <button class="btn" onclick="remplirVacances()">Remplir automatiquement</button>
+      <button class="btn secondary-btn" onclick="window.print()">Imprimer</button>
+    </div>
+
+    <div id="tableVacances"></div>
+  </div>
+</section>
 
   <script type="module" src="./app.js"></script>
 </body>
