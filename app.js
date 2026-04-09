@@ -412,6 +412,8 @@ function showSection(section) {
   document.querySelectorAll(".nav button").forEach((btn) => btn.classList.remove("active"));
   document.getElementById(`section-${section}`)?.classList.remove("hidden");
   document.getElementById(`btn-${section}`)?.classList.add("active");
+
+  if (section === "vacances") renderVacances();
 }
 
 function refreshStats() {
@@ -1539,6 +1541,49 @@ function partagerInventaire() {
   navigator.clipboard.writeText(texte)
     .then(() => alert("Inventaire copié dans le presse-papiers."))
     .catch(() => alert("Impossible de partager automatiquement sur cet appareil."));
+}
+
+function renderVacances() {
+  const zone = document.getElementById("tableVacances");
+  if (!zone) return;
+
+  if (!appData.oiseaux.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Nourriture 1</th>
+            <th>Qté</th>
+            <th>Nourriture 2</th>
+            <th>Qté</th>
+            <th>Remarques</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${appData.oiseaux.map((o) => `
+            <tr>
+              <td><strong>${safe(o.nom)}</strong></td>
+              <td><input value="${safeAttr(o.nourritureHabituelle || "")}"></td>
+              <td><input type="number" value="${safeAttr(o.quantiteHabituelle || 0)}"></td>
+              <td><input value="${safeAttr(o.nourritureHabituelle2 || "")}"></td>
+              <td><input type="number" value="${safeAttr(o.quantiteHabituelle2 || 0)}"></td>
+              <td><input placeholder="Remarque"></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function remplirVacances() {
+  renderVacances();
 }
 
 function renderAll() {
