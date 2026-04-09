@@ -1139,12 +1139,22 @@ function renderVeterinaire() {
   const filtre = document.getElementById("vetFilterBird")?.value || "";
   if (!zone) return;
 
+  const normaliser = (txt) =>
+    String(txt || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+
   let liste = safeArray(appData.veterinaire);
 
   if (filtre) {
-    liste = liste.filter((item) =>
-      (item.oiseau || "").trim().toLowerCase() === filtre.trim().toLowerCase()
-    );
+    const filtreNormalise = normaliser(filtre);
+
+    liste = liste.filter((item) => {
+      const nomItem = normaliser(item.oiseau);
+      return nomItem === filtreNormalise;
+    });
   }
 
   if (!liste.length) {
@@ -2050,6 +2060,7 @@ window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
 window.imprimerInventaire = imprimerInventaire;
 window.partagerInventaire = partagerInventaire;
+window.renderVeterinaire = renderVeterinaire;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
