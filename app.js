@@ -1308,6 +1308,7 @@ async function ajouterOiseau() {
   const quantiteHabituelle = toNumber(document.getElementById("oiseauHabitudeQty")?.value || 0);
   const nourritureHabituelle2 = document.getElementById("oiseauHabitudeFood2")?.value || "";
   const quantiteHabituelle2 = toNumber(document.getElementById("oiseauHabitudeQty2")?.value || 0);
+  const annexe = document.getElementById("oiseauAnnexe")?.value || "";
 
   const photoFile = document.getElementById("oiseauPhotoFile")?.files?.[0] || null;
   const docFiles = document.getElementById("oiseauDocFiles")?.files || null;
@@ -1351,6 +1352,7 @@ async function ajouterOiseau() {
       existingBird.espece = espece;
       existingBird.sexe = sexe;
       existingBird.age = age;
+      existingBird.annexe = annexe;
       existingBird.poidsActuel = poidsActuel;
       existingBird.notes = notes;
       existingBird.nourritureHabituelle = nourritureHabituelle;
@@ -1362,22 +1364,23 @@ async function ajouterOiseau() {
 
       if (statusEl) statusEl.textContent = "Oiseau modifié";
     } else {
-      appData.oiseaux.unshift({
-        id: makeId(),
-        nom,
-        espece,
-        sexe,
-        age,
-        poidsActuel,
-        notes,
-        nourritureHabituelle,
-        quantiteHabituelle,
-        nourritureHabituelle2,
-        quantiteHabituelle2,
-        photoUrl,
-        documents,
-        historiquePoids: []
-      });
+     appData.oiseaux.unshift({
+      id: makeId(),
+      nom,
+      espece,
+      sexe,
+      age,
+      annexe,
+      poidsActuel,
+      notes,
+      nourritureHabituelle,
+      quantiteHabituelle,
+      nourritureHabituelle2,
+      quantiteHabituelle2,
+      photoUrl,
+      documents,
+      historiquePoids: []
+    });
 
       if (statusEl) statusEl.textContent = "Oiseau ajouté";
     }
