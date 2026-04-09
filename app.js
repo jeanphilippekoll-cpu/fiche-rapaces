@@ -2162,6 +2162,7 @@ window.imprimerInventaire = imprimerInventaire;
 window.partagerInventaire = partagerInventaire;
 window.renderVeterinaire = renderVeterinaire;
 window.exportControle = exportControle;
+window.remplirVacances = remplirVacances;
 
 function ouvrirFicheOiseau(id) {
   showSection("oiseaux");
