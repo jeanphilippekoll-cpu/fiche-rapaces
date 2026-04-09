@@ -2080,6 +2080,7 @@ window.ouvrirInventaire = ouvrirInventaire;
 window.imprimerInventaire = imprimerInventaire;
 window.partagerInventaire = partagerInventaire;
 window.renderVeterinaire = renderVeterinaire;
+window.exportControle = exportControle;
 
 function ouvrirFicheOiseau(id) {
   showSection("oiseaux");
@@ -2099,6 +2100,70 @@ function ouvrirVetoOiseau(nom) {
       renderVeterinaire();
     }
   }, 300);
+}
+
+function exportControle() {
+  const win = window.open("", "_blank");
+
+  const contenu = `
+    <html>
+    <head>
+      <title>Export contrôle élevage</title>
+      <style>
+        body { font-family: Arial; padding:20px; }
+        h1 { margin-bottom:0; }
+        h2 { margin-top:30px; }
+        .card { border:1px solid #ccc; padding:10px; margin-bottom:10px; }
+        .small { font-size:12px; word-break:break-all; }
+      </style>
+    </head>
+    <body>
+
+      <h1>Inventaire élevage</h1>
+      <p>Date : ${new Date().toLocaleDateString()}</p>
+
+      ${appData.oiseaux.map(o => `
+        <div class="card">
+          <h2>${safe(o.nom)}</h2>
+
+          <p><strong>Espèce :</strong> ${safe(o.espece)}</p>
+          <p><strong>Sexe :</strong> ${safe(o.sexe)}</p>
+          <p><strong>Age :</strong> ${safe(o.age)}</p>
+          <p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
+
+          <h3>Documents</h3>
+          ${
+            safeArray(o.documents).length
+              ? safeArray(o.documents).map(d => `
+                  <p>${safe(d.name)}</p>
+                  <p class="small">${safe(d.url)}</p>
+                `).join("")
+              : "<p>Aucun document</p>"
+          }
+
+          <h3>Suivi vétérinaire</h3>
+          ${
+            safeArray(appData.veterinaire)
+              .filter(v => v.oiseau === o.nom)
+              .map(v => `
+                <div class="card">
+                  <p><strong>Date :</strong> ${safe(formatDateFR(v.date))}</p>
+                  <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire)}</p>
+                  <p><strong>Diagnostic :</strong> ${safe(v.diagnostic)}</p>
+                  <p><strong>Traitement :</strong> ${safe(v.traitement)}</p>
+                </div>
+              `).join("") || "<p>Aucun suivi</p>"
+          }
+
+        </div>
+      `).join("")}
+
+    </body>
+    </html>
+  `;
+
+  win.document.write(contenu);
+  win.document.close();
 }
 
 window.ouvrirFicheOiseau = ouvrirFicheOiseau;
