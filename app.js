@@ -1408,6 +1408,15 @@ function renderAll() {
   fillStockForm();
 }
 
+function saveLocalBackup() {
+  try {
+    localStorage.setItem("rapaces_backup", JSON.stringify(appData));
+    console.log("Backup local OK");
+  } catch (e) {
+    console.warn("Erreur backup local", e);
+  }
+}
+
 async function saveData() {
   try {
     if (statusEl) statusEl.textContent = "Sauvegarde…";
@@ -1423,10 +1432,17 @@ async function saveData() {
     rawRapacesData = rapacesPayload;
     rawUserData = userPayload;
 
+    // 💾 Sauvegarde locale anti-perte
+    saveLocalBackup();
+
     if (statusEl) statusEl.textContent = "Sauvegardé";
   } catch (e) {
     console.error(e);
-    if (statusEl) statusEl.textContent = "Erreur sauvegarde";
+
+    // 💾 même en cas d'erreur → backup local
+    saveLocalBackup();
+
+    if (statusEl) statusEl.textContent = "Erreur sauvegarde (backup local OK)";
   }
 }
 
