@@ -1104,30 +1104,49 @@ function renderTerrain() {
   const zone = document.getElementById("terrainZone");
   if (!zone) return;
 
-  if (!appData.oiseaux.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun oiseau disponible.</p>`;
+  const search = document.getElementById("terrainSearch")?.value.toLowerCase() || "";
+
+  let oiseaux = appData.oiseaux;
+
+  if (search) {
+    oiseaux = oiseaux.filter((o) =>
+      (o.nom || "").toLowerCase().includes(search)
+    );
+  }
+
+  if (!oiseaux.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau trouvé.</p>`;
     return;
   }
 
   zone.innerHTML = `
     <div class="bird-grid">
-      ${appData.oiseaux.map((oiseau) => `
+      ${oiseaux.map((oiseau) => `
         <article class="bird-card terrain-card">
+
           <h3>${safe(oiseau.nom)}</h3>
           <p class="bird-species">${safe(oiseau.espece || "")}</p>
 
           ${oiseau.photoUrl ? `
-            <img src="${safeAttr(oiseau.photoUrl)}" alt="${safeAttr(oiseau.nom)}" class="bird-photo">
-          ` : `
-            <div class="bird-photo-placeholder">Pas de photo</div>
-          `}
+            <img src="${safeAttr(oiseau.photoUrl)}" class="bird-photo">
+          ` : `<div class="bird-photo-placeholder">Pas de photo</div>`}
 
           <div class="actions">
+
             <button class="btn terrain-poussin" onclick="quickFeed('${oiseau.id}','Poussin',1)">+1 Poussin</button>
+
             <button class="btn terrain-souris" onclick="quickFeed('${oiseau.id}','Souris',1)">+1 Souris</button>
+
             <button class="btn terrain-cailleteau" onclick="quickFeed('${oiseau.id}','Cailleteau 30gr',1)">+1 Cailleteau</button>
-            <button class="btn terrain-ration" onclick="rationHabituelleTerrain('${oiseau.id}')">Ration habituelle</button>
+
+            <button class="btn terrain-ration" onclick="rationHabituelleTerrain('${oiseau.id}')">Ration</button>
+
+            <button class="btn secondary-btn" onclick="ouvrirFicheOiseau('${oiseau.id}')">Fiche</button>
+
+            <button class="btn info-btn" onclick="ouvrirVetoOiseau('${oiseau.nom}')">Véto</button>
+
           </div>
+
         </article>
       `).join("")}
     </div>
