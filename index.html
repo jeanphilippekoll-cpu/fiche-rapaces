@@ -713,6 +713,27 @@
 #section-nourrissage h2 {
   border-left-color: #d4a95c;
 }
+/* ===== COULEUR CARDS ACCUEIL ===== */
+
+.card.oiseaux {
+  background: #e8f5e9;
+  border-left: 6px solid #4caf50;
+}
+
+.card.pesees {
+  background: #e3f2fd;
+  border-left: 6px solid #2196f3;
+}
+
+.card.documents {
+  background: #fff3e0;
+  border-left: 6px solid #ff9800;
+}
+
+.card.nourrissage {
+  background: #fbe9e7;
+  border-left: 6px solid #f44336;
+}
   </style>
 </head>
 <body>
@@ -754,32 +775,37 @@
     </nav>
 
     <section id="section-accueil" class="section">
-      <div class="grid">
-        <div class="card">
-          <h3>Oiseaux</h3>
-          <p id="statOiseaux" class="stats-number">0</p>
-          <p class="stat-label">Nombre total</p>
-        </div>
-        <div class="card">
-          <h3>Pesées oiseaux</h3>
-          <p id="statPesees" class="stats-number">0</p>
-          <p class="stat-label">Nombre total</p>
-        </div>
-        <div class="card">
-          <h3>Documents</h3>
-          <p id="statDocuments" class="stats-number">0</p>
-          <p class="stat-label">Nombre total</p>
-        </div>
-        <div class="card">
-          <h3>Nourrissages</h3>
-          <p id="statNourrissages" class="stats-number">0</p>
-          <p class="stat-label">Nombre total</p>
-        </div>
-      </div>
+     <div class="grid">
+
+  <div class="card oiseaux">
+    <h3>Oiseaux</h3>
+    <p id="statOiseaux" class="stats-number">0</p>
+    <p class="stat-label">Nombre total</p>
+  </div>
+
+  <div class="card pesees">
+    <h3>Pesées oiseaux</h3>
+    <p id="statPesees" class="stats-number">0</p>
+    <p class="stat-label">Nombre total</p>
+  </div>
+
+  <div class="card documents">
+    <h3>Documents</h3>
+    <p id="statDocuments" class="stats-number">0</p>
+    <p class="stat-label">Nombre total</p>
+  </div>
+
+  <div class="card nourrissage">
+    <h3>Nourrissages</h3>
+    <p id="statNourrissages" class="stats-number">0</p>
+    <p class="stat-label">Nombre total</p>
+  </div>
+
+</div> 
     </section>
 
     <section id="section-oiseaux" class="section hidden">
-      <div class="card">
+      <div class="card oiseaux"></div>
         <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
         <input id="oiseauEditId" type="hidden">
 
