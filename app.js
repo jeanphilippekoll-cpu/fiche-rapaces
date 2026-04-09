@@ -2101,14 +2101,6 @@ function ouvrirVetoOiseau(nom) {
   }, 300);
 }
 
-function ouvrirFicheOiseau(id) {
-  showSection("oiseaux");
-  setTimeout(() => {
-    const el = document.querySelector(`[onclick="modifierOiseau('${id}')"]`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 300);
-}
-
 window.ouvrirFicheOiseau = ouvrirFicheOiseau;
 window.ouvrirVetoOiseau = ouvrirVetoOiseau;
 
