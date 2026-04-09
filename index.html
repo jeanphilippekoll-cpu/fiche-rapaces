@@ -423,6 +423,229 @@
       .bird-meta{grid-template-columns:1fr}
       .nav button,.btn{width:100%}
     }
+  /* ===== FINITION LISIBILITÉ TABLETTE / IPHONE ===== */
+
+.feed-table th,
+.feed-table td {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.feed-table tbody tr:nth-child(odd) td {
+  background: #fffdf8;
+}
+
+.feed-table tbody tr:nth-child(even) td {
+  background: #f8f1e5;
+}
+
+.feed-table tbody tr:hover td {
+  background: #efe4cf;
+}
+
+.bird-card {
+  border-width: 1px;
+  box-shadow: 0 10px 24px rgba(75,57,30,0.08);
+}
+
+.bird-card h3 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.card-section {
+  background: #fffaf2;
+}
+
+.item {
+  background: #fffaf2;
+}
+
+.summary-card {
+  background: linear-gradient(180deg, #fffaf2 0%, #f8f0e2 100%);
+}
+
+.doc-link {
+  background: #fff;
+  border: 1px solid rgba(96, 76, 46, 0.14);
+  font-weight: 700;
+}
+
+.doc-link:hover {
+  background: #f5ecdc;
+}
+
+.weight-pill {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.small-actions .btn,
+.actions .btn,
+.feed-toolbar .btn {
+  min-height: 44px;
+}
+
+.feed-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(odd) td,
+#listeNourrissage .feed-table tbody tr:nth-child(odd) td,
+#listeVeterinaire .feed-table tbody tr:nth-child(odd) td {
+  background: #fffdf8;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(even) td,
+#listeNourrissage .feed-table tbody tr:nth-child(even) td,
+#listeVeterinaire .feed-table tbody tr:nth-child(even) td {
+  background: #f7efdf;
+}
+
+/* couleurs plus visibles pour les boutons terrain */
+.terrain-poussin {
+  background: #e6c781 !important;
+  color: #4f3510 !important;
+}
+
+.terrain-souris {
+  background: #cfe0c7 !important;
+  color: #28472d !important;
+}
+
+.terrain-cailleteau {
+  background: #eabeb5 !important;
+  color: #65322d !important;
+}
+
+.terrain-ration {
+  background: #d8ccb4 !important;
+  color: #3d3123 !important;
+}
+
+.info-btn {
+  background: #6f9fa0 !important;
+  color: #fff !important;
+}
+
+.warn-btn {
+  background: #bf835f !important;
+  color: #fff !important;
+}
+
+.secondary-btn {
+  background: #d8ccb4 !important;
+  color: #3d3123 !important;
+}
+
+.btn-danger {
+  background: #b75b52 !important;
+  color: #fff !important;
+}
+
+/* meilleure lisibilité mobile */
+@media (max-width: 900px) {
+  .app {
+    padding: 14px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .bird-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .bird-photo,
+  .bird-photo-placeholder {
+    height: 190px;
+  }
+
+  .feed-table {
+    min-width: 640px;
+  }
+
+  .feed-table th,
+  .feed-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* évite le zoom iPhone */
+    min-height: 46px;
+  }
+
+  textarea {
+    min-height: 100px;
+  }
+
+  .btn,
+  .nav button {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 46px;
+  }
+
+  .bird-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid,
+  .grid,
+  .form-grid,
+  .list-grid,
+  .bird-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    margin-bottom: 14px;
+  }
+
+  .nav {
+    gap: 8px;
+    margin: 14px 0 20px;
+  }
+
+  .nav button,
+  .btn {
+    width: 100%;
+  }
+
+  .feed-table {
+    min-width: 560px;
+  }
+
+  .stats-number {
+    font-size: 30px;
+  }
+
+  .bird-card h3 {
+    font-size: 21px;
+  }
+
+  .card h2 {
+    font-size: 21px;
+  }
+}
   </style>
 </head>
 <body>
