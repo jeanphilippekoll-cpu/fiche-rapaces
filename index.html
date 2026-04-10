@@ -39,10 +39,11 @@
     }
 
     .app{
-      max-width:1360px;
-      margin:0 auto;
-      padding:26px;
-    }
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:26px;
+}
 
     .topbar{
       display:flex;
@@ -1084,546 +1085,561 @@ h2 {
   </style>
 </head>
 <body>
- <div class="layout">
 
-  <aside class="sidebar">
-    <!-- menu ici -->
-  </aside>
+  <div class="layout">
 
-  <main class="main-content"> 
-  <div id="pinOverlay" class="pin-overlay">
-    <div class="pin-card">
-      <h2>Accès protégé</h2>
-      <p>Entre le code PIN pour ouvrir l’application.</p>
-      <label for="pinInput">Code PIN</label>
-      <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
-      <div class="actions">
-        <button class="btn" onclick="checkPin()">Ouvrir</button>
+    <aside class="sidebar">
+      <h2 class="logo">🦅 Rapaces</h2>
+
+      <div class="menu-group">
+        <p class="menu-title">Tableau de bord</p>
+        <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
       </div>
-      <p id="pinError" class="pin-error"></p>
-    </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Oiseaux</p>
+        <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+        <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
+        <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
+      </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Soins quotidiens</p>
+        <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
+        <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
+        <button id="btn-stock" onclick="showSection('stock')">Stock</button>
+        <button id="btn-entretien" onclick="showSection('entretien')">Entretien</button>
+      </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Administratif</p>
+        <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+        <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
+        <button id="btn-vacances" onclick="showSection('vacances')">Vacances</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+
+      <div id="pinOverlay" class="pin-overlay">
+        <div class="pin-card">
+          <h2>Accès protégé</h2>
+          <p>Entre le code PIN pour ouvrir l’application.</p>
+          <label for="pinInput">Code PIN</label>
+          <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+          <div class="actions">
+            <button class="btn" onclick="checkPin()">Ouvrir</button>
+          </div>
+          <p id="pinError" class="pin-error"></p>
+        </div>
+      </div>
+
+      <div id="appContent" class="app">
+        <header class="topbar">
+          <div>
+            <h1 class="page-title">Fiche Rapaces</h1>
+            <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, terrain, vétérinaire, documents et stock</p>
+            <div id="status">Chargement…</div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="saveData()">Sauvegarder</button>
+          </div>
+        </header>
+
+        <section id="section-accueil" class="section">
+          <div class="grid">
+            <div class="card oiseaux">
+              <h3>Oiseaux</h3>
+              <p id="statOiseaux" class="stats-number">0</p>
+              <p class="stat-label">Nombre total</p>
+            </div>
+
+            <div class="card pesees">
+              <h3>Pesées oiseaux</h3>
+              <p id="statPesees" class="stats-number">0</p>
+              <p class="stat-label">Nombre total</p>
+            </div>
+
+            <div class="card documents">
+              <h3>Documents</h3>
+              <p id="statDocuments" class="stats-number">0</p>
+              <p class="stat-label">Nombre total</p>
+            </div>
+
+            <div class="card nourrissage">
+              <h3>Nourrissages</h3>
+              <p id="statNourrissages" class="stats-number">0</p>
+              <p class="stat-label">Nombre total</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-oiseaux" class="section hidden">
+          <div class="card oiseaux">
+            <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
+            <input id="oiseauEditId" type="hidden">
+
+            <div class="form-grid">
+              <div>
+                <label for="oiseauNom">Nom</label>
+                <input id="oiseauNom" placeholder="Nom">
+              </div>
+
+              <div>
+                <label for="oiseauEspece">Espèce</label>
+                <input id="oiseauEspece" placeholder="Espèce">
+              </div>
+
+              <div>
+                <label for="oiseauSexe">Sexe</label>
+                <input id="oiseauSexe" placeholder="Sexe">
+              </div>
+
+              <div>
+                <label for="oiseauAge">Âge</label>
+                <input id="oiseauAge" placeholder="Âge">
+              </div>
+
+              <div>
+                <label for="oiseauDateEntree">Date d'entrée</label>
+                <input id="oiseauDateEntree" type="date">
+              </div>
+
+              <div>
+                <label for="oiseauRegistreEntree">N° registre d'entrée</label>
+                <input id="oiseauRegistreEntree" placeholder="N° entrée">
+              </div>
+
+              <div>
+                <label for="oiseauStatut">Statut</label>
+                <select id="oiseauStatut">
+                  <option value="En place">En place</option>
+                  <option value="Vendu">Vendu</option>
+                  <option value="Décédé">Décédé</option>
+                  <option value="Sorti">Sorti</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauDateSortie">Date de sortie</label>
+                <input id="oiseauDateSortie" type="date">
+              </div>
+
+              <div>
+                <label for="oiseauRegistreSortie">N° registre de sortie</label>
+                <input id="oiseauRegistreSortie" placeholder="N° sortie">
+              </div>
+
+              <div>
+                <label for="oiseauMotifSortie">Motif / remarque sortie</label>
+                <input id="oiseauMotifSortie" placeholder="Vente, décès, transfert...">
+              </div>
+
+              <div>
+                <label for="oiseauAnnexe">Annexe</label>
+                <select id="oiseauAnnexe">
+                  <option value="">Aucune</option>
+                  <option value="Annexe A">Annexe A</option>
+                  <option value="Annexe B">Annexe B</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauPoids">Poids</label>
+                <input id="oiseauPoids" placeholder="Poids (g)">
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
+                <select id="oiseauHabitudeFood">
+                  <option value="Poussin" selected>Poussin</option>
+                  <option value="Caille">Caille</option>
+                  <option value="Pigeon">Pigeon</option>
+                  <option value="Lapin">Lapin</option>
+                  <option value="Poisson">Poisson</option>
+                  <option value="Souris">Souris</option>
+                  <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
+                <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeFood2">Nourriture habituelle 2</label>
+                <select id="oiseauHabitudeFood2">
+                  <option value="">Choisir</option>
+                  <option value="Poussin">Poussin</option>
+                  <option value="Caille">Caille</option>
+                  <option value="Pigeon">Pigeon</option>
+                  <option value="Lapin">Lapin</option>
+                  <option value="Poisson">Poisson</option>
+                  <option value="Souris">Souris</option>
+                  <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
+                <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
+              </div>
+
+              <div>
+                <label for="oiseauPhotoFile">Photo</label>
+                <input id="oiseauPhotoFile" type="file" accept="image/*">
+              </div>
+
+              <div>
+                <label for="oiseauDocFiles">Documents oiseau</label>
+                <input id="oiseauDocFiles" type="file" accept=".pdf,image/*" multiple>
+              </div>
+            </div>
+
+            <label for="oiseauNotes">Notes</label>
+            <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+
+            <div class="actions">
+              <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+              <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Fiches oiseaux</h2>
+            <div id="listeOiseaux"></div>
+          </div>
+        </section>
+
+        <section id="section-pesee" class="section hidden">
+          <div class="card">
+            <h2>Nouvelle pesée</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="pesDate">Date</label>
+                <input id="pesDate" type="date">
+              </div>
+
+              <div>
+                <label for="pesNom">Oiseau</label>
+                <select id="pesNom"></select>
+              </div>
+
+              <div>
+                <label for="pesEspece">Espèce</label>
+                <input id="pesEspece" placeholder="Espèce">
+              </div>
+
+              <div>
+                <label for="pesPoids">Poids</label>
+                <input id="pesPoids" placeholder="Poids">
+              </div>
+
+              <div>
+                <label for="pesNourriture">Nourriture</label>
+                <input id="pesNourriture" placeholder="Nourriture">
+              </div>
+
+              <div>
+                <label for="pesEtat">État</label>
+                <input id="pesEtat" placeholder="État">
+              </div>
+
+              <div>
+                <label for="pesLieu">Lieu</label>
+                <input id="pesLieu" placeholder="Lieu">
+              </div>
+            </div>
+
+            <label for="pesObs">Observations</label>
+            <textarea id="pesObs" placeholder="Observations"></textarea>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterPesee()">Ajouter pesée</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Informations</h2>
+            <div id="listePesees"></div>
+          </div>
+        </section>
+
+        <section id="section-documents" class="section hidden">
+          <div class="card">
+            <h2>Documents</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="docTitre">Titre</label>
+                <input id="docTitre" placeholder="Titre">
+              </div>
+
+              <div>
+                <label for="docType">Type</label>
+                <input id="docType" placeholder="Type">
+              </div>
+            </div>
+
+            <label for="docDescription">Description</label>
+            <textarea id="docDescription" placeholder="Description"></textarea>
+
+            <div>
+              <label for="docFile">Fichier</label>
+              <input id="docFile" type="file" accept=".pdf,image/*">
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Liste des documents</h2>
+            <div id="listeDocuments"></div>
+          </div>
+        </section>
+
+        <section id="section-nourrissage" class="section hidden">
+          <div class="card">
+            <h2>Nourrissage du jour</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="feedDate">Date</label>
+                <input id="feedDate" type="date">
+              </div>
+            </div>
+
+            <label for="feedNote">Remarques générales</label>
+            <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
+
+            <div id="feedTableZone"></div>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Totaux nourrissage</h2>
+            <div id="feedSummaryZone"></div>
+          </div>
+
+          <div class="card">
+            <h2>Historique des nourrissages</h2>
+            <div id="listeNourrissage"></div>
+          </div>
+        </section>
+
+        <section id="section-terrain" class="section hidden">
+          <div class="card">
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div>
+                <label for="terrainSearch">Recherche rapide</label>
+                <input id="terrainSearch" placeholder="Nom oiseau..." oninput="renderTerrain()">
+              </div>
+            </div>
+            <h2>Mode terrain (nourrissage rapide)</h2>
+            <div id="terrainZone"></div>
+          </div>
+        </section>
+
+        <section id="section-veterinaire" class="section hidden">
+          <div class="card">
+            <h2>Nouveau suivi vétérinaire</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="vetBird">Oiseau</label>
+                <select id="vetBird"></select>
+              </div>
+
+              <div>
+                <label for="vetDate">Date consultation</label>
+                <input id="vetDate" type="date">
+              </div>
+
+              <div>
+                <label for="vetNom">Vétérinaire</label>
+                <input id="vetNom" placeholder="Nom du vétérinaire">
+              </div>
+
+              <div>
+                <label for="vetMotif">Motif</label>
+                <input id="vetMotif" placeholder="Motif">
+              </div>
+
+              <div>
+                <label for="vetDiagnostic">Diagnostic</label>
+                <input id="vetDiagnostic" placeholder="Diagnostic">
+              </div>
+
+              <div>
+                <label for="vetTraitement">Traitement</label>
+                <input id="vetTraitement" placeholder="Traitement">
+              </div>
+            </div>
+
+            <label for="vetProtocole">Protocole</label>
+            <textarea id="vetProtocole" placeholder="Protocole"></textarea>
+
+            <label for="vetObservations">Observations</label>
+            <textarea id="vetObservations" placeholder="Observations"></textarea>
+
+            <div>
+              <label for="vetFiles">Fichiers vétérinaires</label>
+              <input id="vetFiles" type="file" accept=".pdf,image/*" multiple>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterSuiviVeterinaire()">Ajouter le suivi vétérinaire</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Historique vétérinaire</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="vetFilterBird">Filtrer par oiseau</label>
+                <select id="vetFilterBird" onchange="renderVeterinaire()"></select>
+              </div>
+            </div>
+
+            <div id="listeVeterinaire"></div>
+          </div>
+        </section>
+
+        <section id="section-inventaire" class="section hidden">
+          <div class="card">
+            <h2>Inventaire oiseaux présents sur site</h2>
+
+            <div class="actions">
+              <button class="btn info-btn" onclick="ouvrirInventaire()">Ouvrir inventaire</button>
+              <button class="btn warn-btn" onclick="imprimerInventaire()">Imprimer</button>
+              <button class="btn secondary-btn" onclick="partagerInventaire()">Partager</button>
+              <button class="btn" onclick="exportControle()">Exporter dossier contrôle</button>
+            </div>
+
+            <div id="inventaireZone"></div>
+          </div>
+        </section>
+
+        <section id="section-stock" class="section hidden">
+          <div class="card">
+            <h2>Stock nourriture</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
+                <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
+                <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
+              </div>
+
+              <div>
+                <label for="stockPoussin">Poussins disponibles (calculé)</label>
+                <input id="stockPoussin" type="number" readonly>
+              </div>
+
+              <div>
+                <label for="stockCaille">Caille</label>
+                <input id="stockCaille" type="number" min="0" placeholder="Caille">
+              </div>
+
+              <div>
+                <label for="stockPigeon">Pigeon</label>
+                <input id="stockPigeon" type="number" min="0" placeholder="Pigeon">
+              </div>
+
+              <div>
+                <label for="stockLapin">Lapin</label>
+                <input id="stockLapin" type="number" min="0" placeholder="Lapin">
+              </div>
+
+              <div>
+                <label for="stockPoisson">Poisson</label>
+                <input id="stockPoisson" type="number" min="0" placeholder="Poisson">
+              </div>
+
+              <div>
+                <label for="stockSouris">Souris</label>
+                <input id="stockSouris" type="number" min="0" placeholder="Souris">
+              </div>
+
+              <div>
+                <label for="stockCailleteau30gr">Cailleteau 30gr</label>
+                <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
+              </div>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-vacances" class="section hidden">
+          <div class="card">
+            <h2>Nourrissage vacances</h2>
+
+            <div class="actions" style="margin-bottom:12px;">
+              <button class="btn" onclick="remplirVacances()">Remplir automatiquement</button>
+              <button class="btn secondary-btn" onclick="window.print()">Imprimer</button>
+            </div>
+
+            <div id="tableVacances"></div>
+          </div>
+        </section>
+
+        <section id="section-entretien" class="section hidden">
+          <div class="card">
+            <h2>Nouvel entretien</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="entretienDate">Date</label>
+                <input id="entretienDate" type="date">
+              </div>
+
+              <div>
+                <label for="entretienType">Type d’entretien</label>
+                <select id="entretienType">
+                  <option value="">Choisir</option>
+                  <option value="Changement eau">Changement eau</option>
+                  <option value="Nettoyage bac eau">Nettoyage bac eau</option>
+                  <option value="Nettoyage espace oiseaux">Nettoyage espace oiseaux</option>
+                  <option value="Désinfection">Désinfection</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="entretienZone">Zone</label>
+                <input id="entretienZone" placeholder="Zone concernée">
+              </div>
+            </div>
+
+            <label for="entretienDetails">Détails / remarques</label>
+            <textarea id="entretienDetails" placeholder="Détails"></textarea>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterEntretien()">Ajouter entretien</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Historique entretien</h2>
+            <div id="listeEntretien"></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
   </div>
- 
-  <div id="appContent" class="app">
-    <header class="topbar">
-      <div>
-        <h1 class="page-title">Fiche Rapaces</h1>
-        <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, terrain, vétérinaire, documents et stock</p>
-        <div id="status">Chargement…</div>
-      </div>
-      <div class="actions">
-        <button class="btn" onclick="saveData()">Sauvegarder</button>
-      </div>
-    </header>
 
-    <nav class="nav">
-      <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
-      <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
-      <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
-      <button id="btn-documents" onclick="showSection('documents')">Documents</button>
-      <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
-      <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
-      <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
-      <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
-      <button id="btn-stock" onclick="showSection('stock')">Stock</button>
-      <button id="btn-vacances" onclick="showSection('vacances')">Vacances</button>
-      <button id="btn-entretien" onclick="showSection('entretien')">Entretien</button>
-    </nav>
-
-    <section id="section-accueil" class="section">
-     <div class="grid">
-
-  <div class="card oiseaux">
-    <h3>Oiseaux</h3>
-    <p id="statOiseaux" class="stats-number">0</p>
-    <p class="stat-label">Nombre total</p>
-  </div>
-
-  <div class="card pesees">
-    <h3>Pesées oiseaux</h3>
-    <p id="statPesees" class="stats-number">0</p>
-    <p class="stat-label">Nombre total</p>
-  </div>
-
-  <div class="card documents">
-    <h3>Documents</h3>
-    <p id="statDocuments" class="stats-number">0</p>
-    <p class="stat-label">Nombre total</p>
-  </div>
-
-  <div class="card nourrissage">
-    <h3>Nourrissages</h3>
-    <p id="statNourrissages" class="stats-number">0</p>
-    <p class="stat-label">Nombre total</p>
-  </div>
-
-</div> 
-    </section>
-
-    <section id="section-oiseaux" class="section hidden">
-      <div class="card oiseaux"></div>
-        <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
-        <input id="oiseauEditId" type="hidden">
-
-        <div class="form-grid">
-          <div>
-            <label for="oiseauNom">Nom</label>
-            <input id="oiseauNom" placeholder="Nom">
-          </div>
-
-          <div>
-            <label for="oiseauEspece">Espèce</label>
-            <input id="oiseauEspece" placeholder="Espèce">
-          </div>
-
-          <div>
-            <label for="oiseauSexe">Sexe</label>
-            <input id="oiseauSexe" placeholder="Sexe">
-          </div>
-
-          <div>
-            <label for="oiseauAge">Âge</label>
-            <input id="oiseauAge" placeholder="Âge">
-          </div>
-
-         <div>
-  <label for="oiseauDateEntree">Date d'entrée</label>
-  <input id="oiseauDateEntree" type="date">
-</div>
-
-<div>
-  <label for="oiseauRegistreEntree">N° registre d'entrée</label>
-  <input id="oiseauRegistreEntree" placeholder="N° entrée">
-</div>
-
-<div>
-  <label for="oiseauStatut">Statut</label>
-  <select id="oiseauStatut">
-    <option value="En place">En place</option>
-    <option value="Vendu">Vendu</option>
-    <option value="Décédé">Décédé</option>
-    <option value="Sorti">Sorti</option>
-  </select>
-</div>
-
-<div>
-  <label for="oiseauDateSortie">Date de sortie</label>
-  <input id="oiseauDateSortie" type="date">
-</div>
-
-<div>
-  <label for="oiseauRegistreSortie">N° registre de sortie</label>
-  <input id="oiseauRegistreSortie" placeholder="N° sortie">
-</div>
-
-<div>
-  <label for="oiseauMotifSortie">Motif / remarque sortie</label>
-  <input id="oiseauMotifSortie" placeholder="Vente, décès, transfert...">
-</div> 
-          <div>
-            <label for="oiseauAnnexe">Annexe</label>
-            <select id="oiseauAnnexe">
-             <option value="">Aucune</option>
-             <option value="Annexe A">Annexe A</option>
-             <option value="Annexe B">Annexe B</option>
-           </select>
-         </div>
-
-          <div>
-            <label for="oiseauPoids">Poids</label>
-            <input id="oiseauPoids" placeholder="Poids (g)">
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
-            <select id="oiseauHabitudeFood">
-              <option value="Poussin" selected>Poussin</option>
-              <option value="Caille">Caille</option>
-              <option value="Pigeon">Pigeon</option>
-              <option value="Lapin">Lapin</option>
-              <option value="Poisson">Poisson</option>
-              <option value="Souris">Souris</option>
-              <option value="Cailleteau 30gr">Cailleteau 30gr</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
-            <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeFood2">Nourriture habituelle 2</label>
-            <select id="oiseauHabitudeFood2">
-              <option value="">Choisir</option>
-              <option value="Poussin">Poussin</option>
-              <option value="Caille">Caille</option>
-              <option value="Pigeon">Pigeon</option>
-              <option value="Lapin">Lapin</option>
-              <option value="Poisson">Poisson</option>
-              <option value="Souris">Souris</option>
-              <option value="Cailleteau 30gr">Cailleteau 30gr</option>
-            </select>
-          </div>
-
-          <div>
-            <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
-            <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
-          </div>
-
-          <div>
-            <label for="oiseauPhotoFile">Photo</label>
-            <input id="oiseauPhotoFile" type="file" accept="image/*">
-          </div>
-
-          <div>
-  <label for="oiseauDocFiles">Documents oiseau</label>
-  <input id="oiseauDocFiles" type="file" accept=".pdf,image/*" multiple>
-</div>
-
-        <label for="oiseauNotes">Notes</label>
-        <textarea id="oiseauNotes" placeholder="Notes"></textarea>
-
-        <div class="actions">
-          <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
-          <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Fiches oiseaux</h2>
-        <div id="listeOiseaux"></div>
-      </div>
-    </section>
-
-    <section id="section-pesee" class="section hidden">
-      <div class="card">
-        <h2>Nouvelle pesée</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="pesDate">Date</label>
-            <input id="pesDate" type="date">
-          </div>
-
-          <div>
-            <label for="pesNom">Oiseau</label>
-            <select id="pesNom"></select>
-          </div>
-
-          <div>
-            <label for="pesEspece">Espèce</label>
-            <input id="pesEspece" placeholder="Espèce">
-          </div>
-
-          <div>
-            <label for="pesPoids">Poids</label>
-            <input id="pesPoids" placeholder="Poids">
-          </div>
-
-          <div>
-            <label for="pesNourriture">Nourriture</label>
-            <input id="pesNourriture" placeholder="Nourriture">
-          </div>
-
-          <div>
-            <label for="pesEtat">État</label>
-            <input id="pesEtat" placeholder="État">
-          </div>
-
-          <div>
-            <label for="pesLieu">Lieu</label>
-            <input id="pesLieu" placeholder="Lieu">
-          </div>
-        </div>
-
-        <label for="pesObs">Observations</label>
-        <textarea id="pesObs" placeholder="Observations"></textarea>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterPesee()">Ajouter pesée</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Informations</h2>
-        <div id="listePesees"></div>
-      </div>
-    </section>
-
-    <section id="section-documents" class="section hidden">
-      <div class="card">
-        <h2>Documents</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="docTitre">Titre</label>
-            <input id="docTitre" placeholder="Titre">
-          </div>
-
-          <div>
-            <label for="docType">Type</label>
-            <input id="docType" placeholder="Type">
-          </div>
-        </div>
-
-        <label for="docDescription">Description</label>
-        <textarea id="docDescription" placeholder="Description"></textarea>
-
-        <div>
-          <label for="docFile">Fichier</label>
-          <input id="docFile" type="file" accept=".pdf,image/*">
-        </div>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Liste des documents</h2>
-        <div id="listeDocuments"></div>
-      </div>
-    </section>
-
-    <section id="section-nourrissage" class="section hidden">
-      <div class="card">
-        <h2>Nourrissage du jour</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="feedDate">Date</label>
-            <input id="feedDate" type="date">
-          </div>
-        </div>
-
-        <label for="feedNote">Remarques générales</label>
-        <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
-
-        <div id="feedTableZone"></div>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h2>Totaux nourrissage</h2>
-        <div id="feedSummaryZone"></div>
-      </div>
-
-      <div class="card">
-        <h2>Historique des nourrissages</h2>
-        <div id="listeNourrissage"></div>
-      </div>
-    </section>
-
-    <section id="section-terrain" class="section hidden">
-      <div class="card">
-       <div class="form-grid" style="margin-bottom:12px;">
-  <div>
-    <label for="terrainSearch">Recherche rapide</label>
-    <input id="terrainSearch" placeholder="Nom oiseau..." oninput="renderTerrain()">
-  </div>
-</div>
-        <h2>Mode terrain (nourrissage rapide)</h2>
-        <div id="terrainZone"></div>
-      </div>
-    </section>
-
-    <section id="section-veterinaire" class="section hidden">
-      <div class="card">
-        <h2>Nouveau suivi vétérinaire</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="vetBird">Oiseau</label>
-            <select id="vetBird"></select>
-          </div>
-
-          <div>
-            <label for="vetDate">Date consultation</label>
-            <input id="vetDate" type="date">
-          </div>
-
-          <div>
-            <label for="vetNom">Vétérinaire</label>
-            <input id="vetNom" placeholder="Nom du vétérinaire">
-          </div>
-
-          <div>
-            <label for="vetMotif">Motif</label>
-            <input id="vetMotif" placeholder="Motif">
-          </div>
-
-          <div>
-            <label for="vetDiagnostic">Diagnostic</label>
-            <input id="vetDiagnostic" placeholder="Diagnostic">
-          </div>
-
-          <div>
-            <label for="vetTraitement">Traitement</label>
-            <input id="vetTraitement" placeholder="Traitement">
-          </div>
-        </div>
-
-        <label for="vetProtocole">Protocole</label>
-        <textarea id="vetProtocole" placeholder="Protocole"></textarea>
-
-        <label for="vetObservations">Observations</label>
-        <textarea id="vetObservations" placeholder="Observations"></textarea>
-
-        <div>
-          <label for="vetFiles">Fichiers vétérinaires</label>
-          <input id="vetFiles" type="file" accept=".pdf,image/*" multiple>
-        </div>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterSuiviVeterinaire()">Ajouter le suivi vétérinaire</button>
-        </div>
-      </div>
-
-     <div class="card">
-  <h2>Historique vétérinaire</h2>
-
-  <div class="form-grid">
-    <div>
-      <label for="vetFilterBird">Filtrer par oiseau</label>
-      <select id="vetFilterBird" onchange="renderVeterinaire()"></select>
-    </div>
-  </div>
-
-  <div id="listeVeterinaire"></div>
- </div> 
-</section>
-
-    <section id="section-inventaire" class="section hidden">
-  <div class="card">
-    <h2>Inventaire oiseaux présents sur site</h2>
-
-    <div class="actions">
-      <button class="btn info-btn" onclick="ouvrirInventaire()">Ouvrir inventaire</button>
-      <button class="btn warn-btn" onclick="imprimerInventaire()">Imprimer</button>
-      <button class="btn secondary-btn" onclick="partagerInventaire()">Partager</button>
-      <button class="btn" onclick="exportControle()">Exporter dossier contrôle</button>
-    </div>
-
-     <div id="inventaireZone"></div>
-    </div>
-   </section>  
-
-    <section id="section-stock" class="section hidden">
-      <div class="card">
-        <h2>Stock nourriture</h2>
-
-        <div class="form-grid">
-          <div>
-            <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
-            <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
-            <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
-          </div>
-
-          <div>
-            <label for="stockPoussin">Poussins disponibles (calculé)</label>
-            <input id="stockPoussin" type="number" readonly>
-          </div>
-
-          <div>
-            <label for="stockCaille">Caille</label>
-            <input id="stockCaille" type="number" min="0" placeholder="Caille">
-          </div>
-
-          <div>
-            <label for="stockPigeon">Pigeon</label>
-            <input id="stockPigeon" type="number" min="0" placeholder="Pigeon">
-          </div>
-
-          <div>
-            <label for="stockLapin">Lapin</label>
-            <input id="stockLapin" type="number" min="0" placeholder="Lapin">
-          </div>
-
-          <div>
-            <label for="stockPoisson">Poisson</label>
-            <input id="stockPoisson" type="number" min="0" placeholder="Poisson">
-          </div>
-
-          <div>
-            <label for="stockSouris">Souris</label>
-            <input id="stockSouris" type="number" min="0" placeholder="Souris">
-          </div>
-
-          <div>
-            <label for="stockCailleteau30gr">Cailleteau 30gr</label>
-            <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
-        </div>
-      </div>
-    </section>
-  </div>
-<section id="section-vacances" class="section hidden">
-  <div class="card">
-    <h2>Nourrissage vacances</h2>
-
-    <div class="actions" style="margin-bottom:12px;">
-      <button class="btn" onclick="remplirVacances()">Remplir automatiquement</button>
-      <button class="btn secondary-btn" onclick="window.print()">Imprimer</button>
-    </div>
-
-    <div id="tableVacances"></div>
-  </div>
-</section>
-
-<section id="section-entretien" class="section hidden">
-  <div class="card">
-    <h2>Nouvel entretien</h2>
-
-    <div class="form-grid">
-      <div>
-        <label for="entretienDate">Date</label>
-        <input id="entretienDate" type="date">
-      </div>
-
-      <div>
-        <label for="entretienType">Type d’entretien</label>
-        <select id="entretienType">
-          <option value="">Choisir</option>
-          <option value="Changement eau">Changement eau</option>
-          <option value="Nettoyage bac eau">Nettoyage bac eau</option>
-          <option value="Nettoyage espace oiseaux">Nettoyage espace oiseaux</option>
-          <option value="Désinfection">Désinfection</option>
-          <option value="Autre">Autre</option>
-        </select>
-      </div>
-
-      <div>
-        <label for="entretienZone">Zone</label>
-        <input id="entretienZone" placeholder="Zone concernée">
-      </div>
-    </div>
-
-    <label for="entretienDetails">Détails / remarques</label>
-    <textarea id="entretienDetails" placeholder="Détails"></textarea>
-
-    <div class="actions">
-      <button class="btn" onclick="ajouterEntretien()">Ajouter entretien</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Historique entretien</h2>
-    <div id="listeEntretien"></div>
-  </div>
-
- </section>
-
-  </main>
-</div>
-
-<script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js"></script>
 </body>
 </html>
