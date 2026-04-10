@@ -523,6 +523,15 @@ function partagerFicheOiseau(id) {
   texte += `Espèce : ${bird.espece || "-"}\n`;
   texte += `Sexe : ${bird.sexe || "-"}\n`;
   texte += `Âge : ${bird.age || "-"}\n`;
+  texte += `N° bague : ${bird.bague || "-"}\n`;
+  texte += `N° CITES : ${bird.cites || "-"}\n`;
+  texte += `Annexe : ${bird.annexe || "-"}\n`;
+  texte += `Date d'entrée : ${formatDateFR(bird.dateEntree || "") || "-"}\n`;
+  texte += `N° registre d'entrée : ${bird.registreEntree || "-"}\n`;
+  texte += `Statut : ${bird.statut || "-"}\n`;
+  texte += `Date de sortie : ${formatDateFR(bird.dateSortie || "") || "-"}\n`;
+  texte += `N° registre de sortie : ${bird.registreSortie || "-"}\n`;
+  texte += `Motif / remarque sortie : ${bird.motifSortie || "-"}\n`;
   texte += `Poids actuel : ${bird.poidsActuel || "-"} g\n`;
   texte += `Nourriture 1 : ${bird.nourritureHabituelle || "-"} (${bird.quantiteHabituelle || 0})\n`;
 
