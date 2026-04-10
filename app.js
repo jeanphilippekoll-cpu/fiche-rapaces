@@ -1413,30 +1413,30 @@ function renderInventaire() {
     `).join("");
 
   zone.innerHTML = `
-    <div class="feed-table-wrap">
-      <table class="feed-table">
-        <thead>
-          <tr>
-            <th>Statut</th>
-            <th>Date entrée</th>
-            <th>Registre entrée</th>
-            <th>Date sortie</th>
-            <th>Registre sortie</th>
-            <th>Nom</th>
-            <th>Espèce</th>
-            <th>Âge</th>
-            <th>Sexe</th>
-            <th>Annexe</th>
-            <th>Poids</th>
-            <th>Documents</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </div>
-  `;
+  <div class="feed-table-wrap">
+    <table class="feed-table">
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Espèce</th>
+          <th>Âge</th>
+          <th>Sexe</th>
+          <th>Annexe</th>
+          <th>Poids</th>
+          <th>Statut</th>
+          <th>Date entrée</th>
+          <th>Registre entrée</th>
+          <th>Date sortie</th>
+          <th>Registre sortie</th>
+          <th>Documents</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  </div>
+`;
 }
 
 function getInventaireHtml() {
