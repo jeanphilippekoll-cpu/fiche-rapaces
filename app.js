@@ -700,12 +700,21 @@ function openBirdSheet(id) {
           ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
         </div>
         <div>
-          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
-          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
-          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
-          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
-          <p><strong>Nourriture 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
-          <p><strong>Nourriture 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
+        <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
+<p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
+<p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
+<p><strong>N° bague :</strong> ${safe(bird.bague || "-")}</p>
+<p><strong>N° CITES :</strong> ${safe(bird.cites || "-")}</p>
+<p><strong>Annexe :</strong> ${safe(bird.annexe || "-")}</p>
+<p><strong>Date d'entrée :</strong> ${safe(formatDateFR(bird.dateEntree || "") || "-")}</p>
+<p><strong>N° registre d'entrée :</strong> ${safe(bird.registreEntree || "-")}</p>
+<p><strong>Statut :</strong> ${safe(bird.statut || "-")}</p>
+<p><strong>Date de sortie :</strong> ${safe(formatDateFR(bird.dateSortie || "") || "-")}</p>
+<p><strong>N° registre de sortie :</strong> ${safe(bird.registreSortie || "-")}</p>
+<p><strong>Motif / remarque sortie :</strong> ${safe(bird.motifSortie || "-")}</p>
+<p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
+<p><strong>Nourriture 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
+<p><strong>Nourriture 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>  
         </div>
       </div>
 
