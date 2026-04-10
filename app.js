@@ -813,14 +813,15 @@ function renderOiseaux() {
             <div class="bird-photo-placeholder">Pas de photo</div>
           `}
 
-          <div class="bird-meta">
+  <div class="bird-meta">
   <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
   <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
+  <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
   <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
   <div><span>Date d'entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
   <div><span>Registre entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
   <div><span>Statut</span><strong>${safe(oiseau.statut || "-")}</strong></div>
-</div>
+</div>       
 
 <div class="card-section">
   <h4>Entrée / sortie registre</h4>
@@ -830,8 +831,7 @@ function renderOiseaux() {
   <p><strong>Date de sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
   <p><strong>N° registre sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
   <p><strong>Motif / remarque :</strong> ${safe(oiseau.motifSortie || "-")}</p>
-  <p><strong>Bague :</strong> ${o.bague || "-"}</p>
-</div>
+  <p><strong>Bague :</strong> ${safe(oiseau.bague || "-")}</p>
 
           <div class="card-section">
             <h4>Notes</h4>
