@@ -1047,47 +1047,104 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const items = appData.nourrissage
-    .slice()
-    .sort((a, b) => {
-      const d = (b.date || "").localeCompare(a.date || "");
-      if (d !== 0) return d;
-      return (a.oiseau || "").localeCompare(b.oiseau || "");
-    });
+  const groupedByDateAndBird = {};
 
-  zone.innerHTML = `
-    <div class="feed-table-wrap">
-      <table class="feed-table">
-        <thead>
+  appData.nourrissage.forEach((item) => {
+    const date = item.date || "Sans date";
+    const oiseau = item.oiseau || "Sans oiseau";
+    const key = `${date}__${oiseau}`;
+
+    if (!groupedByDateAndBird[key]) {
+      groupedByDateAndBird[key] = {
+        date,
+        oiseau,
+        total: 0,
+        remarques: [],
+        aliments: {},
+        lignes: []
+      };
+    }
+
+    const qty = toNumber(item.quantite);
+    const nourriture = item.nourriture || "Inconnu";
+
+    groupedByDateAndBird[key].total += qty;
+    groupedByDateAndBird[key].aliments[nourriture] =
+      (groupedByDateAndBird[key].aliments[nourriture] || 0) + qty;
+
+    if (item.remarques && !groupedByDateAndBird[key].remarques.includes(item.remarques)) {
+      groupedByDateAndBird[key].remarques.push(item.remarques);
+    }
+
+    groupedByDateAndBird[key].lignes.push(item);
+  });
+
+  const groupedByDate = {};
+
+  Object.values(groupedByDateAndBird).forEach((entry) => {
+    if (!groupedByDate[entry.date]) groupedByDate[entry.date] = [];
+    groupedByDate[entry.date].push(entry);
+  });
+
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+  zone.innerHTML = sortedDates.map((date) => {
+    const rows = groupedByDate[date]
+      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
+      .map((entry) => {
+        const detailNourriture = Object.entries(entry.aliments)
+          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
+          .join(" | ");
+
+        const remarques = entry.remarques.length
+          ? entry.remarques.map((r) => safe(r)).join(" | ")
+          : "-";
+
+        const actions = entry.lignes.map((ligne) => `
+          <div style="margin-bottom:8px;padding:8px;border:1px solid rgba(96,76,46,0.12);border-radius:8px;background:#fff;">
+            <div style="margin-bottom:6px;font-size:13px;">
+              ${safe(ligne.nourriture || "")} x${safe(ligne.quantite || 0)}
+            </div>
+            <div class="small-actions">
+              <button class="btn secondary-btn" onclick="modifierNourrissage('${ligne.id}')">Modifier</button>
+              <button class="btn btn-danger" onclick="supprimerNourrissage('${ligne.id}')">Supprimer</button>
+            </div>
+          </div>
+        `).join("");
+
+        return `
           <tr>
-            <th>Date</th>
-            <th>Oiseau</th>
-            <th>Nourriture</th>
-            <th>Quantité</th>
-            <th>Remarques</th>
-            <th>Actions</th>
+            <td>${safe(entry.oiseau)}</td>
+            <td>${detailNourriture}</td>
+            <td>${safe(entry.total)}</td>
+            <td>${remarques}</td>
+            <td>${actions}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${items.map((item) => `
-            <tr>
-              <td>${safe(formatDateFR(item.date || ""))}</td>
-              <td>${safe(item.oiseau || "")}</td>
-              <td>${safe(item.nourriture || "")}</td>
-              <td>${safe(item.quantite || 0)}</td>
-              <td>${safe(item.remarques || "-")}</td>
-              <td>
-                <div class="small-actions">
-                  <button class="btn secondary-btn" onclick="modifierNourrissage('${item.id}')">Modifier</button>
-                  <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-                </div>
-              </td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+        `;
+      }).join("");
+
+    return `
+      <div class="card-section">
+        <h4>${safe(formatDateFR(date))}</h4>
+        <div class="feed-table-wrap">
+          <table class="feed-table">
+            <thead>
+              <tr>
+                <th>Oiseau</th>
+                <th>Nourriture donnée</th>
+                <th>Total du jour</th>
+                <th>Remarques</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function decrementStock(food, qty) {
