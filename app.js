@@ -253,6 +253,12 @@ function normalizeData(rapacesData, userData) {
     sexe: o.sexe || "",
     age: o.age || "",
     annexe: o.annexe || "",
+    dateEntree: o.dateEntree || "",
+    registreEntree: o.registreEntree || "",
+    statut: o.statut || "En place",
+    dateSortie: o.dateSortie || "",
+    registreSortie: o.registreSortie || "",
+    motifSortie: o.motifSortie || "",
     poidsActuel: o.poidsActuel ?? "",
     notes: o.notes || "",
     photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
@@ -334,6 +340,12 @@ function buildRapacesPayload() {
       sexe: o.sexe || "",
       age: o.age || "",
       annexe: o.annexe || "",
+      dateEntree: o.dateEntree || "",
+      registreEntree: o.registreEntree || "",
+      statut: o.statut || "En place",
+      dateSortie: o.dateSortie || "",
+      registreSortie: o.registreSortie || "",
+      motifSortie: o.motifSortie || "",
       poidsActuel: o.poidsActuel ?? "",
       notes: o.notes || "",
       nourritureHabituelle: o.nourritureHabituelle || "Poussin",
@@ -800,6 +812,19 @@ function renderOiseaux() {
   <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
   <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
   <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
+  <div><span>Date d'entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
+  <div><span>Registre entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
+  <div><span>Statut</span><strong>${safe(oiseau.statut || "-")}</strong></div>
+</div>
+
+<div class="card-section">
+  <h4>Entrée / sortie registre</h4>
+  <p><strong>Date d'entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
+  <p><strong>N° registre entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
+  <p><strong>Statut :</strong> ${safe(oiseau.statut || "-")}</p>
+  <p><strong>Date de sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
+  <p><strong>N° registre sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
+  <p><strong>Motif / remarque :</strong> ${safe(oiseau.motifSortie || "-")}</p>
 </div>
 
           <div class="card-section">
@@ -1357,7 +1382,7 @@ function renderInventaire() {
     return;
   }
 
-  const rows = appData.oiseaux
+  const rows = appData.oiseaux.filter((o) => (o.statut || "En place") === "En place")
     .slice()
     .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
     .map((oiseau) => `
@@ -1368,6 +1393,11 @@ function renderInventaire() {
         <td>${safe(oiseau.sexe || "")}</td>
         <td>${safe(oiseau.annexe || "-")}</td>
         <td>${safe(oiseau.poidsActuel || "")}</td>
+        <td>${safe(oiseau.statut || "-")}</td>
+        <td>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</td>
+        <td>${safe(oiseau.registreEntree || "-")}</td>
+        <td>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</td>
+        <td>${safe(oiseau.registreSortie || "-")}</td>   
         <td>
           ${
             safeArray(oiseau.documents).length
@@ -1387,6 +1417,11 @@ function renderInventaire() {
       <table class="feed-table">
         <thead>
           <tr>
+            <th>Statut</th>
+            <th>Date entrée</th>
+            <th>Registre entrée</th>
+            <th>Date sortie</th>
+            <th>Registre sortie</th>
             <th>Nom</th>
             <th>Espèce</th>
             <th>Âge</th>
@@ -1684,9 +1719,16 @@ function resetBirdForm() {
     "oiseauNotes",
     "oiseauHabitudeQty",
     "oiseauHabitudeQty2"
+    "oiseauDateEntree",
+    "oiseauRegistreEntree",
+    "oiseauDateSortie",
+    "oiseauRegistreSortie",
+    "oiseauMotifSortie",
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
+    const statutEl = document.getElementById("oiseauStatut");
+    if (statutEl) statutEl.value = "En place";
   });
 
   const food1 = document.getElementById("oiseauHabitudeFood");
@@ -1722,6 +1764,12 @@ async function ajouterOiseau() {
   const nourritureHabituelle2 = document.getElementById("oiseauHabitudeFood2")?.value || "";
   const quantiteHabituelle2 = toNumber(document.getElementById("oiseauHabitudeQty2")?.value || 0);
   const annexe = document.getElementById("oiseauAnnexe")?.value || "";
+  const dateEntree = document.getElementById("oiseauDateEntree")?.value || "";
+  const registreEntree = document.getElementById("oiseauRegistreEntree")?.value.trim() || "";
+  const statut = document.getElementById("oiseauStatut")?.value || "En place";
+  const dateSortie = document.getElementById("oiseauDateSortie")?.value || "";
+  const registreSortie = document.getElementById("oiseauRegistreSortie")?.value.trim() || "";
+  const motifSortie = document.getElementById("oiseauMotifSortie")?.value.trim() || "";
 
   const photoFile = document.getElementById("oiseauPhotoFile")?.files?.[0] || null;
   const docFiles = document.getElementById("oiseauDocFiles")?.files || null;
@@ -1774,6 +1822,17 @@ async function ajouterOiseau() {
       existingBird.quantiteHabituelle2 = quantiteHabituelle2;
       existingBird.photoUrl = photoUrl;
       existingBird.documents = documents;
+      existingBird.dateEntree = dateEntree;
+      existingBird.registreEntree = registreEntree;
+      existingBird.statut = statut;
+      existingBird.dateSortie = dateSortie;
+      existingBird.registreSortie = registreSortie;
+      existingBird.dateEntree = dateEntree;
+      existingBird.registreEntree = registreEntree;
+      existingBird.statut = statut;
+      existingBird.dateSortie = dateSortie;
+      existingBird.registreSortie = registreSortie;
+      existingBird.motifSortie = motifSortie;
 
       if (statusEl) statusEl.textContent = "Oiseau modifié";
     } else {
@@ -1830,6 +1889,12 @@ function modifierOiseau(id) {
   set("oiseauHabitudeFood2", bird.nourritureHabituelle2);
   set("oiseauHabitudeQty2", bird.quantiteHabituelle2);
   set("oiseauEditId", bird.id);
+  set("oiseauDateEntree", bird.dateEntree);
+  set("oiseauRegistreEntree", bird.registreEntree);
+  set("oiseauStatut", bird.statut || "En place");
+  set("oiseauDateSortie", bird.dateSortie);
+  set("oiseauRegistreSortie", bird.registreSortie);
+  set("oiseauMotifSortie", bird.motifSortie);
 
   const title = document.getElementById("oiseauFormTitle");
   const btn = document.getElementById("oiseauSubmitBtn");
