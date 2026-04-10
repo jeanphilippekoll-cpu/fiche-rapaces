@@ -248,28 +248,30 @@ function normalizeData(rapacesData, userData) {
   const veterinaireSource = safeArray(userData?.veterinaire || rapacesData?.veterinaire || []);
 
   const oiseaux = oiseauxSource.map((o, index) => ({
-    id: o.id || `oiseau_${index}_${makeId()}`,
-    nom: o.nom || "",
-    espece: o.espece || "",
-    sexe: o.sexe || "",
-    age: o.age || "",
-    annexe: o.annexe || "",
-    dateEntree: o.dateEntree || "",
-    registreEntree: o.registreEntree || "",
-    statut: o.statut || "En place",
-    dateSortie: o.dateSortie || "",
-    registreSortie: o.registreSortie || "",
-    motifSortie: o.motifSortie || "",
-    poidsActuel: o.poidsActuel ?? "",
-    notes: o.notes || "",
-    photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
-    documents: normalizeDocuments(o.documents),
-    historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
-    nourritureHabituelle: o.nourritureHabituelle || "Poussin",
-    quantiteHabituelle: toNumber(o.quantiteHabituelle),
-    nourritureHabituelle2: o.nourritureHabituelle2 || "",
-    quantiteHabituelle2: toNumber(o.quantiteHabituelle2)
-  }));
+  id: o.id || `oiseau_${index}_${makeId()}`,
+  nom: o.nom || "",
+  bague: o.bague || "",
+  cites: o.cites || "",
+  espece: o.espece || "",
+  sexe: o.sexe || "",
+  age: o.age || "",
+  annexe: o.annexe || "",
+  dateEntree: o.dateEntree || "",
+  registreEntree: o.registreEntree || "",
+  statut: o.statut || "En place",
+  dateSortie: o.dateSortie || "",
+  registreSortie: o.registreSortie || "",
+  motifSortie: o.motifSortie || "",
+  poidsActuel: o.poidsActuel ?? "",
+  notes: o.notes || "",
+  photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
+  documents: normalizeDocuments(o.documents),
+  historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
+  nourritureHabituelle: o.nourritureHabituelle || "Poussin",
+  quantiteHabituelle: toNumber(o.quantiteHabituelle),
+  nourritureHabituelle2: o.nourritureHabituelle2 || "",
+  quantiteHabituelle2: toNumber(o.quantiteHabituelle2)
+}));
 
   const pesees = peseesSource.map((e, index) => ({
     id: e.id || `pes_${index}_${makeId()}`,
@@ -331,39 +333,38 @@ function normalizeData(rapacesData, userData) {
 function buildRapacesPayload() {
   const oldBirds = safeArray(rawRapacesData?.oiseaux);
 
-  const oiseaux = appData.oiseaux.map((o) => {
-    const ancien = oldBirds.find((b) => (b?.id || b?.nom || "") === (o.id || o.nom || ""));
-    return {
-      ...ancien,
-      id: o.id,
-      nom: o.nom || "",
-      espece: o.espece || "",
-      sexe: o.sexe || "",
-      age: o.age || "",
-      annexe: o.annexe || "",
-      dateEntree: o.dateEntree || "",
-      registreEntree: o.registreEntree || "",
-      statut: o.statut || "En place",
-      dateSortie: o.dateSortie || "",
-      registreSortie: o.registreSortie || "",
-      motifSortie: o.motifSortie || "",
-      poidsActuel: o.poidsActuel ?? "",
-      notes: o.notes || "",
-      nourritureHabituelle: o.nourritureHabituelle || "Poussin",
-      quantiteHabituelle: toNumber(o.quantiteHabituelle),
-      nourritureHabituelle2: o.nourritureHabituelle2 || "",
-      quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
-      photo: {
-        ...(ancien?.photo || {}),
-        url: o.photoUrl || ""
-      },
-      documents: normalizeDocuments(o.documents),
-      historiquePoids: safeArray(o.historiquePoids).map((h) => ({
-        date: h?.date || "",
-        poids: h?.poids ?? ""
-      }))
-    };
-  });
+  return {
+  ...ancien,
+  id: o.id,
+  nom: o.nom || "",
+  bague: o.bague || "",
+  cites: o.cites || "",
+  espece: o.espece || "",
+  sexe: o.sexe || "",
+  age: o.age || "",
+  annexe: o.annexe || "",
+  dateEntree: o.dateEntree || "",
+  registreEntree: o.registreEntree || "",
+  statut: o.statut || "En place",
+  dateSortie: o.dateSortie || "",
+  registreSortie: o.registreSortie || "",
+  motifSortie: o.motifSortie || "",
+  poidsActuel: o.poidsActuel ?? "",
+  notes: o.notes || "",
+  nourritureHabituelle: o.nourritureHabituelle || "Poussin",
+  quantiteHabituelle: toNumber(o.quantiteHabituelle),
+  nourritureHabituelle2: o.nourritureHabituelle2 || "",
+  quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
+  photo: {
+    ...(ancien?.photo || {}),
+    url: o.photoUrl || ""
+  },
+  documents: normalizeDocuments(o.documents),
+  historiquePoids: safeArray(o.historiquePoids).map((h) => ({
+    date: h?.date || "",
+    poids: h?.poids ?? ""
+  }))
+};
 
   syncBoitesFromPoussins();
 
@@ -1653,21 +1654,21 @@ function resetBirdForm() {
   editingBirdId = null;
 
   [
-    "oiseauNom",
-    "oiseauEspece",
-    "oiseauSexe",
-    "oiseauAge",
-    "oiseauPoids",
-    "oiseauNotes",
-    "oiseauHabitudeQty",
-    "oiseauHabitudeQty2",
-    "oiseauDateEntree",
-    "oiseauRegistreEntree",
-    "oiseauDateSortie",
-    "oiseauRegistreSortie",
-    "oiseauMotifSortie",
-    "oiseauBague",
-    "oiseauCites",
+  "oiseauNom",
+  "oiseauBague",
+  "oiseauCites",
+  "oiseauEspece",
+  "oiseauSexe",
+  "oiseauAge",
+  "oiseauPoids",
+  "oiseauNotes",
+  "oiseauHabitudeQty",
+  "oiseauHabitudeQty2",
+  "oiseauDateEntree",
+  "oiseauRegistreEntree",
+  "oiseauDateSortie",
+  "oiseauRegistreSortie",
+  "oiseauMotifSortie",
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
@@ -1830,6 +1831,8 @@ function modifierOiseau(id) {
   };
 
   set("oiseauNom", bird.nom);
+  set("oiseauBague", bird.bague);
+  set("oiseauCites", bird.cites);
   set("oiseauEspece", bird.espece);
   set("oiseauSexe", bird.sexe);
   set("oiseauAge", bird.age);
@@ -1846,8 +1849,6 @@ function modifierOiseau(id) {
   set("oiseauDateSortie", bird.dateSortie);
   set("oiseauRegistreSortie", bird.registreSortie);
   set("oiseauMotifSortie", bird.motifSortie);
-  set("oiseauBague", bird.bague);
-  set("oiseauCites", bird.cites);
 
   const title = document.getElementById("oiseauFormTitle");
   const btn = document.getElementById("oiseauSubmitBtn");
