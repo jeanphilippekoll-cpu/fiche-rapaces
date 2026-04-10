@@ -817,6 +817,7 @@ function renderOiseaux() {
   <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
   <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
   <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
+  <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
   <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
   <div><span>Date d'entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
   <div><span>Registre entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
@@ -1405,12 +1406,15 @@ function renderInventaire() {
     return;
   }
 
-  const rows = appData.oiseaux.filter((o) => (o.statut || "En place") === "En place")
+  const rows = appData.oiseaux
+    .filter((o) => (o.statut || "En place") === "En place")
     .slice()
     .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
     .map((oiseau) => `
       <tr>
         <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.bague || "-")}</td>
+        <td>${safe(oiseau.cites || "-")}</td>
         <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.age || "")}</td>
         <td>${safe(oiseau.sexe || "")}</td>
@@ -1420,8 +1424,7 @@ function renderInventaire() {
         <td>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</td>
         <td>${safe(oiseau.registreEntree || "-")}</td>
         <td>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</td>
-        <td>${safe(oiseau.registreSortie || "-")}</td>  
-        <td>${safe(oiseau.bague || "-")}</td>
+        <td>${safe(oiseau.registreSortie || "-")}</td>
         <td>
           ${
             safeArray(oiseau.documents).length
@@ -1437,108 +1440,23 @@ function renderInventaire() {
     `).join("");
 
   zone.innerHTML = `
-  <div class="feed-table-wrap">
-    <table class="feed-table">
-      <thead>
-        <tr>
-          <th>Nom</th>
-          <th>Bague</th>
-          <th>Espèce</th>
-          <th>Âge</th>
-          <th>Sexe</th>
-          <th>Annexe</th>
-          <th>Poids</th>
-          <th>Statut</th>
-          <th>Date entrée</th>
-          <th>Registre entrée</th>
-          <th>Date sortie</th>
-          <th>Registre sortie</th>
-          <th>Documents</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rows}
-      </tbody>
-    </table>
-  </div>
-`;
-}
-
-function getInventaireHtml() {
-  const rows = appData.oiseaux
-    .slice()
-    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
-    .map((oiseau) => `
-      <tr>
-        <td>${safe(oiseau.nom || "")}</td>
-        <td>${safe(oiseau.espece || "")}</td>
-        <td>${safe(oiseau.age || "")}</td>
-        <td>${safe(oiseau.sexe || "")}</td>
-        <td>${safe(oiseau.annexe || "-")}</td>
-        <td>${safe(oiseau.poidsActuel || "")}</td>
-        <td>
-          ${
-            safeArray(oiseau.documents).length
-              ? safeArray(oiseau.documents).map((doc) => `
-                  <div style="margin-bottom:8px;">
-                    <div>${safe(doc.name)}</div>
-                    <div style="font-size:12px;word-break:break-all;color:#666;">${safe(doc.url)}</div>
-                  </div>
-                `).join("")
-              : `Aucun`
-          }
-        </td>
-      </tr>
-    `).join("");
-
-  return `
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <title>Inventaire oiseaux</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;background:#faf7f2}
-        h1{margin-bottom:8px}
-        .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-        .btn{
-          display:inline-block;
-          padding:12px 16px;
-          border:none;
-          border-radius:10px;
-          text-decoration:none;
-          font-weight:700;
-          cursor:pointer;
-          background:#8aa36b;
-          color:#fff;
-        }
-        table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}
-        th,td{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}
-        th{background:#f2e8d4}
-        @media print{
-          .actions{display:none}
-          body{padding:10px;background:#fff}
-        }
-      </style>
-    </head>
-    <body>
-      <div class="actions">
-        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-      </div>
-
-      <h1>Inventaire oiseaux présents sur site</h1>
-      <p>Date : ${safe(formatDateFR(todayStr()))}</p>
-
-      <table>
+    <div class="feed-table-wrap">
+      <table class="feed-table">
         <thead>
           <tr>
             <th>Nom</th>
+            <th>N° bague</th>
+            <th>N° CITES</th>
             <th>Espèce</th>
             <th>Âge</th>
             <th>Sexe</th>
             <th>Annexe</th>
             <th>Poids</th>
+            <th>Statut</th>
+            <th>Date entrée</th>
+            <th>Registre entrée</th>
+            <th>Date sortie</th>
+            <th>Registre sortie</th>
             <th>Documents</th>
           </tr>
         </thead>
@@ -1546,8 +1464,7 @@ function getInventaireHtml() {
           ${rows}
         </tbody>
       </table>
-    </body>
-    </html>
+    </div>
   `;
 }
 
@@ -1749,6 +1666,8 @@ function resetBirdForm() {
     "oiseauDateSortie",
     "oiseauRegistreSortie",
     "oiseauMotifSortie",
+    "oiseauBague",
+    "oiseauCites",
   ].forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.value = "";
@@ -1780,6 +1699,7 @@ async function ajouterOiseau() {
   if (!nom) return;
 
   const bague = document.getElementById("oiseauBague")?.value.trim() || "";
+  const cites = document.getElementById("oiseauCites")?.value.trim() || "";
   const espece = document.getElementById("oiseauEspece")?.value.trim() || "";
   const sexe = document.getElementById("oiseauSexe")?.value.trim() || "";
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
@@ -1837,6 +1757,7 @@ async function ajouterOiseau() {
     if (editingBirdId && existingBird) {
       existingBird.nom = nom;
       existingBird.bague = bague;
+      existingBird.cites = cites;
       existingBird.espece = espece;
       existingBird.sexe = sexe;
       existingBird.age = age;
@@ -1862,6 +1783,7 @@ async function ajouterOiseau() {
         id: makeId(),
         nom,
         bague,
+        cites,
         espece,
         sexe,
         age,
@@ -1924,6 +1846,8 @@ function modifierOiseau(id) {
   set("oiseauDateSortie", bird.dateSortie);
   set("oiseauRegistreSortie", bird.registreSortie);
   set("oiseauMotifSortie", bird.motifSortie);
+  set("oiseauBague", bird.bague);
+  set("oiseauCites", bird.cites);
 
   const title = document.getElementById("oiseauFormTitle");
   const btn = document.getElementById("oiseauSubmitBtn");
