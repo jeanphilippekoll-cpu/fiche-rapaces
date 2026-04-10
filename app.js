@@ -1718,7 +1718,7 @@ function resetBirdForm() {
     "oiseauPoids",
     "oiseauNotes",
     "oiseauHabitudeQty",
-    "oiseauHabitudeQty2"
+    "oiseauHabitudeQty2",
     "oiseauDateEntree",
     "oiseauRegistreEntree",
     "oiseauDateSortie",
