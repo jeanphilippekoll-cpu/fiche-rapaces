@@ -46,6 +46,7 @@ let rawRapacesData = {};
 let rawUserData = {};
 let editingBirdId = null;
 let autoSaveTimer = null;
+let editingFeedId = null;
 
 let appData = {
   oiseaux: [],
@@ -1046,87 +1047,47 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const groupedByDateAndBird = {};
+  const items = appData.nourrissage
+    .slice()
+    .sort((a, b) => {
+      const d = (b.date || "").localeCompare(a.date || "");
+      if (d !== 0) return d;
+      return (a.oiseau || "").localeCompare(b.oiseau || "");
+    });
 
-  appData.nourrissage.forEach((item) => {
-    const date = item.date || "Sans date";
-    const oiseau = item.oiseau || "Sans oiseau";
-    const key = `${date}__${oiseau}`;
-
-    if (!groupedByDateAndBird[key]) {
-      groupedByDateAndBird[key] = {
-        date,
-        oiseau,
-        total: 0,
-        remarques: [],
-        aliments: {}
-      };
-    }
-
-    const qty = toNumber(item.quantite);
-    const nourriture = item.nourriture || "Inconnu";
-
-    groupedByDateAndBird[key].total += qty;
-    groupedByDateAndBird[key].aliments[nourriture] =
-      (groupedByDateAndBird[key].aliments[nourriture] || 0) + qty;
-
-    if (item.remarques && !groupedByDateAndBird[key].remarques.includes(item.remarques)) {
-      groupedByDateAndBird[key].remarques.push(item.remarques);
-    }
-  });
-
-  const groupedByDate = {};
-
-  Object.values(groupedByDateAndBird).forEach((entry) => {
-    if (!groupedByDate[entry.date]) groupedByDate[entry.date] = [];
-    groupedByDate[entry.date].push(entry);
-  });
-
-  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
-
-  zone.innerHTML = sortedDates.map((date) => {
-    const rows = groupedByDate[date]
-      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
-      .map((entry) => {
-        const detailNourriture = Object.entries(entry.aliments)
-          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
-          .join(" | ");
-
-        const remarques = entry.remarques.length
-          ? entry.remarques.map((r) => safe(r)).join(" | ")
-          : "-";
-
-        return `
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
           <tr>
-            <td>${safe(entry.oiseau)}</td>
-            <td>${detailNourriture}</td>
-            <td>${safe(entry.total)}</td>
-            <td>${remarques}</td>
+            <th>Date</th>
+            <th>Oiseau</th>
+            <th>Nourriture</th>
+            <th>Quantité</th>
+            <th>Remarques</th>
+            <th>Actions</th>
           </tr>
-        `;
-      }).join("");
-
-    return `
-      <div class="card-section">
-        <h4>${safe(formatDateFR(date))}</h4>
-        <div class="feed-table-wrap">
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Oiseau</th>
-                <th>Nourriture donnée</th>
-                <th>Total du jour</th>
-                <th>Remarques</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }).join("");
+        </thead>
+        <tbody>
+          ${items.map((item) => `
+            <tr>
+              <td>${safe(formatDateFR(item.date || ""))}</td>
+              <td>${safe(item.oiseau || "")}</td>
+              <td>${safe(item.nourriture || "")}</td>
+              <td>${safe(item.quantite || 0)}</td>
+              <td>${safe(item.remarques || "-")}</td>
+              <td>
+                <div class="small-actions">
+                  <button class="btn secondary-btn" onclick="modifierNourrissage('${item.id}')">Modifier</button>
+                  <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function decrementStock(food, qty) {
@@ -1997,6 +1958,12 @@ function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
 
+  if (editingFeedId) {
+  const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
+  if (ancien) restoreStockFromDeletedFeed(ancien);
+  appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
+  editingFeedId = null;
+}
   if (!appData.oiseaux.length) return;
 
   const lignes = [];
@@ -2162,6 +2129,40 @@ function supprimerDocument(id) {
   triggerAutoSave();
 }
 
+function modifierNourrissage(id) {
+  const item = appData.nourrissage.find((n) => n.id === id);
+  if (!item) return;
+
+  editingFeedId = id;
+
+  const feedDate = document.getElementById("feedDate");
+  const feedNote = document.getElementById("feedNote");
+
+  if (feedDate) feedDate.value = item.date || "";
+  if (feedNote) feedNote.value = item.remarques || "";
+
+  const oiseau = appData.oiseaux.find(
+    (o) => (o.nom || "").trim().toLowerCase() === (item.oiseau || "").trim().toLowerCase()
+  );
+
+  if (oiseau) {
+    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
+    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
+    const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
+    const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
+
+    if (food1) food1.value = item.nourriture || "Poussin";
+    if (qty1) qty1.value = item.quantite || "";
+
+    if (food2) food2.value = "";
+    if (qty2) qty2.value = "";
+  }
+
+  if (statusEl) statusEl.textContent = `Modification du nourrissage de ${item.oiseau}`;
+  showSection("nourrissage");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function supprimerNourrissage(id) {
   const found = appData.nourrissage.find((n) => n.id === id);
   if (found) restoreStockFromDeletedFeed(found);
@@ -2294,6 +2295,7 @@ window.ajouterSuiviVeterinaire = ajouterSuiviVeterinaire;
 window.supprimerOiseau = supprimerOiseau;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
+window.modifierNourrissage = modifierNourrissage;
 window.supprimerSuiviVeterinaire = supprimerSuiviVeterinaire;
 window.quickFeed = quickFeed;
 window.rationHabituelleTerrain = rationHabituelleTerrain;
