@@ -425,7 +425,11 @@ function buildUserPayload() {
 
 function showSection(section) {
   document.querySelectorAll(".section").forEach((el) => el.classList.add("hidden"));
-  document.querySelectorAll(".nav button").forEach((btn) => btn.classList.remove("active"));
+
+  document.querySelectorAll(".nav button, .sidebar button").forEach((btn) => {
+    btn.classList.remove("active");
+  });
+
   document.getElementById(`section-${section}`)?.classList.remove("hidden");
   document.getElementById(`btn-${section}`)?.classList.add("active");
 
