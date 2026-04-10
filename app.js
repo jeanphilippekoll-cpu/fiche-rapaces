@@ -830,6 +830,7 @@ function renderOiseaux() {
   <p><strong>Date de sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
   <p><strong>N° registre sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
   <p><strong>Motif / remarque :</strong> ${safe(oiseau.motifSortie || "-")}</p>
+  <p><strong>Bague :</strong> ${o.bague || "-"}</p>
 </div>
 
           <div class="card-section">
@@ -1419,7 +1420,8 @@ function renderInventaire() {
         <td>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</td>
         <td>${safe(oiseau.registreEntree || "-")}</td>
         <td>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</td>
-        <td>${safe(oiseau.registreSortie || "-")}</td>   
+        <td>${safe(oiseau.registreSortie || "-")}</td>  
+        <td>${o.bague || "-"}</td>
         <td>
           ${
             safeArray(oiseau.documents).length
@@ -1451,6 +1453,7 @@ function renderInventaire() {
           <th>Date sortie</th>
           <th>Registre sortie</th>
           <th>Documents</th>
+          <th>Bague</th>
         </tr>
       </thead>
       <tbody>
@@ -1776,6 +1779,7 @@ async function ajouterOiseau() {
   const nom = document.getElementById("oiseauNom")?.value.trim() || "";
   if (!nom) return;
 
+  const bague = document.getElementById("oiseauBague")?.value.trim() || "";
   const espece = document.getElementById("oiseauEspece")?.value.trim() || "";
   const sexe = document.getElementById("oiseauSexe")?.value.trim() || "";
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
@@ -1832,6 +1836,7 @@ async function ajouterOiseau() {
 
     if (editingBirdId && existingBird) {
       existingBird.nom = nom;
+      existingBird.bague = bague;
       existingBird.espece = espece;
       existingBird.sexe = sexe;
       existingBird.age = age;
@@ -1849,32 +1854,34 @@ async function ajouterOiseau() {
       existingBird.statut = statut;
       existingBird.dateSortie = dateSortie;
       existingBird.registreSortie = registreSortie;
-      existingBird.dateEntree = dateEntree;
-      existingBird.registreEntree = registreEntree;
-      existingBird.statut = statut;
-      existingBird.dateSortie = dateSortie;
-      existingBird.registreSortie = registreSortie;
       existingBird.motifSortie = motifSortie;
 
       if (statusEl) statusEl.textContent = "Oiseau modifié";
     } else {
-     appData.oiseaux.unshift({
-      id: makeId(),
-      nom,
-      espece,
-      sexe,
-      age,
-      annexe,
-      poidsActuel,
-      notes,
-      nourritureHabituelle,
-      quantiteHabituelle,
-      nourritureHabituelle2,
-      quantiteHabituelle2,
-      photoUrl,
-      documents,
-      historiquePoids: []
-    });
+      appData.oiseaux.unshift({
+        id: makeId(),
+        nom,
+        bague,
+        espece,
+        sexe,
+        age,
+        annexe,
+        dateEntree,
+        registreEntree,
+        statut,
+        dateSortie,
+        registreSortie,
+        motifSortie,
+        poidsActuel,
+        notes,
+        nourritureHabituelle,
+        quantiteHabituelle,
+        nourritureHabituelle2,
+        quantiteHabituelle2,
+        photoUrl,
+        documents,
+        historiquePoids: []
+      });
 
       if (statusEl) statusEl.textContent = "Oiseau ajouté";
     }
