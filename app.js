@@ -1421,7 +1421,7 @@ function renderInventaire() {
         <td>${safe(oiseau.registreEntree || "-")}</td>
         <td>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</td>
         <td>${safe(oiseau.registreSortie || "-")}</td>  
-        <td>${o.bague || "-"}</td>
+        <td>${safe(oiseau.bague || "-")}</td>
         <td>
           ${
             safeArray(oiseau.documents).length
@@ -1442,6 +1442,7 @@ function renderInventaire() {
       <thead>
         <tr>
           <th>Nom</th>
+          <th>Bague</th>
           <th>Espèce</th>
           <th>Âge</th>
           <th>Sexe</th>
@@ -1453,7 +1454,6 @@ function renderInventaire() {
           <th>Date sortie</th>
           <th>Registre sortie</th>
           <th>Documents</th>
-          <th>Bague</th>
         </tr>
       </thead>
       <tbody>
