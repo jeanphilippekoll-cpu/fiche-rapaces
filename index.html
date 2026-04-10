@@ -837,10 +837,7 @@
 
 /* bouton actif */
 .nav button.active {
-  color: #2b241b !important;
-  transform: none;
-  box-shadow: 0 8px 18px rgba(75,57,30,0.12);
-  outline: 2px solid rgba(61,49,35,0.12);
+  color: #ffffff !important;
 }
 
 /* mobile / tablette */
@@ -1094,6 +1091,46 @@ h2 {
 }
 .sidebar button {
   color: #2b241b;
+  font-weight: 700;
+}
+/* ===== BOUTON ACTIF SIDEBAR : FORCÉ ET LISIBLE ===== */
+.sidebar button.active,
+.sidebar button.active#btn-accueil,
+.sidebar button.active#btn-oiseaux,
+.sidebar button.active#btn-pesee,
+.sidebar button.active#btn-documents,
+.sidebar button.active#btn-nourrissage,
+.sidebar button.active#btn-terrain,
+.sidebar button.active#btn-veterinaire,
+.sidebar button.active#btn-inventaire,
+.sidebar button.active#btn-stock,
+.sidebar button.active#btn-vacances,
+.sidebar button.active#btn-entretien {
+  background: #6f8f52 !important;
+  color: #ffffff !important;
+  border-left: 6px solid #4f6739 !important;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.14) !important;
+  outline: none !important;
+}
+
+.sidebar button.active:hover,
+.sidebar button.active#btn-accueil:hover,
+.sidebar button.active#btn-oiseaux:hover,
+.sidebar button.active#btn-pesee:hover,
+.sidebar button.active#btn-documents:hover,
+.sidebar button.active#btn-nourrissage:hover,
+.sidebar button.active#btn-terrain:hover,
+.sidebar button.active#btn-veterinaire:hover,
+.sidebar button.active#btn-inventaire:hover,
+.sidebar button.active#btn-stock:hover,
+.sidebar button.active#btn-vacances:hover,
+.sidebar button.active#btn-entretien:hover {
+  background: #6f8f52 !important;
+  color: #ffffff !important;
+}
+
+.sidebar button {
+  color: #2b241b !important;
   font-weight: 700;
 }
 }
