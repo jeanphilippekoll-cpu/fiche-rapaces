@@ -1599,6 +1599,7 @@ function renderAll() {
   renderNourrissage();
   renderVeterinaire();
   renderInventaire();
+  renderEntretien();
   fillStockForm();
 }
 
