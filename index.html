@@ -734,6 +734,135 @@
   background: #fbe9e7;
   border-left: 6px solid #f44336;
 }
+/* ===== NAVIGATION PLUS LISIBLE ET PLUS PRO ===== */
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 18px 0 28px;
+}
+
+.nav button {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  transition: 0.2s ease;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.08);
+  border-left: 6px solid transparent;
+  text-align: center;
+}
+
+.nav button:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+/* couleur de base si jamais */
+.nav button {
+  background: #efe6d1;
+  color: #3d3123;
+}
+
+/* Accueil */
+#btn-accueil {
+  background: #f5efe2;
+  border-left-color: #8c7a5b;
+}
+
+/* Oiseaux */
+#btn-oiseaux {
+  background: #e5f3e4;
+  border-left-color: #5c9b5c;
+}
+
+/* Pesée */
+#btn-pesee {
+  background: #e3eef9;
+  border-left-color: #5b8fc7;
+}
+
+/* Documents */
+#btn-documents {
+  background: #fff0dc;
+  border-left-color: #d08a2f;
+}
+
+/* Nourrissage */
+#btn-nourrissage {
+  background: #fbe9dd;
+  border-left-color: #c77736;
+}
+
+/* Terrain */
+#btn-terrain {
+  background: #f4e7cf;
+  border-left-color: #b18b3d;
+}
+
+/* Suivi veto */
+#btn-veterinaire {
+  background: #e3f0ef;
+  border-left-color: #5f9a99;
+}
+
+/* Inventaire */
+#btn-inventaire {
+  background: #e8f4e8;
+  border-left-color: #6aa56a;
+}
+
+/* Vacances */
+#btn-vacances {
+  background: #f8e5ef;
+  border-left-color: #b06793;
+}
+
+/* Entretien */
+#btn-entretien {
+  background: #ece7f6;
+  border-left-color: #7f69b3;
+}
+
+/* Stock */
+#btn-stock {
+  background: #f7eadf;
+  border-left-color: #b88257;
+}
+
+/* bouton actif */
+.nav button.active {
+  color: #2b241b !important;
+  transform: none;
+  box-shadow: 0 8px 18px rgba(75,57,30,0.12);
+  outline: 2px solid rgba(61,49,35,0.12);
+}
+
+/* mobile / tablette */
+@media (max-width: 900px) {
+  .nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav button {
+    min-height: 52px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav {
+    grid-template-columns: 1fr;
+  }
+
+  .nav button {
+    width: 100%;
+  }
+}
   </style>
 </head>
 <body>
