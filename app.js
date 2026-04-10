@@ -2139,6 +2139,80 @@ function rationHabituelleTerrain(id) {
   }
 }
 
+function ajouterEntretien() {
+  const date = document.getElementById("entretienDate")?.value || todayStr();
+  const type = document.getElementById("entretienType")?.value || "";
+  const zone = document.getElementById("entretienZone")?.value.trim() || "";
+  const details = document.getElementById("entretienDetails")?.value.trim() || "";
+
+  if (!type) {
+    alert("Choisis un type d'entretien.");
+    return;
+  }
+
+  appData.entretien.unshift({
+    id: makeId(),
+    date,
+    type,
+    zone,
+    details
+  });
+
+  const entretienDate = document.getElementById("entretienDate");
+  const entretienType = document.getElementById("entretienType");
+  const entretienZone = document.getElementById("entretienZone");
+  const entretienDetails = document.getElementById("entretienDetails");
+
+  if (entretienDate) entretienDate.value = todayStr();
+  if (entretienType) entretienType.value = "";
+  if (entretienZone) entretienZone.value = "";
+  if (entretienDetails) entretienDetails.value = "";
+
+  renderEntretien();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Entretien ajouté";
+}
+
+function supprimerEntretien(id) {
+  appData.entretien = safeArray(appData.entretien).filter((e) => e.id !== id);
+  renderEntretien();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Entretien supprimé";
+}
+
+function renderEntretien() {
+  const zone = document.getElementById("listeEntretien");
+  if (!zone) return;
+
+  if (!safeArray(appData.entretien).length) {
+    zone.innerHTML = `<p class="muted-line">Aucun entretien enregistré.</p>`;
+    return;
+  }
+
+  const sorted = safeArray(appData.entretien)
+    .slice()
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  zone.innerHTML = `
+    <div class="list-grid">
+      ${sorted.map((item) => `
+        <div class="item">
+          <p><strong>Date :</strong> ${safe(formatDateFR(item.date || ""))}</p>
+          <p><strong>Type :</strong> ${safe(item.type || "")}</p>
+          <p><strong>Zone :</strong> ${safe(item.zone || "-")}</p>
+          <p><strong>Détails :</strong> ${safe(item.details || "-")}</p>
+
+          <div class="small-actions">
+            <button class="btn btn-danger" onclick="supprimerEntretien('${item.id}')">Supprimer</button>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
 window.showSection = showSection;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
@@ -2160,15 +2234,16 @@ window.rationHabituelleTerrain = rationHabituelleTerrain;
 window.openBirdSheet = openBirdSheet;
 window.checkPin = checkPin;
 window.partagerFicheOiseau = partagerFicheOiseau;
-window.ouvrirInventaire = ouvrirInventaire;
+window.ajouterEntretien = ajouterEntretien;
+window.supprimerEntretien = supprimerEntretien;
 window.imprimerInventaire = imprimerInventaire;
 window.partagerInventaire = partagerInventaire;
 window.renderVeterinaire = renderVeterinaire;
 window.exportControle = exportControle;
 window.remplirVacances = remplirVacances;
+
 window.partagerFicheOiseau = partagerFicheOiseau;
-window.ajouterEntretien = ajouterEntretien;
-window.supprimerEntretien = supprimerEntretien;
+window.ouvrirInventaire = ouvrirInventaire;
 
 function ouvrirFicheOiseau(id) {
   showSection("oiseaux");
