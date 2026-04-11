@@ -609,48 +609,22 @@ function openBirdSheet(id) {
     `).join("");
 
   const vetBlocks = birdVet.map((v) => `
-    <div style="border:1px solid #ddd;border-radius:10px;padding:12px;margin-top:10px;">
+    <div class="print-block">
       <p><strong>Date :</strong> ${safe(formatDateFR(v.date))}</p>
-      <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire)}</p>
-      <p><strong>Motif :</strong> ${safe(v.motif)}</p>
-      <p><strong>Diagnostic :</strong> ${safe(v.diagnostic)}</p>
-      <p><strong>Traitement :</strong> ${safe(v.traitement)}</p>
-      <p><strong>Protocole :</strong> ${safe(v.protocole)}</p>
-      <p><strong>Observations :</strong> ${safe(v.observations)}</p>
-      ${
-        safeArray(v.fichiers).length
-          ? `
-            <div style="display:grid;gap:8px;margin-top:10px;">
-              ${safeArray(v.fichiers).map((f) => `
-                <div style="border:1px solid #ddd;border-radius:8px;padding:10px;">
-                  <div style="font-weight:700;margin-bottom:8px;">${safe(f.name)}</div>
-                  <a href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer"
-                     style="display:inline-block;padding:10px 14px;border-radius:8px;background:#7aa7a6;color:#fff;text-decoration:none;font-weight:700;">
-                    Ouvrir le fichier
-                  </a>
-                  <div style="margin-top:8px;font-size:12px;word-break:break-all;color:#666;">${safe(f.url)}</div>
-                </div>
-              `).join("")}
-            </div>
-          `
-          : `<p>Aucun fichier.</p>`
-      }
+      <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire || "-")}</p>
+      <p><strong>Motif :</strong> ${safe(v.motif || "-")}</p>
+      <p><strong>Diagnostic :</strong> ${safe(v.diagnostic || "-")}</p>
+      <p><strong>Traitement :</strong> ${safe(v.traitement || "-")}</p>
+      <p><strong>Protocole :</strong> ${safe(v.protocole || "-")}</p>
+      <p><strong>Observations :</strong> ${safe(v.observations || "-")}</p>
     </div>
   `).join("");
 
   const docsRows = safeArray(bird.documents)
     .map((doc) => `
-      <li style="margin-bottom:14px;">
-        <div style="font-weight:700;">${safe(doc.name)}</div>
-        <div style="margin-top:8px;">
-          <a href="${safeAttr(doc.url)}" target="_blank" rel="noopener noreferrer"
-             style="display:inline-block;padding:10px 14px;border-radius:8px;background:#8aa36b;color:#fff;text-decoration:none;font-weight:700;">
-            Ouvrir le document
-          </a>
-        </div>
-        <div style="margin-top:8px;font-size:12px;word-break:break-all;color:#666;">
-          ${safe(doc.url)}
-        </div>
+      <li>
+        <strong>${safe(doc.name)}</strong><br>
+        <span style="font-size:12px;color:#666;">${safe(doc.url)}</span>
       </li>
     `)
     .join("");
@@ -669,16 +643,68 @@ function openBirdSheet(id) {
       <title>Fiche ${safe(bird.nom)}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;line-height:1.45;background:#faf7f2}
-        h1,h2{margin-bottom:8px}
-        .top{display:flex;gap:24px;align-items:flex-start;margin-bottom:18px;flex-wrap:wrap}
-        img{max-width:280px;border-radius:12px}
-        table{width:100%;border-collapse:collapse;margin-top:12px}
-        th,td{border:1px solid #ccc;padding:8px;text-align:left;vertical-align:top}
-        th{background:#f2f2f2}
-        .box{margin-top:18px;padding:14px;border:1px solid #ddd;border-radius:10px;background:#fff}
-        ul{margin:8px 0 0 20px}
-        .actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+        body{
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111;
+          padding:24px;
+          line-height:1.45;
+          background:#fff;
+        }
+        h1,h2{
+          margin-bottom:8px;
+        }
+        .top{
+          display:flex;
+          gap:24px;
+          align-items:flex-start;
+          margin-bottom:18px;
+          flex-wrap:wrap;
+        }
+        img{
+          max-width:260px;
+          border-radius:12px;
+          border:1px solid #ccc;
+        }
+        .info-box{
+          flex:1;
+          min-width:280px;
+        }
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:12px;
+        }
+        th,td{
+          border:1px solid #ccc;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+        th{
+          background:#f2f2f2;
+        }
+        .box{
+          margin-top:18px;
+          padding:14px;
+          border:1px solid #ddd;
+          border-radius:10px;
+          background:#fff;
+        }
+        .print-block{
+          border:1px solid #ddd;
+          border-radius:10px;
+          padding:12px;
+          margin-top:10px;
+        }
+        ul{
+          margin:8px 0 0 20px;
+        }
+        .actions{
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          margin-bottom:18px;
+        }
         .btn{
           display:inline-block;
           padding:12px 16px;
@@ -687,19 +713,20 @@ function openBirdSheet(id) {
           text-decoration:none;
           font-weight:700;
           cursor:pointer;
+          background:#8aa36b;
+          color:#fff;
         }
-        .btn-print{background:#8aa36b;color:#fff;}
-        .btn-share{background:#7aa7a6;color:#fff;}
         @media print{
           .actions{display:none}
-          body{padding:10px;background:#fff}
+          body{padding:10px}
+          .box{break-inside:avoid}
+          .print-block{break-inside:avoid}
         }
       </style>
     </head>
     <body>
       <div class="actions">
-        <button class="btn btn-print" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
-        <button class="btn btn-share" onclick="navigator.clipboard.writeText(window.location.href).catch(()=>{}); alert('Pour partager sur le terrain : utilise le bouton Partager dans l’application principale.')">Info partage</button>
+        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
       </div>
 
       <h1>Fiche oiseau : ${safe(bird.nom)}</h1>
@@ -708,23 +735,28 @@ function openBirdSheet(id) {
         <div>
           ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
         </div>
-        <div>
-        <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
-<p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
-<p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
-<p><strong>N° bague :</strong> ${safe(bird.bague || "-")}</p>
-<p><strong>N° CITES :</strong> ${safe(bird.cites || "-")}</p>
-<p><strong>Annexe :</strong> ${safe(bird.annexe || "-")}</p>
-<p><strong>Date d'entrée :</strong> ${safe(formatDateFR(bird.dateEntree || "") || "-")}</p>
-<p><strong>N° registre d'entrée :</strong> ${safe(bird.registreEntree || "-")}</p>
-<p><strong>Statut :</strong> ${safe(bird.statut || "-")}</p>
-<p><strong>Date de sortie :</strong> ${safe(formatDateFR(bird.dateSortie || "") || "-")}</p>
-<p><strong>N° registre de sortie :</strong> ${safe(bird.registreSortie || "-")}</p>
-<p><strong>Motif / remarque sortie :</strong> ${safe(bird.motifSortie || "-")}</p>
-<p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
-<p><strong>Nourriture 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
-<p><strong>Nourriture 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>  
+
+        <div class="info-box">
+          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
+          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
+          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
+          <p><strong>N° bague :</strong> ${safe(bird.bague || "-")}</p>
+          <p><strong>N° CITES :</strong> ${safe(bird.cites || "-")}</p>
+          <p><strong>Annexe :</strong> ${safe(bird.annexe || "-")}</p>
+          <p><strong>Date d'entrée :</strong> ${safe(formatDateFR(bird.dateEntree || "") || "-")}</p>
+          <p><strong>N° registre d'entrée :</strong> ${safe(bird.registreEntree || "-")}</p>
+          <p><strong>Statut :</strong> ${safe(bird.statut || "-")}</p>
+          <p><strong>Date de sortie :</strong> ${safe(formatDateFR(bird.dateSortie || "") || "-")}</p>
+          <p><strong>N° registre de sortie :</strong> ${safe(bird.registreSortie || "-")}</p>
+          <p><strong>Motif / remarque sortie :</strong> ${safe(bird.motifSortie || "-")}</p>
+          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
         </div>
+      </div>
+
+      <div class="box">
+        <h2>Alimentation habituelle</h2>
+        <p><strong>Nourriture 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
+        <p><strong>Nourriture 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
       </div>
 
       <div class="box">
@@ -1084,9 +1116,7 @@ function renderNourrissageHistory() {
         date,
         oiseau,
         total: 0,
-        remarques: [],
-        aliments: {},
-        lignes: []
+        aliments: {}
       };
     }
 
@@ -1096,12 +1126,6 @@ function renderNourrissageHistory() {
     groupedByDateAndBird[key].total += qty;
     groupedByDateAndBird[key].aliments[nourriture] =
       (groupedByDateAndBird[key].aliments[nourriture] || 0) + qty;
-
-    if (item.remarques && !groupedByDateAndBird[key].remarques.includes(item.remarques)) {
-      groupedByDateAndBird[key].remarques.push(item.remarques);
-    }
-
-    groupedByDateAndBird[key].lignes.push(item);
   });
 
   const groupedByDate = {};
@@ -1121,45 +1145,26 @@ function renderNourrissageHistory() {
           .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
           .join(" | ");
 
-        const remarques = entry.remarques.length
-          ? entry.remarques.map((r) => safe(r)).join(" | ")
-          : "-";
-
-        const actions = entry.lignes.map((ligne) => `
-          <div style="margin-bottom:8px;padding:8px;border:1px solid rgba(96,76,46,0.12);border-radius:8px;background:#fff;">
-            <div style="margin-bottom:6px;font-size:13px;">
-              ${safe(ligne.nourriture || "")} x${safe(ligne.quantite || 0)}
-            </div>
-            <div class="small-actions">
-              <button class="btn secondary-btn" onclick="modifierNourrissage('${ligne.id}')">Modifier</button>
-              <button class="btn btn-danger" onclick="supprimerNourrissage('${ligne.id}')">Supprimer</button>
-            </div>
-          </div>
-        `).join("");
-
         return `
           <tr>
+            <td>${safe(formatDateFR(entry.date))}</td>
             <td>${safe(entry.oiseau)}</td>
             <td>${detailNourriture}</td>
             <td>${safe(entry.total)}</td>
-            <td>${remarques}</td>
-            <td>${actions}</td>
           </tr>
         `;
       }).join("");
 
     return `
       <div class="card-section">
-        <h4>${safe(formatDateFR(date))}</h4>
         <div class="feed-table-wrap">
           <table class="feed-table">
             <thead>
               <tr>
+                <th>Date</th>
                 <th>Oiseau</th>
                 <th>Nourriture donnée</th>
-                <th>Total du jour</th>
-                <th>Remarques</th>
-                <th>Actions</th>
+                <th>Total</th>
               </tr>
             </thead>
             <tbody>
