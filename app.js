@@ -333,38 +333,42 @@ function normalizeData(rapacesData, userData) {
 function buildRapacesPayload() {
   const oldBirds = safeArray(rawRapacesData?.oiseaux);
 
-  return {
-  ...ancien,
-  id: o.id,
-  nom: o.nom || "",
-  bague: o.bague || "",
-  cites: o.cites || "",
-  espece: o.espece || "",
-  sexe: o.sexe || "",
-  age: o.age || "",
-  annexe: o.annexe || "",
-  dateEntree: o.dateEntree || "",
-  registreEntree: o.registreEntree || "",
-  statut: o.statut || "En place",
-  dateSortie: o.dateSortie || "",
-  registreSortie: o.registreSortie || "",
-  motifSortie: o.motifSortie || "",
-  poidsActuel: o.poidsActuel ?? "",
-  notes: o.notes || "",
-  nourritureHabituelle: o.nourritureHabituelle || "Poussin",
-  quantiteHabituelle: toNumber(o.quantiteHabituelle),
-  nourritureHabituelle2: o.nourritureHabituelle2 || "",
-  quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
-  photo: {
-    ...(ancien?.photo || {}),
-    url: o.photoUrl || ""
-  },
-  documents: normalizeDocuments(o.documents),
-  historiquePoids: safeArray(o.historiquePoids).map((h) => ({
-    date: h?.date || "",
-    poids: h?.poids ?? ""
-  }))
-};
+  const oiseaux = appData.oiseaux.map((o) => {
+    const ancien = oldBirds.find((b) => (b?.id || b?.nom || "") === (o.id || o.nom || ""));
+
+    return {
+      ...ancien,
+      id: o.id,
+      nom: o.nom || "",
+      bague: o.bague || "",
+      cites: o.cites || "",
+      espece: o.espece || "",
+      sexe: o.sexe || "",
+      age: o.age || "",
+      annexe: o.annexe || "",
+      dateEntree: o.dateEntree || "",
+      registreEntree: o.registreEntree || "",
+      statut: o.statut || "En place",
+      dateSortie: o.dateSortie || "",
+      registreSortie: o.registreSortie || "",
+      motifSortie: o.motifSortie || "",
+      poidsActuel: o.poidsActuel ?? "",
+      notes: o.notes || "",
+      nourritureHabituelle: o.nourritureHabituelle || "Poussin",
+      quantiteHabituelle: toNumber(o.quantiteHabituelle),
+      nourritureHabituelle2: o.nourritureHabituelle2 || "",
+      quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
+      photo: {
+        ...(ancien?.photo || {}),
+        url: o.photoUrl || ""
+      },
+      documents: normalizeDocuments(o.documents),
+      historiquePoids: safeArray(o.historiquePoids).map((h) => ({
+        date: h?.date || "",
+        poids: h?.poids ?? ""
+      }))
+    };
+  });
 
   syncBoitesFromPoussins();
 
