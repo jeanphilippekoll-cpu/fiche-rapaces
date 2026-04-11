@@ -1221,6 +1221,10 @@ function renderNourrissageSummary() {
   `;
 }
 
+function makeFeedGroupKey(date, oiseau) {
+  return `${date || ""}__${(oiseau || "").trim().toLowerCase()}`;
+}
+
 function renderNourrissageHistory() {
   const zone = document.getElementById("listeNourrissage");
   if (!zone) return;
@@ -1230,8 +1234,32 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const sorted = appData.nourrissage
-    .slice()
+  const groupes = {};
+
+  appData.nourrissage.forEach((item) => {
+    const date = item.date || "";
+    const oiseau = item.oiseau || "";
+    const key = makeFeedGroupKey(date, oiseau);
+
+    if (!groupes[key]) {
+      groupes[key] = {
+        key,
+        date,
+        oiseau,
+        total: 0,
+        aliments: {}
+      };
+    }
+
+    const qty = toNumber(item.quantite);
+    const nourriture = item.nourriture || "Inconnu";
+
+    groupes[key].total += qty;
+    groupes[key].aliments[nourriture] =
+      (groupes[key].aliments[nourriture] || 0) + qty;
+  });
+
+  const lignes = Object.values(groupes)
     .sort((a, b) => {
       const d = (b.date || "").localeCompare(a.date || "");
       if (d !== 0) return d;
@@ -1251,24 +1279,79 @@ function renderNourrissageHistory() {
           </tr>
         </thead>
         <tbody>
-          ${sorted.map((item) => `
-            <tr>
-              <td>${safe(formatDateFR(item.date || ""))}</td>
-              <td>${safe(item.oiseau || "")}</td>
-              <td>${safe(item.nourriture || "")}</td>
-              <td>${safe(item.quantite || 0)}</td>
-              <td>
-                <div class="small-actions">
-                  <button class="btn secondary-btn" onclick="modifierNourrissage('${item.id}')">Modifier</button>
-                  <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
-                </div>
-              </td>
-            </tr>
-          `).join("")}
+          ${lignes.map((entry) => {
+            const detailNourriture = Object.entries(entry.aliments)
+              .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
+              .join(" | ");
+
+            return `
+              <tr>
+                <td>${safe(formatDateFR(entry.date || ""))}</td>
+                <td>${safe(entry.oiseau || "")}</td>
+                <td>${detailNourriture}</td>
+                <td>${safe(entry.total)}</td>
+                <td>
+                  <div class="small-actions">
+                    <button class="btn secondary-btn" onclick="corrigerDateNourrissage('${entry.key}')">Corriger date</button>
+                    <button class="btn btn-danger" onclick="supprimerGroupeNourrissage('${entry.key}')">Supprimer</button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join("")}
         </tbody>
       </table>
     </div>
   `;
+}
+
+function corrigerDateNourrissage(groupKey) {
+  const items = appData.nourrissage.filter(
+    (n) => makeFeedGroupKey(n.date, n.oiseau) === groupKey
+  );
+
+  if (!items.length) return;
+
+  const ancienneDate = items[0].date || "";
+  const nouvelleDate = prompt("Nouvelle date (AAAA-MM-JJ) :", ancienneDate);
+
+  if (!nouvelleDate || !/^\d{4}-\d{2}-\d{2}$/.test(nouvelleDate)) {
+    alert("Date invalide. Format attendu : AAAA-MM-JJ");
+    return;
+  }
+
+  items.forEach((item) => {
+    item.date = nouvelleDate;
+  });
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Date du nourrissage corrigée";
+}
+
+function supprimerGroupeNourrissage(groupKey) {
+  const items = appData.nourrissage.filter(
+    (n) => makeFeedGroupKey(n.date, n.oiseau) === groupKey
+  );
+
+  if (!items.length) return;
+
+  const ok = confirm("Supprimer tout le nourrissage de cet oiseau pour cette date ?");
+  if (!ok) return;
+
+  items.forEach((item) => {
+    restoreStockFromDeletedFeed(item);
+  });
+
+  appData.nourrissage = appData.nourrissage.filter(
+    (n) => makeFeedGroupKey(n.date, n.oiseau) !== groupKey
+  );
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Nourrissage supprimé";
 }
 
 function decrementStock(food, qty) {
@@ -2536,6 +2619,8 @@ window.supprimerOiseau = supprimerOiseau;
 window.supprimerDocument = supprimerDocument;
 window.supprimerNourrissage = supprimerNourrissage;
 window.modifierNourrissage = modifierNourrissage;
+window.corrigerDateNourrissage = corrigerDateNourrissage;
+window.supprimerGroupeNourrissage = supprimerGroupeNourrissage;
 window.supprimerSuiviVeterinaire = supprimerSuiviVeterinaire;
 window.quickFeed = quickFeed;
 window.rationHabituelleTerrain = rationHabituelleTerrain;
