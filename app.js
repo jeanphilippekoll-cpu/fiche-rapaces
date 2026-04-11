@@ -735,8 +735,15 @@ function openBirdSheet(id) {
         <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
       </div>
 
-      <h1>FICHE OISEAU</h1>
-      <p class="subtitle">Document de suivi individuel</p>
+      <div class="header-doc">
+  <h2>Koll Jean-Philippe</h2>
+  <p>Rue du Canal 82, 4800 Ensival</p>
+  <p>+32 473 47 03 87</p>
+  <p>jeanphilippekoll@gmail.com</p>
+</div>
+
+<h1>FICHE OISEAU</h1>
+<p class="subtitle">Document de suivi individuel</p>
 
       <div class="header-grid">
         <div class="photo-box">
