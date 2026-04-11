@@ -782,56 +782,54 @@ function openBirdSheet(id) {
         </div>
 
         <div>
-          <table class="identity-table">
-            <tr>
-              <th>Nom</th>
-              <td>${safe(bird.nom || "-")}</td>
-              <th>Espèce</th>
-              <td>${safe(bird.espece || "-")}</td>
-            </tr>
-            <tr>
-              <th>Sexe</th>
-              <td>${safe(bird.sexe || "-")}</td>
-              <th>Âge</th>
-              <td>${safe(bird.age || "-")}</td>
-            </tr>
-            <tr>
-              <th>N° bague</th>
-              <td>${safe(bird.bague || "-")}</td>
-              <th>N° CITES</th>
-              <td>${safe(bird.cites || "-")}</td>
-            </tr>
-            <tr>
-              <th>Annexe</th>
-              <td>${safe(bird.annexe || "-")}</td>
-              <th>Poids actuel</th>
-              <td>${safe(bird.poidsActuel || "-")} g</td>
-            </tr>
-            <tr>
-              <th>Date d'entrée</th>
-              <td>${safe(formatDateFR(bird.dateEntree || "") || "-")}</td>
-              <th>N° registre d'entrée</th>
-              <td>${safe(bird.registreEntree || "-")}</td>
-            </tr>
-            <tr>
-              <th>Statut</th>
-              <td>${safe(bird.statut || "-")}</td>
-              <th>Date de sortie</th>
-              <td>${safe(formatDateFR(bird.dateSortie || "") || "-")}</td>
-            </tr>
-            <tr>
-              <th>N° registre de sortie</th>
-              <td>${safe(bird.registreSortie || "-")}</td>
-              <th>Motif sortie</th>
-              <td>${safe(bird.motifSortie || "-")}</td>
-            </tr>
-            <tr>
-              <th>Nourriture 1</th>
-              <td>${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)})</td>
-              <th>Nourriture 2</th>
-              <td>${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)})` : ""}</td>
-            </tr>
-          </table>
+       <table class="identity-table">
+  <tr>
+    <th>Nom</th>
+    <td>${safe(bird.nom || "-")}</td>
+    <th>Espèce</th>
+    <td>${safe(bird.espece || "-")}</td>
+  </tr>
+  <tr>
+    <th>Date de naissance / Âge</th>
+    <td>${safe(bird.age || "-")}</td>
+    <th>Sexe</th>
+    <td>${safe(bird.sexe || "-")}</td>
+  </tr>
+  <tr>
+    <th>N° bague</th>
+    <td>${safe(bird.bague || "-")}</td>
+    <th>N° CITES</th>
+    <td>${safe(bird.cites || "-")}</td>
+  </tr>
+  <tr>
+    <th>Annexe</th>
+    <td>${safe(bird.annexe || "-")}</td>
+    <th>Poids actuel</th>
+    <td>${safe(bird.poidsActuel || "-")} g</td>
+  </tr>
+  <tr>
+    <th>N° entrée</th>
+    <td>${safe(bird.registreEntree || "-")}</td>
+    <th>Date entrée</th>
+    <td>${safe(formatDateFR(bird.dateEntree || "") || "-")}</td>
+  </tr>
+  <tr>
+    <th>Date sortie</th>
+    <td>${safe(formatDateFR(bird.dateSortie || "") || "-")}</td>
+    <th>N° sortie</th>
+    <td>${safe(bird.registreSortie || "-")}</td>
+  </tr>
+  <tr>
+    <th>Motif sortie</th>
+    <td colspan="3">${safe(bird.motifSortie || "-")}</td>
+  </tr>
+  <tr>
+    <th>Nourriture 1</th>
+    <td>${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)})</td>
+    <th>Nourriture 2</th>
+    <td>${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)})` : ""}</td>
+  </tr>
+</table>   
         </div>
       </div>
 
@@ -990,27 +988,35 @@ function renderOiseaux() {
             <div class="bird-photo-placeholder">Pas de photo</div>
           `}
 
-  <div class="bird-meta">
+ <div class="bird-meta">
+  <div><span>Espèce</span><strong>${safe(oiseau.espece || "-")}</strong></div>
+  <div><span>Date de naissance / Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
   <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-  <div><span>Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
   <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
   <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
   <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
-  <div><span>Date d'entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
-  <div><span>Registre entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
-  <div><span>Statut</span><strong>${safe(oiseau.statut || "-")}</strong></div>
-</div>       
+  <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
+  <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
+  <div><span>Date sortie</span><strong>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</strong></div>
+  <div><span>N° sortie</span><strong>${safe(oiseau.registreSortie || "-")}</strong></div>
+  <div><span>Motif sortie</span><strong>${safe(oiseau.motifSortie || "-")}</strong></div>
+  <div><span>Poids</span><strong>${safe(oiseau.poidsActuel || "-")} g</strong></div>
+</div> 
 
 <div class="card-section">
-  <h4>Entrée / sortie registre</h4>
-  <p><strong>Date d'entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
-  <p><strong>N° registre entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
-  <p><strong>Statut :</strong> ${safe(oiseau.statut || "-")}</p>
-  <p><strong>Date de sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
-  <p><strong>N° registre sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
-  <p><strong>Motif / remarque :</strong> ${safe(oiseau.motifSortie || "-")}</p>
-  <p><strong>Bague :</strong> ${safe(oiseau.bague || "-")}</p>
-
+  <h4>Identification / registre</h4>
+  <p><strong>Espèce :</strong> ${safe(oiseau.espece || "-")}</p>
+  <p><strong>Date de naissance / Âge :</strong> ${safe(oiseau.age || "-")}</p>
+  <p><strong>Sexe :</strong> ${safe(oiseau.sexe || "-")}</p>
+  <p><strong>N° bague :</strong> ${safe(oiseau.bague || "-")}</p>
+  <p><strong>N° CITES :</strong> ${safe(oiseau.cites || "-")}</p>
+  <p><strong>Annexe :</strong> ${safe(oiseau.annexe || "-")}</p>
+  <p><strong>N° entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
+  <p><strong>Date entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
+  <p><strong>Date sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
+  <p><strong>N° sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
+  <p><strong>Motif sortie :</strong> ${safe(oiseau.motifSortie || "-")}</p>
+</div>
           <div class="card-section">
             <h4>Notes</h4>
             <p>${safe(oiseau.notes || "Aucune note")}</p>
