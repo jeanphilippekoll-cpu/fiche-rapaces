@@ -1602,6 +1602,114 @@ function ouvrirInventaire() {
   win.document.close();
 }
 
+function getInventaireHtml() {
+
+  const rows = appData.oiseaux
+    .slice()
+    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+    .map((oiseau) => `
+      <tr>
+        <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.bague || "-")}</td>
+        <td>${safe(oiseau.cites || "-")}</td>
+        <td>${safe(oiseau.espece || "")}</td>
+        <td>${safe(oiseau.age || "")}</td>
+        <td>${safe(oiseau.sexe || "")}</td>
+        <td>${safe(oiseau.annexe || "-")}</td>
+        <td>${safe(oiseau.poidsActuel || "")}</td>
+        <td>${safe(oiseau.statut || "-")}</td>
+        <td>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</td>
+        <td>${safe(oiseau.registreEntree || "-")}</td>
+        <td>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</td>
+        <td>${safe(oiseau.registreSortie || "-")}</td>
+      </tr>
+    `).join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Inventaire oiseaux</title>
+      <style>
+        body{
+          font-family:Arial;
+          padding:20px;
+        }
+
+        .header-doc{
+          border-bottom:2px solid #000;
+          padding-bottom:10px;
+          margin-bottom:15px;
+        }
+
+        .header-doc h2{
+          margin:0;
+          font-size:18px;
+        }
+
+        .header-doc p{
+          margin:2px 0;
+          font-size:13px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        th,td{
+          border:1px solid #ccc;
+          padding:8px;
+        }
+
+        th{
+          background:#eee;
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <button onclick="window.print()">Imprimer</button>
+
+      <div class="header-doc">
+        <h2>Koll Jean-Philippe</h2>
+        <p>Rue du Canal 82, 4800 Ensival</p>
+        <p>+32 473 47 03 87</p>
+        <p>jeanphilippekoll@gmail.com</p>
+      </div>
+
+      <h1>Inventaire oiseaux présents sur site</h1>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Bague</th>
+            <th>CITES</th>
+            <th>Espèce</th>
+            <th>Âge</th>
+            <th>Sexe</th>
+            <th>Annexe</th>
+            <th>Poids</th>
+            <th>Statut</th>
+            <th>Date entrée</th>
+            <th>Registre entrée</th>
+            <th>Date sortie</th>
+            <th>Registre sortie</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+    </body>
+    </html>
+  `;
+}
+
 function imprimerInventaire() {
   ouvrirInventaire();
 }
