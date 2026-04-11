@@ -593,41 +593,38 @@ function openBirdSheet(id) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
       <tr>
-        <td>${safe(formatDateFR(item.date))}</td>
-        <td>${safe(item.poids)}</td>
+        <td>${safe(formatDateFR(item.date || ""))}</td>
+        <td>${safe(item.poids || "")}</td>
       </tr>
     `).join("");
 
   const feedRows = birdFeeds
     .map((item) => `
       <tr>
-        <td>${safe(formatDateFR(item.date))}</td>
-        <td>${safe(item.nourriture)}</td>
-        <td>${safe(item.quantite)}</td>
-        <td>${safe(item.remarques || "")}</td>
+        <td>${safe(formatDateFR(item.date || ""))}</td>
+        <td>${safe(item.nourriture || "")}</td>
+        <td>${safe(item.quantite || 0)}</td>
       </tr>
     `).join("");
 
-  const vetBlocks = birdVet.map((v) => `
-    <div class="print-block">
-      <p><strong>Date :</strong> ${safe(formatDateFR(v.date))}</p>
-      <p><strong>Vétérinaire :</strong> ${safe(v.veterinaire || "-")}</p>
-      <p><strong>Motif :</strong> ${safe(v.motif || "-")}</p>
-      <p><strong>Diagnostic :</strong> ${safe(v.diagnostic || "-")}</p>
-      <p><strong>Traitement :</strong> ${safe(v.traitement || "-")}</p>
-      <p><strong>Protocole :</strong> ${safe(v.protocole || "-")}</p>
-      <p><strong>Observations :</strong> ${safe(v.observations || "-")}</p>
-    </div>
-  `).join("");
+  const vetRows = birdVet
+    .map((v) => `
+      <tr>
+        <td>${safe(formatDateFR(v.date || ""))}</td>
+        <td>${safe(v.veterinaire || "-")}</td>
+        <td>${safe(v.motif || "-")}</td>
+        <td>${safe(v.diagnostic || "-")}</td>
+        <td>${safe(v.traitement || "-")}</td>
+      </tr>
+    `).join("");
 
   const docsRows = safeArray(bird.documents)
     .map((doc) => `
-      <li>
-        <strong>${safe(doc.name)}</strong><br>
-        <span style="font-size:12px;color:#666;">${safe(doc.url)}</span>
-      </li>
-    `)
-    .join("");
+      <tr>
+        <td>${safe(doc.name || "")}</td>
+        <td>${safe(doc.url || "")}</td>
+      </tr>
+    `).join("");
 
   const win = window.open("", "_blank");
   if (!win) {
@@ -640,157 +637,252 @@ function openBirdSheet(id) {
     <html lang="fr">
     <head>
       <meta charset="UTF-8">
-      <title>Fiche ${safe(bird.nom)}</title>
+      <title>Fiche officielle - ${safe(bird.nom)}</title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         body{
-          font-family:Arial,Helvetica,sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           color:#111;
-          padding:24px;
-          line-height:1.45;
           background:#fff;
+          padding:20px;
+          line-height:1.4;
         }
-        h1,h2{
-          margin-bottom:8px;
-        }
-        .top{
-          display:flex;
-          gap:24px;
-          align-items:flex-start;
-          margin-bottom:18px;
-          flex-wrap:wrap;
-        }
-        img{
-          max-width:260px;
-          border-radius:12px;
-          border:1px solid #ccc;
-        }
-        .info-box{
-          flex:1;
-          min-width:280px;
-        }
-        table{
-          width:100%;
-          border-collapse:collapse;
-          margin-top:12px;
-        }
-        th,td{
-          border:1px solid #ccc;
-          padding:8px;
-          text-align:left;
-          vertical-align:top;
-        }
-        th{
-          background:#f2f2f2;
-        }
-        .box{
-          margin-top:18px;
-          padding:14px;
-          border:1px solid #ddd;
-          border-radius:10px;
-          background:#fff;
-        }
-        .print-block{
-          border:1px solid #ddd;
-          border-radius:10px;
-          padding:12px;
-          margin-top:10px;
-        }
-        ul{
-          margin:8px 0 0 20px;
-        }
-        .actions{
-          display:flex;
-          gap:10px;
-          flex-wrap:wrap;
+        .top-actions{
           margin-bottom:18px;
         }
         .btn{
           display:inline-block;
-          padding:12px 16px;
+          padding:10px 14px;
           border:none;
-          border-radius:10px;
-          text-decoration:none;
+          border-radius:8px;
+          background:#333;
+          color:#fff;
           font-weight:700;
           cursor:pointer;
-          background:#8aa36b;
-          color:#fff;
+        }
+        h1{
+          margin:0 0 6px 0;
+          font-size:28px;
+        }
+        h2{
+          margin:24px 0 10px 0;
+          font-size:18px;
+          border-bottom:2px solid #222;
+          padding-bottom:4px;
+        }
+        .subtitle{
+          margin:0 0 18px 0;
+          color:#444;
+          font-size:14px;
+        }
+        .header-grid{
+          display:grid;
+          grid-template-columns: 260px 1fr;
+          gap:20px;
+          align-items:start;
+        }
+        .photo-box{
+          border:1px solid #999;
+          padding:8px;
+          min-height:220px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+        }
+        .photo-box img{
+          max-width:100%;
+          max-height:300px;
+          object-fit:contain;
+        }
+        .identity-table,
+        .data-table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:8px;
+        }
+        .identity-table th,
+        .identity-table td,
+        .data-table th,
+        .data-table td{
+          border:1px solid #999;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+        .identity-table th,
+        .data-table th{
+          background:#f2f2f2;
+        }
+        .notes-box{
+          border:1px solid #999;
+          min-height:80px;
+          padding:10px;
+          white-space:pre-wrap;
+        }
+        .small{
+          font-size:12px;
+          color:#555;
         }
         @media print{
-          .actions{display:none}
-          body{padding:10px}
-          .box{break-inside:avoid}
-          .print-block{break-inside:avoid}
+          .top-actions{display:none}
+          body{padding:8px}
+          h2, table, .notes-box, .photo-box{break-inside:avoid}
         }
       </style>
     </head>
     <body>
-      <div class="actions">
+      <div class="top-actions">
         <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
       </div>
 
-      <h1>Fiche oiseau : ${safe(bird.nom)}</h1>
+      <h1>FICHE OISEAU</h1>
+      <p class="subtitle">Document de suivi individuel</p>
 
-      <div class="top">
+      <div class="header-grid">
+        <div class="photo-box">
+          ${
+            bird.photoUrl
+              ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">`
+              : `<span class="small">Pas de photo</span>`
+          }
+        </div>
+
         <div>
-          ${bird.photoUrl ? `<img src="${safeAttr(bird.photoUrl)}" alt="${safeAttr(bird.nom)}">` : `<p>Pas de photo</p>`}
+          <table class="identity-table">
+            <tr>
+              <th>Nom</th>
+              <td>${safe(bird.nom || "-")}</td>
+              <th>Espèce</th>
+              <td>${safe(bird.espece || "-")}</td>
+            </tr>
+            <tr>
+              <th>Sexe</th>
+              <td>${safe(bird.sexe || "-")}</td>
+              <th>Âge</th>
+              <td>${safe(bird.age || "-")}</td>
+            </tr>
+            <tr>
+              <th>N° bague</th>
+              <td>${safe(bird.bague || "-")}</td>
+              <th>N° CITES</th>
+              <td>${safe(bird.cites || "-")}</td>
+            </tr>
+            <tr>
+              <th>Annexe</th>
+              <td>${safe(bird.annexe || "-")}</td>
+              <th>Poids actuel</th>
+              <td>${safe(bird.poidsActuel || "-")} g</td>
+            </tr>
+            <tr>
+              <th>Date d'entrée</th>
+              <td>${safe(formatDateFR(bird.dateEntree || "") || "-")}</td>
+              <th>N° registre d'entrée</th>
+              <td>${safe(bird.registreEntree || "-")}</td>
+            </tr>
+            <tr>
+              <th>Statut</th>
+              <td>${safe(bird.statut || "-")}</td>
+              <th>Date de sortie</th>
+              <td>${safe(formatDateFR(bird.dateSortie || "") || "-")}</td>
+            </tr>
+            <tr>
+              <th>N° registre de sortie</th>
+              <td>${safe(bird.registreSortie || "-")}</td>
+              <th>Motif sortie</th>
+              <td>${safe(bird.motifSortie || "-")}</td>
+            </tr>
+            <tr>
+              <th>Nourriture 1</th>
+              <td>${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)})</td>
+              <th>Nourriture 2</th>
+              <td>${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)})` : ""}</td>
+            </tr>
+          </table>
         </div>
-
-        <div class="info-box">
-          <p><strong>Espèce :</strong> ${safe(bird.espece || "-")}</p>
-          <p><strong>Sexe :</strong> ${safe(bird.sexe || "-")}</p>
-          <p><strong>Âge :</strong> ${safe(bird.age || "-")}</p>
-          <p><strong>N° bague :</strong> ${safe(bird.bague || "-")}</p>
-          <p><strong>N° CITES :</strong> ${safe(bird.cites || "-")}</p>
-          <p><strong>Annexe :</strong> ${safe(bird.annexe || "-")}</p>
-          <p><strong>Date d'entrée :</strong> ${safe(formatDateFR(bird.dateEntree || "") || "-")}</p>
-          <p><strong>N° registre d'entrée :</strong> ${safe(bird.registreEntree || "-")}</p>
-          <p><strong>Statut :</strong> ${safe(bird.statut || "-")}</p>
-          <p><strong>Date de sortie :</strong> ${safe(formatDateFR(bird.dateSortie || "") || "-")}</p>
-          <p><strong>N° registre de sortie :</strong> ${safe(bird.registreSortie || "-")}</p>
-          <p><strong>Motif / remarque sortie :</strong> ${safe(bird.motifSortie || "-")}</p>
-          <p><strong>Poids actuel :</strong> ${safe(bird.poidsActuel || "-")} g</p>
-        </div>
       </div>
 
-      <div class="box">
-        <h2>Alimentation habituelle</h2>
-        <p><strong>Nourriture 1 :</strong> ${safe(bird.nourritureHabituelle || "-")} (${safe(bird.quantiteHabituelle || 0)} pièce(s))</p>
-        <p><strong>Nourriture 2 :</strong> ${safe(bird.nourritureHabituelle2 || "-")} ${bird.nourritureHabituelle2 ? `(${safe(bird.quantiteHabituelle2 || 0)} pièce(s))` : ""}</p>
-      </div>
+      <h2>Notes</h2>
+      <div class="notes-box">${safe(bird.notes || "Aucune note")}</div>
 
-      <div class="box">
-        <h2>Notes</h2>
-        <p>${safe(bird.notes || "Aucune note")}</p>
-      </div>
+      <h2>Documents liés</h2>
+      ${
+        docsRows
+          ? `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Document</th>
+                  <th>Lien</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${docsRows}
+              </tbody>
+            </table>
+          `
+          : `<p class="small">Aucun document lié.</p>`
+      }
 
-      <div class="box">
-        <h2>Documents liés</h2>
-        ${docsRows ? `<ul>${docsRows}</ul>` : `<p>Aucun document.</p>`}
-      </div>
+      <h2>Historique des poids</h2>
+      ${
+        poidsRows
+          ? `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Poids (g)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${poidsRows}
+              </tbody>
+            </table>
+          `
+          : `<p class="small">Aucun poids enregistré.</p>`
+      }
 
-      <div class="box">
-        <h2>Historique des poids</h2>
-        ${
-          poidsRows
-            ? `<table><thead><tr><th>Date</th><th>Poids (g)</th></tr></thead><tbody>${poidsRows}</tbody></table>`
-            : `<p>Aucun poids enregistré.</p>`
-        }
-      </div>
+      <h2>Historique nourrissage</h2>
+      ${
+        feedRows
+          ? `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Nourriture</th>
+                  <th>Quantité</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${feedRows}
+              </tbody>
+            </table>
+          `
+          : `<p class="small">Aucun nourrissage enregistré.</p>`
+      }
 
-      <div class="box">
-        <h2>Historique des nourrissages</h2>
-        ${
-          feedRows
-            ? `<table><thead><tr><th>Date</th><th>Nourriture</th><th>Quantité</th><th>Remarques</th></tr></thead><tbody>${feedRows}</tbody></table>`
-            : `<p>Aucun nourrissage enregistré.</p>`
-        }
-      </div>
-
-      <div class="box">
-        <h2>Suivi vétérinaire</h2>
-        ${vetBlocks || `<p>Aucun suivi vétérinaire.</p>`}
-      </div>
+      <h2>Suivi vétérinaire</h2>
+      ${
+        vetRows
+          ? `
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Vétérinaire</th>
+                  <th>Motif</th>
+                  <th>Diagnostic</th>
+                  <th>Traitement</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${vetRows}
+              </tbody>
+            </table>
+          `
+          : `<p class="small">Aucun suivi vétérinaire.</p>`
+      }
     </body>
     </html>
   `);
