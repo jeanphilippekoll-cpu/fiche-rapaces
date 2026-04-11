@@ -2388,40 +2388,6 @@ function modifierNourrissage(id) {
   );
 
   if (oiseau) {
-    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
-    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
-    const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
-    const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
-
-    if (food1) food1.value = item.nourriture || "Poussin";
-    if (qty1) qty1.value = item.quantite || "";
-
-    if (food2) food2.value = "";
-    if (qty2) qty2.value = "";
-  }
-
-  if (statusEl) statusEl.textContent = `Modification du nourrissage de ${item.oiseau}`;
-  showSection("nourrissage");
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function modifierNourrissage(id) {
-  const item = appData.nourrissage.find((n) => n.id === id);
-  if (!item) return;
-
-  editingFeedId = id;
-
-  const feedDate = document.getElementById("feedDate");
-  const feedNote = document.getElementById("feedNote");
-
-  if (feedDate) feedDate.value = item.date || "";
-  if (feedNote) feedNote.value = item.remarques || "";
-
-  const oiseau = appData.oiseaux.find(
-    (o) => (o.nom || "").trim().toLowerCase() === (item.oiseau || "").trim().toLowerCase()
-  );
-
-  if (oiseau) {
     viderTableNourrissage(false);
 
     const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
