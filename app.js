@@ -1259,50 +1259,59 @@ function renderNourrissageHistory() {
       (groupes[key].aliments[nourriture] || 0) + qty;
   });
 
-  const lignes = Object.values(groupes)
-    .sort((a, b) => {
-      const d = (b.date || "").localeCompare(a.date || "");
-      if (d !== 0) return d;
-      return (a.oiseau || "").localeCompare(b.oiseau || "");
-    });
+  const groupesParDate = {};
 
-  zone.innerHTML = `
-    <div class="feed-table-wrap">
-      <table class="feed-table">
-        <thead>
+  Object.values(groupes).forEach((entry) => {
+    if (!groupesParDate[entry.date]) groupesParDate[entry.date] = [];
+    groupesParDate[entry.date].push(entry);
+  });
+
+  const datesTriees = Object.keys(groupesParDate).sort((a, b) => b.localeCompare(a));
+
+  zone.innerHTML = datesTriees.map((date) => {
+    const rows = groupesParDate[date]
+      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
+      .map((entry) => {
+        const detailNourriture = Object.entries(entry.aliments)
+          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
+          .join(" | ");
+
+        return `
           <tr>
-            <th>Date</th>
-            <th>Oiseau</th>
-            <th>Nourriture donnée</th>
-            <th>Total</th>
-            <th>Actions</th>
+            <td>${safe(entry.oiseau || "")}</td>
+            <td>${detailNourriture}</td>
+            <td>${safe(entry.total)}</td>
+            <td>
+              <div class="small-actions">
+                <button class="btn secondary-btn" onclick="corrigerDateNourrissage('${entry.key}')">Corriger date</button>
+                <button class="btn btn-danger" onclick="supprimerGroupeNourrissage('${entry.key}')">Supprimer</button>
+              </div>
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          ${lignes.map((entry) => {
-            const detailNourriture = Object.entries(entry.aliments)
-              .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
-              .join(" | ");
+        `;
+      }).join("");
 
-            return `
+    return `
+      <div class="card-section">
+        <h4>${safe(formatDateFR(date || ""))}</h4>
+        <div class="feed-table-wrap">
+          <table class="feed-table">
+            <thead>
               <tr>
-                <td>${safe(formatDateFR(entry.date || ""))}</td>
-                <td>${safe(entry.oiseau || "")}</td>
-                <td>${detailNourriture}</td>
-                <td>${safe(entry.total)}</td>
-                <td>
-                  <div class="small-actions">
-                    <button class="btn secondary-btn" onclick="corrigerDateNourrissage('${entry.key}')">Corriger date</button>
-                    <button class="btn btn-danger" onclick="supprimerGroupeNourrissage('${entry.key}')">Supprimer</button>
-                  </div>
-                </td>
+                <th>Oiseau</th>
+                <th>Nourriture donnée</th>
+                <th>Total</th>
+                <th>Actions</th>
               </tr>
-            `;
-          }).join("")}
-        </tbody>
-      </table>
-    </div>
-  `;
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }).join("");
 }
 
 function corrigerDateNourrissage(groupKey) {
