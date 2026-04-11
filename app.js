@@ -2763,10 +2763,15 @@ function exportControle() {
           <h2>${safe(o.nom)}</h2>
 
           <p><strong>Espèce :</strong> ${safe(o.espece || "-")}</p>
-          <p><strong>Sexe :</strong> ${safe(o.sexe || "-")}</p>
-          <p><strong>Âge :</strong> ${safe(o.age || "-")}</p>
-          <p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
-          <p><strong>Poids :</strong> ${safe(o.poidsActuel || "-")} g</p>
+<p><strong>Âge / date de naissance :</strong> ${safe(o.age || "-")}</p>
+<p><strong>Sexe :</strong> ${safe(o.sexe || "-")}</p>
+<p><strong>N° bague :</strong> ${safe(o.bague || "-")}</p>
+<p><strong>N° CITES :</strong> ${safe(o.cites || "-")}</p>
+<p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
+<p><strong>N° entrée :</strong> ${safe(o.registreEntree || "-")}</p>
+<p><strong>Date d'entrée :</strong> ${safe(formatDateFR(o.dateEntree || "") || "-")}</p>
+<p><strong>Statut :</strong> ${safe(o.statut || "-")}</p>
+<p><strong>Poids :</strong> ${safe(o.poidsActuel || "-")} g</p>
 
           <h3>Documents</h3>
           ${
