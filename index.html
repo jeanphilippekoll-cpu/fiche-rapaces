@@ -1391,9 +1391,17 @@ h2 {
           </div>
 
           <div class="card">
-            <h2>Fiches oiseaux</h2>
-            <div id="listeOiseaux"></div>
-          </div>
+  <h2>Fiches oiseaux</h2>
+
+  <div class="form-grid" style="margin-bottom:12px;">
+    <div>
+      <label for="searchOiseaux">Recherche rapide</label>
+      <input id="searchOiseaux" placeholder="Nom, espèce, bague, CITES..." oninput="renderOiseaux()">
+    </div>
+  </div>
+
+  <div id="listeOiseaux"></div>
+</div>
         </section>
 
         <section id="section-pesee" class="section hidden">

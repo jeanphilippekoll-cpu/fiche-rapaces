@@ -965,14 +965,27 @@ function renderOiseaux() {
   const zone = document.getElementById("listeOiseaux");
   if (!zone) return;
 
-  if (!appData.oiseaux.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
+  const search = document.getElementById("searchOiseaux")?.value.toLowerCase().trim() || "";
+
+  let oiseaux = appData.oiseaux.slice();
+
+  if (search) {
+    oiseaux = oiseaux.filter((oiseau) =>
+      (oiseau.nom || "").toLowerCase().includes(search) ||
+      (oiseau.espece || "").toLowerCase().includes(search) ||
+      (oiseau.bague || "").toLowerCase().includes(search) ||
+      (oiseau.cites || "").toLowerCase().includes(search)
+    );
+  }
+
+  if (!oiseaux.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau trouvé.</p>`;
     return;
   }
 
   zone.innerHTML = `
     <div class="bird-grid">
-      ${appData.oiseaux.map((oiseau) => `
+      ${oiseaux.map((oiseau) => `
         <article class="bird-card">
           <div class="bird-card-head">
             <div>
@@ -988,35 +1001,37 @@ function renderOiseaux() {
             <div class="bird-photo-placeholder">Pas de photo</div>
           `}
 
- <div class="bird-meta">
-  <div><span>Espèce</span><strong>${safe(oiseau.espece || "-")}</strong></div>
-  <div><span>Date de naissance / Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
-  <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-  <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
-  <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
-  <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
-  <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
-  <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
-  <div><span>Date sortie</span><strong>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</strong></div>
-  <div><span>N° sortie</span><strong>${safe(oiseau.registreSortie || "-")}</strong></div>
-  <div><span>Motif sortie</span><strong>${safe(oiseau.motifSortie || "-")}</strong></div>
-  <div><span>Poids</span><strong>${safe(oiseau.poidsActuel || "-")} g</strong></div>
-</div> 
+          <div class="bird-meta">
+            <div><span>Espèce</span><strong>${safe(oiseau.espece || "-")}</strong></div>
+            <div><span>Date de naissance / Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
+            <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
+            <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
+            <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
+            <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
+            <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
+            <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
+            <div><span>Date sortie</span><strong>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</strong></div>
+            <div><span>N° sortie</span><strong>${safe(oiseau.registreSortie || "-")}</strong></div>
+            <div><span>Motif sortie</span><strong>${safe(oiseau.motifSortie || "-")}</strong></div>
+            <div><span>Poids</span><strong>${safe(oiseau.poidsActuel || "-")} g</strong></div>
+          </div>
 
-<div class="card-section">
-  <h4>Identification / registre</h4>
-  <p><strong>Espèce :</strong> ${safe(oiseau.espece || "-")}</p>
-  <p><strong>Date de naissance / Âge :</strong> ${safe(oiseau.age || "-")}</p>
-  <p><strong>Sexe :</strong> ${safe(oiseau.sexe || "-")}</p>
-  <p><strong>N° bague :</strong> ${safe(oiseau.bague || "-")}</p>
-  <p><strong>N° CITES :</strong> ${safe(oiseau.cites || "-")}</p>
-  <p><strong>Annexe :</strong> ${safe(oiseau.annexe || "-")}</p>
-  <p><strong>N° entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
-  <p><strong>Date entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
-  <p><strong>Date sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
-  <p><strong>N° sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
-  <p><strong>Motif sortie :</strong> ${safe(oiseau.motifSortie || "-")}</p>
-</div>
+          <div class="card-section">
+            <h4>Identification / registre</h4>
+            <p><strong>Nom :</strong> ${safe(oiseau.nom || "-")}</p>
+            <p><strong>Espèce :</strong> ${safe(oiseau.espece || "-")}</p>
+            <p><strong>Date de naissance / Âge :</strong> ${safe(oiseau.age || "-")}</p>
+            <p><strong>Sexe :</strong> ${safe(oiseau.sexe || "-")}</p>
+            <p><strong>N° bague :</strong> ${safe(oiseau.bague || "-")}</p>
+            <p><strong>N° CITES :</strong> ${safe(oiseau.cites || "-")}</p>
+            <p><strong>Annexe :</strong> ${safe(oiseau.annexe || "-")}</p>
+            <p><strong>N° entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
+            <p><strong>Date entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
+            <p><strong>Date sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
+            <p><strong>N° sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
+            <p><strong>Motif sortie :</strong> ${safe(oiseau.motifSortie || "-")}</p>
+          </div>
+
           <div class="card-section">
             <h4>Notes</h4>
             <p>${safe(oiseau.notes || "Aucune note")}</p>
@@ -1043,12 +1058,12 @@ function renderOiseaux() {
             ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
           </div>
 
-         <div class="small-actions">
-          <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-          <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
-          <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
-          <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-        </div> 
+          <div class="small-actions">
+            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
+            <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
+            <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+          </div>
         </article>
       `).join("")}
     </div>
