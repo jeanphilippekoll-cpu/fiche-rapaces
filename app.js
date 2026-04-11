@@ -2524,11 +2524,11 @@ function exportControle() {
       </div>
 
       <div class="header-doc">
-  <h2>Koll Jean-Philippe</h2>
-  <p>Rue du Canal 82, 4800 Ensival</p>
-  <p>+32 473 47 03 87</p>
-  <p>jeanphilippekoll@gmail.com</p>
-</div>
+       <h2>Koll Jean-Philippe</h2>
+       <p>Rue du Canal 82, 4800 Ensival</p>
+       <p>+32 473 47 03 87</p>
+       <p>jeanphilippekoll@gmail.com</p>
+      </div>
 
       <h1>Export contrôle élevage</h1>
       <p>Date : ${safe(formatDateFR(todayStr()))}</p>
