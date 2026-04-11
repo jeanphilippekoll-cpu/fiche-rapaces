@@ -1230,77 +1230,45 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const groupedByDateAndBird = {};
+  const sorted = appData.nourrissage
+    .slice()
+    .sort((a, b) => {
+      const d = (b.date || "").localeCompare(a.date || "");
+      if (d !== 0) return d;
+      return (a.oiseau || "").localeCompare(b.oiseau || "");
+    });
 
-  appData.nourrissage.forEach((item) => {
-    const date = item.date || "Sans date";
-    const oiseau = item.oiseau || "Sans oiseau";
-    const key = `${date}__${oiseau}`;
-
-    if (!groupedByDateAndBird[key]) {
-      groupedByDateAndBird[key] = {
-        date,
-        oiseau,
-        total: 0,
-        aliments: {}
-      };
-    }
-
-    const qty = toNumber(item.quantite);
-    const nourriture = item.nourriture || "Inconnu";
-
-    groupedByDateAndBird[key].total += qty;
-    groupedByDateAndBird[key].aliments[nourriture] =
-      (groupedByDateAndBird[key].aliments[nourriture] || 0) + qty;
-  });
-
-  const groupedByDate = {};
-
-  Object.values(groupedByDateAndBird).forEach((entry) => {
-    if (!groupedByDate[entry.date]) groupedByDate[entry.date] = [];
-    groupedByDate[entry.date].push(entry);
-  });
-
-  const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
-
-  zone.innerHTML = sortedDates.map((date) => {
-    const rows = groupedByDate[date]
-      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
-      .map((entry) => {
-        const detailNourriture = Object.entries(entry.aliments)
-          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
-          .join(" | ");
-
-        return `
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
           <tr>
-            <td>${safe(formatDateFR(entry.date))}</td>
-            <td>${safe(entry.oiseau)}</td>
-            <td>${detailNourriture}</td>
-            <td>${safe(entry.total)}</td>
+            <th>Date</th>
+            <th>Oiseau</th>
+            <th>Nourriture donnée</th>
+            <th>Total</th>
+            <th>Actions</th>
           </tr>
-        `;
-      }).join("");
-
-    return `
-      <div class="card-section">
-        <div class="feed-table-wrap">
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Oiseau</th>
-                <th>Nourriture donnée</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  }).join("");
+        </thead>
+        <tbody>
+          ${sorted.map((item) => `
+            <tr>
+              <td>${safe(formatDateFR(item.date || ""))}</td>
+              <td>${safe(item.oiseau || "")}</td>
+              <td>${safe(item.nourriture || "")}</td>
+              <td>${safe(item.quantite || 0)}</td>
+              <td>
+                <div class="small-actions">
+                  <button class="btn secondary-btn" onclick="modifierNourrissage('${item.id}')">Modifier</button>
+                  <button class="btn btn-danger" onclick="supprimerNourrissage('${item.id}')">Supprimer</button>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function decrementStock(food, qty) {
@@ -2230,12 +2198,6 @@ function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
 
-  if (editingFeedId) {
-  const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
-  if (ancien) restoreStockFromDeletedFeed(ancien);
-  appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
-  editingFeedId = null;
-}
   if (!appData.oiseaux.length) return;
 
   const lignes = [];
@@ -2248,7 +2210,7 @@ function ajouterNourrissage() {
 
     if (f1 && q1 > 0) {
       lignes.push({
-        id: makeId(),
+        id: editingFeedId || makeId(),
         date,
         oiseau: oiseau.nom || "",
         nourriture: f1,
@@ -2274,6 +2236,14 @@ function ajouterNourrissage() {
     return;
   }
 
+  if (editingFeedId) {
+    const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
+    if (ancien) restoreStockFromDeletedFeed(ancien);
+
+    appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
+    editingFeedId = null;
+  }
+
   lignes.forEach((ligne) => {
     decrementStock(ligne.nourriture, ligne.quantite);
     appData.nourrissage.unshift(ligne);
@@ -2286,7 +2256,7 @@ function ajouterNourrissage() {
 
   renderAll();
   triggerAutoSave();
-  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) ajouté(s)`;
+  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
 }
 
 function appliquerNourritureHabituelle() {
@@ -2433,6 +2403,38 @@ function modifierNourrissage(id) {
   if (statusEl) statusEl.textContent = `Modification du nourrissage de ${item.oiseau}`;
   showSection("nourrissage");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function modifierNourrissage(id) {
+  const item = appData.nourrissage.find((n) => n.id === id);
+  if (!item) return;
+
+  editingFeedId = id;
+
+  const feedDate = document.getElementById("feedDate");
+  const feedNote = document.getElementById("feedNote");
+
+  if (feedDate) feedDate.value = item.date || "";
+  if (feedNote) feedNote.value = item.remarques || "";
+
+  const oiseau = appData.oiseaux.find(
+    (o) => (o.nom || "").trim().toLowerCase() === (item.oiseau || "").trim().toLowerCase()
+  );
+
+  if (oiseau) {
+    viderTableNourrissage(false);
+
+    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
+    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
+
+    if (food1) food1.value = item.nourriture || "Poussin";
+    if (qty1) qty1.value = item.quantite || 0;
+  }
+
+  showSection("nourrissage");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (statusEl) statusEl.textContent = `Modification du nourrissage de ${item.oiseau}`;
 }
 
 function supprimerNourrissage(id) {
