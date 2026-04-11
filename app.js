@@ -2664,6 +2664,7 @@ window.partagerInventaire = partagerInventaire;
 window.renderVeterinaire = renderVeterinaire;
 window.exportControle = exportControle;
 window.remplirVacances = remplirVacances;
+window.renderOiseaux = renderOiseaux;
 
 window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
