@@ -660,9 +660,27 @@ function openBirdSheet(id) {
           font-weight:700;
           cursor:pointer;
         }
+        .header-doc{
+          border-bottom:2px solid #444;
+          padding-bottom:10px;
+          margin-bottom:15px;
+        }
+        .header-doc h2{
+          margin:0;
+          font-size:18px;
+          color:#2f4f2f;
+        }
+        .header-doc p{
+          margin:2px 0;
+          font-size:13px;
+          color:#444;
+        }
         h1{
           margin:0 0 6px 0;
           font-size:28px;
+          color:#2f4f2f;
+          border-bottom:2px solid #ccc;
+          padding-bottom:5px;
         }
         h2{
           margin:24px 0 10px 0;
@@ -711,7 +729,11 @@ function openBirdSheet(id) {
         }
         .identity-table th,
         .data-table th{
-          background:#f2f2f2;
+          background:#e8f0e8;
+          color:#2f4f2f;
+        }
+        tbody tr:nth-child(even) td{
+          background:#f7f7f7;
         }
         .notes-box{
           border:1px solid #999;
@@ -727,6 +749,7 @@ function openBirdSheet(id) {
           .top-actions{display:none}
           body{padding:8px}
           h2, table, .notes-box, .photo-box{break-inside:avoid}
+          .header-doc h2, h1, h2{color:#000}
         }
       </style>
     </head>
@@ -736,14 +759,14 @@ function openBirdSheet(id) {
       </div>
 
       <div class="header-doc">
-  <h2>Koll Jean-Philippe</h2>
-  <p>Rue du Canal 82, 4800 Ensival</p>
-  <p>+32 473 47 03 87</p>
-  <p>jeanphilippekoll@gmail.com</p>
-</div>
+        <h2>Koll Jean-Philippe</h2>
+        <p>Rue du Canal 82, 4800 Ensival</p>
+        <p>+32 473 47 03 87</p>
+        <p>jeanphilippekoll@gmail.com</p>
+      </div>
 
-<h1>FICHE OISEAU</h1>
-<p class="subtitle">Document de suivi individuel</p>
+      <h1>FICHE OISEAU</h1>
+      <p class="subtitle">Document de suivi individuel</p>
 
       <div class="header-grid">
         <div class="photo-box">
@@ -1603,7 +1626,6 @@ function ouvrirInventaire() {
 }
 
 function getInventaireHtml() {
-
   const rows = appData.oiseaux
     .slice()
     .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
@@ -1627,50 +1649,74 @@ function getInventaireHtml() {
 
   return `
     <!DOCTYPE html>
-    <html>
+    <html lang="fr">
     <head>
+      <meta charset="UTF-8">
       <title>Inventaire oiseaux</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
         body{
-          font-family:Arial;
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111;
+          background:#fff;
           padding:20px;
         }
-
         .header-doc{
-          border-bottom:2px solid #000;
+          border-bottom:2px solid #444;
           padding-bottom:10px;
           margin-bottom:15px;
         }
-
         .header-doc h2{
           margin:0;
           font-size:18px;
+          color:#2f4f2f;
         }
-
         .header-doc p{
           margin:2px 0;
           font-size:13px;
+          color:#444;
         }
-
+        h1{
+          color:#2f4f2f;
+          border-bottom:2px solid #ccc;
+          padding-bottom:5px;
+        }
         table{
           width:100%;
           border-collapse:collapse;
         }
-
-        th,td{
+        th, td{
           border:1px solid #ccc;
           padding:8px;
+          text-align:left;
+          vertical-align:top;
         }
-
         th{
-          background:#eee;
+          background:#e8f0e8;
+          color:#2f4f2f;
+        }
+        tbody tr:nth-child(even) td{
+          background:#f7f7f7;
+        }
+        .btn{
+          display:inline-block;
+          padding:10px 14px;
+          border:none;
+          border-radius:8px;
+          background:#333;
+          color:#fff;
+          font-weight:700;
+          cursor:pointer;
+          margin-bottom:14px;
+        }
+        @media print{
+          button{display:none}
+          .header-doc h2, h1{color:#000}
         }
       </style>
     </head>
-
     <body>
-
-      <button onclick="window.print()">Imprimer</button>
+      <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
 
       <div class="header-doc">
         <h2>Koll Jean-Philippe</h2>
@@ -1680,6 +1726,7 @@ function getInventaireHtml() {
       </div>
 
       <h1>Inventaire oiseaux présents sur site</h1>
+      <p>Date : ${safe(formatDateFR(todayStr()))}</p>
 
       <table>
         <thead>
@@ -1699,12 +1746,10 @@ function getInventaireHtml() {
             <th>Registre sortie</th>
           </tr>
         </thead>
-
         <tbody>
           ${rows}
         </tbody>
       </table>
-
     </body>
     </html>
   `;
