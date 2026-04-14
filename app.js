@@ -1281,6 +1281,171 @@ function makeFeedGroupKey(date, oiseau) {
   return `${date || ""}__${(oiseau || "").trim().toLowerCase()}`;
 }
 
+function imprimerFicheNourrissage() {
+  const date = document.getElementById("feedDate")?.value || todayStr();
+  const remarques = document.getElementById("feedNote")?.value.trim() || "";
+
+  const oiseauxTries = appData.oiseaux
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a.ordre) || 9999;
+      const ordreB = toNumber(b.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
+
+  const rows = oiseauxTries.map((oiseau) => {
+    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "";
+    const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
+    const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
+    const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
+
+    const nourriture = [
+      f1 && q1 > 0 ? `${safe(f1)} x${safe(q1)}` : "",
+      f2 && q2 > 0 ? `${safe(f2)} x${safe(q2)}` : ""
+    ].filter(Boolean).join(" | ");
+
+    return `
+      <tr>
+        <td>${safe(oiseau.nom || "")}</td>
+        <td>${nourriture || "-"}</td>
+        <td>${safe((q1 || 0) + (q2 || 0))}</td>
+      </tr>
+    `;
+  }).join("");
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre d'impression.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Fiche nourrissage</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body{
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111;
+          background:#fff;
+          padding:20px;
+        }
+        .top-actions{
+          margin-bottom:18px;
+        }
+        .btn{
+          display:inline-block;
+          padding:10px 14px;
+          border:none;
+          border-radius:8px;
+          background:#333;
+          color:#fff;
+          font-weight:700;
+          cursor:pointer;
+        }
+        .header-doc{
+          border-bottom:2px solid #444;
+          padding-bottom:10px;
+          margin-bottom:15px;
+        }
+        .header-doc h2{
+          margin:0;
+          font-size:18px;
+          color:#2f4f2f;
+        }
+        .header-doc p{
+          margin:2px 0;
+          font-size:13px;
+          color:#444;
+        }
+        h1{
+          margin:0 0 10px 0;
+          font-size:26px;
+          color:#2f4f2f;
+          border-bottom:2px solid #ccc;
+          padding-bottom:5px;
+        }
+        .info{
+          margin-bottom:14px;
+        }
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:12px;
+        }
+        th, td{
+          border:1px solid #ccc;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+        th{
+          background:#e8f0e8;
+          color:#2f4f2f;
+        }
+        tbody tr:nth-child(even) td{
+          background:#f7f7f7;
+        }
+        .notes-box{
+          margin-top:16px;
+          border:1px solid #ccc;
+          padding:10px;
+          min-height:60px;
+          white-space:pre-wrap;
+        }
+        @media print{
+          .top-actions{display:none}
+          body{padding:8px}
+          .header-doc h2, h1{color:#000}
+        }
+      </style>
+    </head>
+    <body>
+      <div class="top-actions">
+        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+      </div>
+
+      <div class="header-doc">
+        <h2>Koll Jean-Philippe</h2>
+        <p>Rue du Canal 82, 4800 Ensival</p>
+        <p>+32 473 47 03 87</p>
+        <p>jeanphilippekoll@gmail.com</p>
+      </div>
+
+      <h1>Fiche nourrissage oiseaux</h1>
+
+      <div class="info">
+        <p><strong>Date :</strong> ${safe(formatDateFR(date || "") || "-")}</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Nourriture donnée</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+      <div class="notes-box">
+        <strong>Remarques générales :</strong><br>
+        ${safe(remarques || "Aucune remarque")}
+      </div>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
 function renderNourrissageHistory() {
   const zone = document.getElementById("listeNourrissage");
   if (!zone) return;
@@ -2778,6 +2943,7 @@ window.remplirVacances = remplirVacances;
 window.renderOiseaux = renderOiseaux;
 window.monterOiseau = monterOiseau;
 window.descendreOiseau = descendreOiseau;
+window.imprimerFicheNourrissage = imprimerFicheNourrissage;
 
 window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
