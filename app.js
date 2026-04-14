@@ -388,14 +388,25 @@ function buildRapacesPayload() {
       boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
     },
     documents: appData.documents
-  .filter((d) => (d.type || "") !== "Document général")
-  .map((d) => ({
-    id: d.id || makeId(),
-    titre: d.titre || "Document",
-    type: d.type || "Document",
-    description: d.description || "",
-    lien: d.lien || ""
-  })),
+      .filter((d) => (d.type || "") !== "Document général")
+      .map((d) => ({
+        id: d.id || makeId(),
+        titre: d.titre || "Document",
+        type: d.type || "Document",
+        description: d.description || "",
+        lien: d.lien || ""
+      })),
+    documentsGeneraux: appData.documents
+      .filter((d) => (d.type || "") === "Document général")
+      .map((d) => ({
+        id: d.id || makeId(),
+        titre: d.titre || "Document général",
+        type: d.type || "Document général",
+        description: d.description || "",
+        lien: d.lien || ""
+      }))
+  };
+}
 
 documentsGeneraux: appData.documents
   .filter((d) => (d.type || "") === "Document général")
