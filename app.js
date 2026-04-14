@@ -387,9 +387,25 @@ function buildRapacesPayload() {
       cailleteau30gr: toNumber(appData.stock.cailleteau30gr),
       boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
     },
-    documents: rawRapacesData.documents || [],
-    documentsGeneraux: rawRapacesData.documentsGeneraux || []
-  };
+    documents: appData.documents
+  .filter((d) => (d.type || "") !== "Document général")
+  .map((d) => ({
+    id: d.id || makeId(),
+    titre: d.titre || "Document",
+    type: d.type || "Document",
+    description: d.description || "",
+    lien: d.lien || ""
+  })),
+
+documentsGeneraux: appData.documents
+  .filter((d) => (d.type || "") === "Document général")
+  .map((d) => ({
+    id: d.id || makeId(),
+    titre: d.titre || "Document général",
+    type: d.type || "Document général",
+    description: d.description || "",
+    lien: d.lien || ""
+  }))
 }
 
 function buildUserPayload() {
@@ -1933,14 +1949,15 @@ function renderVacances() {
           </tr>
         </thead>
         <tbody>
-          ${appData.oiseaux.map((o) => `
-            <tr>
-              <td><strong>${safe(o.nom)}</strong></td>
-              <td><input value="${safeAttr(o.nourritureHabituelle || "")}"></td>
-              <td><input type="number" value="${safeAttr(o.quantiteHabituelle || 0)}"></td>
-              <td><input value="${safeAttr(o.nourritureHabituelle2 || "")}"></td>
-              <td><input type="number" value="${safeAttr(o.quantiteHabituelle2 || 0)}"></td>
-              <td><input placeholder="Remarque"></td>
+          ${appData.oiseaux
+  .slice()
+  .sort((a, b) => {
+    const ordreA = toNumber(a.ordre) || 9999;
+    const ordreB = toNumber(b.ordre) || 9999;
+    if (ordreA !== ordreB) return ordreA - ordreB;
+    return (a.nom || "").localeCompare(b.nom || "");
+  })
+  .map((o) => `
             </tr>
           `).join("")}
         </tbody>
