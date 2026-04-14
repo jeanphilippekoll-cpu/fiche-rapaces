@@ -1322,111 +1322,41 @@ function imprimerFicheNourrissage() {
 
   win.document.write(`
     <!DOCTYPE html>
-    <html lang="fr">
+    <html>
     <head>
-      <meta charset="UTF-8">
       <title>Fiche nourrissage</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
-        body{
-          font-family:Arial,Helvetica,sans-serif;
-          color:#111;
-          background:#fff;
-          padding:20px;
-        }
-        .top-actions{
-          margin-bottom:18px;
-        }
-        .btn{
-          display:inline-block;
-          padding:10px 14px;
-          border:none;
-          border-radius:8px;
-          background:#333;
-          color:#fff;
-          font-weight:700;
-          cursor:pointer;
-        }
-        .header-doc{
-          border-bottom:2px solid #444;
-          padding-bottom:10px;
-          margin-bottom:15px;
-        }
-        .header-doc h2{
-          margin:0;
-          font-size:18px;
-          color:#2f4f2f;
-        }
-        .header-doc p{
-          margin:2px 0;
-          font-size:13px;
-          color:#444;
-        }
-        h1{
-          margin:0 0 10px 0;
-          font-size:26px;
-          color:#2f4f2f;
-          border-bottom:2px solid #ccc;
-          padding-bottom:5px;
-        }
-        .info{
-          margin-bottom:14px;
-        }
-        table{
-          width:100%;
-          border-collapse:collapse;
-          margin-top:12px;
-        }
-        th, td{
-          border:1px solid #ccc;
-          padding:8px;
-          text-align:left;
-          vertical-align:top;
-        }
-        th{
-          background:#e8f0e8;
-          color:#2f4f2f;
-        }
-        tbody tr:nth-child(even) td{
-          background:#f7f7f7;
-        }
-        .notes-box{
-          margin-top:16px;
-          border:1px solid #ccc;
-          padding:10px;
-          min-height:60px;
-          white-space:pre-wrap;
-        }
-        @media print{
-          .top-actions{display:none}
-          body{padding:8px}
-          .header-doc h2, h1{color:#000}
-        }
+        body{font-family:Arial;padding:20px;background:#fff;color:#111;}
+        .top-actions{margin-bottom:15px;}
+        .btn{padding:10px;border:none;background:#333;color:#fff;border-radius:6px;}
+        .header-doc{border-bottom:2px solid #333;margin-bottom:15px;padding-bottom:10px;}
+        table{width:100%;border-collapse:collapse;margin-top:10px;}
+        th,td{border:1px solid #ccc;padding:8px;}
+        th{background:#eee;}
+        @media print{.top-actions{display:none}}
       </style>
     </head>
     <body>
+
       <div class="top-actions">
-        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+        <button class="btn" onclick="window.print()">Imprimer / PDF</button>
       </div>
 
       <div class="header-doc">
-        <h2>Koll Jean-Philippe</h2>
-        <p>Rue du Canal 82, 4800 Ensival</p>
-        <p>+32 473 47 03 87</p>
-        <p>jeanphilippekoll@gmail.com</p>
+        <strong>Koll Jean-Philippe</strong><br>
+        Rue du Canal 82, 4800 Ensival<br>
+        +32 473 47 03 87<br>
+        jeanphilippekoll@gmail.com
       </div>
 
-      <h1>Fiche nourrissage oiseaux</h1>
-
-      <div class="info">
-        <p><strong>Date :</strong> ${safe(formatDateFR(date || "") || "-")}</p>
-      </div>
+      <h2>Fiche nourrissage</h2>
+      <p><strong>Date :</strong> ${safe(formatDateFR(date) || "-")}</p>
 
       <table>
         <thead>
           <tr>
             <th>Oiseau</th>
-            <th>Nourriture donnée</th>
+            <th>Nourriture</th>
             <th>Total</th>
           </tr>
         </thead>
@@ -1435,10 +1365,8 @@ function imprimerFicheNourrissage() {
         </tbody>
       </table>
 
-      <div class="notes-box">
-        <strong>Remarques générales :</strong><br>
-        ${safe(remarques || "Aucune remarque")}
-      </div>
+      <p><strong>Remarques :</strong><br>${safe(remarques || "-")}</p>
+
     </body>
     </html>
   `);
