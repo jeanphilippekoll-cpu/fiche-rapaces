@@ -250,6 +250,7 @@ function normalizeData(rapacesData, userData) {
   const oiseaux = oiseauxSource.map((o, index) => ({
   id: o.id || `oiseau_${index}_${makeId()}`,
   nom: o.nom || "",
+  ordre: toNumber(o.ordre),
   bague: o.bague || "",
   cites: o.cites || "",
   espece: o.espece || "",
@@ -340,6 +341,7 @@ function buildRapacesPayload() {
       ...ancien,
       id: o.id,
       nom: o.nom || "",
+      ordre: toNumber(o.ordre),
       bague: o.bague || "",
       cites: o.cites || "",
       espece: o.espece || "",
@@ -967,7 +969,14 @@ function renderOiseaux() {
 
   const search = document.getElementById("searchOiseaux")?.value.toLowerCase().trim() || "";
 
-  let oiseaux = appData.oiseaux.slice();
+  let oiseaux = appData.oiseaux
+  .slice()
+  .sort((a, b) => {
+    const ordreA = toNumber(a.ordre) || 9999;
+    const ordreB = toNumber(b.ordre) || 9999;
+    if (ordreA !== ordreB) return ordreA - ordreB;
+    return (a.nom || "").localeCompare(b.nom || "");
+  });
 
   if (search) {
     oiseaux = oiseaux.filter((oiseau) =>
@@ -1143,7 +1152,15 @@ function renderNourrissageTable() {
           </tr>
         </thead>
         <tbody>
-          ${appData.oiseaux.map((oiseau) => `
+          ${appData.oiseaux
+  .slice()
+  .sort((a, b) => {
+    const ordreA = toNumber(a.ordre) || 9999;
+    const ordreB = toNumber(b.ordre) || 9999;
+    if (ordreA !== ordreB) return ordreA - ordreB;
+    return (a.nom || "").localeCompare(b.nom || "");
+  })
+  .map((oiseau) => `
             <tr>
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
@@ -1427,7 +1444,14 @@ function renderTerrain() {
 
   const search = document.getElementById("terrainSearch")?.value.toLowerCase() || "";
 
-  let oiseaux = appData.oiseaux;
+  let oiseaux = appData.oiseaux
+  .slice()
+  .sort((a, b) => {
+    const ordreA = toNumber(a.ordre) || 9999;
+    const ordreB = toNumber(b.ordre) || 9999;
+    if (ordreA !== ordreB) return ordreA - ordreB;
+    return (a.nom || "").localeCompare(b.nom || "");
+  });
 
   if (search) {
     oiseaux = oiseaux.filter((o) =>
@@ -2015,6 +2039,7 @@ function resetBirdForm() {
 
   [
   "oiseauNom",
+  "oiseauOrdre",
   "oiseauBague",
   "oiseauCites",
   "oiseauEspece",
@@ -2059,6 +2084,7 @@ async function ajouterOiseau() {
   const nom = document.getElementById("oiseauNom")?.value.trim() || "";
   if (!nom) return;
 
+  const ordre = toNumber(document.getElementById("oiseauOrdre")?.value || 0);
   const bague = document.getElementById("oiseauBague")?.value.trim() || "";
   const cites = document.getElementById("oiseauCites")?.value.trim() || "";
   const espece = document.getElementById("oiseauEspece")?.value.trim() || "";
@@ -2117,6 +2143,7 @@ async function ajouterOiseau() {
 
     if (editingBirdId && existingBird) {
       existingBird.nom = nom;
+      existingBird.ordre = ordre;
       existingBird.bague = bague;
       existingBird.cites = cites;
       existingBird.espece = espece;
@@ -2143,6 +2170,7 @@ async function ajouterOiseau() {
       appData.oiseaux.unshift({
         id: makeId(),
         nom,
+        ordre,
         bague,
         cites,
         espece,
@@ -2191,6 +2219,7 @@ function modifierOiseau(id) {
   };
 
   set("oiseauNom", bird.nom);
+  set("oiseauOrdre", bird.ordre);
   set("oiseauBague", bird.bague);
   set("oiseauCites", bird.cites);
   set("oiseauEspece", bird.espece);
