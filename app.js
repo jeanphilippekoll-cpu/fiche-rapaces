@@ -387,7 +387,7 @@ function buildRapacesPayload() {
       cailleteau30gr: toNumber(appData.stock.cailleteau30gr),
       boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
     },
-        documents: appData.documents
+    documents: appData.documents
       .filter((d) => (d.type || "") !== "Document général")
       .map((d) => ({
         id: d.id || makeId(),
@@ -396,7 +396,6 @@ function buildRapacesPayload() {
         description: d.description || "",
         lien: d.lien || ""
       })),
-
     documentsGeneraux: appData.documents
       .filter((d) => (d.type || "") === "Document général")
       .map((d) => ({
