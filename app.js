@@ -1068,11 +1068,13 @@ function renderOiseaux() {
           </div>
 
           <div class="small-actions">
-            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-            <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
-            <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
-            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-          </div>
+  <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
+  <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>
+  <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
+  <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
+  <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
+  <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+</div>
         </article>
       `).join("")}
     </div>
@@ -2501,6 +2503,62 @@ async function ajouterSuiviVeterinaire() {
   }
 }
 
+function monterOiseau(id) {
+  const oiseauxTries = appData.oiseaux
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a.ordre) || 9999;
+      const ordreB = toNumber(b.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
+
+  const index = oiseauxTries.findIndex((o) => o.id === id);
+  if (index <= 0) return;
+
+  const current = oiseauxTries[index];
+  const previous = oiseauxTries[index - 1];
+
+  const ordreCurrent = toNumber(current.ordre) || index + 1;
+  const ordrePrevious = toNumber(previous.ordre) || index;
+
+  current.ordre = ordrePrevious;
+  previous.ordre = ordreCurrent;
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = `${current.nom} déplacé vers le haut`;
+}
+
+function descendreOiseau(id) {
+  const oiseauxTries = appData.oiseaux
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a.ordre) || 9999;
+      const ordreB = toNumber(b.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
+
+  const index = oiseauxTries.findIndex((o) => o.id === id);
+  if (index === -1 || index >= oiseauxTries.length - 1) return;
+
+  const current = oiseauxTries[index];
+  const next = oiseauxTries[index + 1];
+
+  const ordreCurrent = toNumber(current.ordre) || index + 1;
+  const ordreNext = toNumber(next.ordre) || index + 2;
+
+  current.ordre = ordreNext;
+  next.ordre = ordreCurrent;
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = `${current.nom} déplacé vers le bas`;
+}
+
 function supprimerOiseau(id) {
   appData.oiseaux = appData.oiseaux.filter((o) => o.id !== id);
   renderAll();
@@ -2694,6 +2752,8 @@ window.renderVeterinaire = renderVeterinaire;
 window.exportControle = exportControle;
 window.remplirVacances = remplirVacances;
 window.renderOiseaux = renderOiseaux;
+window.monterOiseau = monterOiseau;
+window.descendreOiseau = descendreOiseau;
 
 window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
