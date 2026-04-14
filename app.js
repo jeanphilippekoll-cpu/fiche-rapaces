@@ -1950,16 +1950,23 @@ function renderVacances() {
         </thead>
         <tbody>
           ${appData.oiseaux
-  .slice()
-  .sort((a, b) => {
-    const ordreA = toNumber(a.ordre) || 9999;
-    const ordreB = toNumber(b.ordre) || 9999;
-    if (ordreA !== ordreB) return ordreA - ordreB;
-    return (a.nom || "").localeCompare(b.nom || "");
-  })
-  .map((o) => `
-            </tr>
-          `).join("")}
+            .slice()
+            .sort((a, b) => {
+              const ordreA = toNumber(a.ordre) || 9999;
+              const ordreB = toNumber(b.ordre) || 9999;
+              if (ordreA !== ordreB) return ordreA - ordreB;
+              return (a.nom || "").localeCompare(b.nom || "");
+            })
+            .map((o) => `
+              <tr>
+                <td><strong>${safe(o.nom)}</strong></td>
+                <td><input value="${safeAttr(o.nourritureHabituelle || "")}"></td>
+                <td><input type="number" value="${safeAttr(o.quantiteHabituelle || 0)}"></td>
+                <td><input value="${safeAttr(o.nourritureHabituelle2 || "")}"></td>
+                <td><input type="number" value="${safeAttr(o.quantiteHabituelle2 || 0)}"></td>
+                <td><input placeholder="Remarque"></td>
+              </tr>
+            `).join("")}
         </tbody>
       </table>
     </div>
