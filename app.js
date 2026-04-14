@@ -2816,7 +2816,7 @@ function ouvrirVetoOiseau(nom) {
 function exportControle() {
   const win = window.open("", "_blank");
   if (!win) {
-    alert("Le navigateur bloque la fenêtre d’export.");
+    alert("Le navigateur bloque la fenêtre d'export.");
     return;
   }
 
