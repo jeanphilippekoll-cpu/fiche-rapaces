@@ -2066,6 +2066,122 @@ function renderVacances() {
   `;
 }
 
+function imprimerVacances() {
+  const zone = document.getElementById("tableVacances");
+  if (!zone) return;
+
+  const contenuTable = zone.innerHTML || "<p>Aucun contenu vacances.</p>";
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre d'impression.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Nourrissage vacances</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body{
+          font-family:Arial,Helvetica,sans-serif;
+          color:#111;
+          background:#fff;
+          padding:20px;
+        }
+        .top-actions{
+          margin-bottom:18px;
+        }
+        .btn{
+          display:inline-block;
+          padding:10px 14px;
+          border:none;
+          border-radius:8px;
+          background:#333;
+          color:#fff;
+          font-weight:700;
+          cursor:pointer;
+        }
+        .header-doc{
+          border-bottom:2px solid #444;
+          padding-bottom:10px;
+          margin-bottom:15px;
+        }
+        .header-doc h2{
+          margin:0;
+          font-size:18px;
+          color:#2f4f2f;
+        }
+        .header-doc p{
+          margin:2px 0;
+          font-size:13px;
+          color:#444;
+        }
+        h1{
+          margin:0 0 10px 0;
+          font-size:26px;
+          color:#2f4f2f;
+          border-bottom:2px solid #ccc;
+          padding-bottom:5px;
+        }
+        table{
+          width:100%;
+          border-collapse:collapse;
+          margin-top:12px;
+        }
+        th, td{
+          border:1px solid #ccc;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+        th{
+          background:#e8f0e8;
+          color:#2f4f2f;
+        }
+        tbody tr:nth-child(even) td{
+          background:#f7f7f7;
+        }
+        input, textarea{
+          width:100%;
+          border:none;
+          background:transparent;
+          font:inherit;
+          color:#111;
+          padding:0;
+        }
+        @media print{
+          .top-actions{display:none}
+          body{padding:8px}
+          .header-doc h2, h1{color:#000}
+        }
+      </style>
+    </head>
+    <body>
+      <div class="top-actions">
+        <button class="btn" onclick="window.print()">Imprimer / Enregistrer en PDF</button>
+      </div>
+
+      <div class="header-doc">
+        <h2>Koll Jean-Philippe</h2>
+        <p>Rue du Canal 82, 4800 Ensival</p>
+        <p>+32 473 47 03 87</p>
+        <p>jeanphilippekoll@gmail.com</p>
+      </div>
+
+      <h1>Nourrissage vacances</h1>
+
+      ${contenuTable}
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
 function remplirVacances() {
   renderVacances();
 }
@@ -2872,6 +2988,7 @@ window.renderOiseaux = renderOiseaux;
 window.monterOiseau = monterOiseau;
 window.descendreOiseau = descendreOiseau;
 window.imprimerFicheNourrissage = imprimerFicheNourrissage;
+window.imprimerVacances = imprimerVacances;
 
 window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
