@@ -1097,6 +1097,79 @@ function renderOiseaux() {
   `;
 }
 
+function renderArchivesOiseaux() {
+  const zone = document.getElementById("listeArchivesOiseaux");
+  if (!zone) return;
+
+  const search = document.getElementById("searchArchives")?.value.toLowerCase().trim() || "";
+
+  let oiseaux = appData.oiseaux
+    .filter((oiseau) => {
+      return (
+        (oiseau.registreSortie || "").trim() !== "" ||
+        (oiseau.dateSortie || "").trim() !== ""
+      );
+    })
+    .slice()
+    .sort((a, b) => {
+      const dateA = a.dateSortie || "";
+      const dateB = b.dateSortie || "";
+      const d = dateB.localeCompare(dateA);
+      if (d !== 0) return d;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
+
+  if (search) {
+    oiseaux = oiseaux.filter((o) =>
+      (o.nom || "").toLowerCase().includes(search) ||
+      (o.espece || "").toLowerCase().includes(search) ||
+      (o.bague || "").toLowerCase().includes(search) ||
+      (o.cites || "").toLowerCase().includes(search)
+    );
+  }
+
+  if (!oiseaux.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau archivé.</p>`;
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="bird-grid">
+      ${oiseaux.map((o) => `
+        <article class="bird-card">
+          <div class="bird-card-head">
+            <div>
+              <h3>${safe(o.nom)}</h3>
+              <p class="bird-species">${safe(o.espece || "-")}</p>
+            </div>
+            <div class="weight-pill">${safe(o.statut || "-")}</div>
+          </div>
+
+          ${o.photoUrl ? `
+            <img src="${safeAttr(o.photoUrl)}" alt="${safeAttr(o.nom)}" class="bird-photo">
+          ` : `
+            <div class="bird-photo-placeholder">Pas de photo</div>
+          `}
+
+          <div class="bird-meta">
+            <div><span>N° bague</span><strong>${safe(o.bague || "-")}</strong></div>
+            <div><span>N° CITES</span><strong>${safe(o.cites || "-")}</strong></div>
+            <div><span>Date sortie</span><strong>${safe(formatDateFR(o.dateSortie || "") || "-")}</strong></div>
+            <div><span>N° sortie</span><strong>${safe(o.registreSortie || "-")}</strong></div>
+            <div><span>Motif sortie</span><strong>${safe(o.motifSortie || "-")}</strong></div>
+          </div>
+
+          <div class="small-actions">
+            <button class="btn info-btn" onclick="openBirdSheet('${o.id}')">Ouvrir fiche</button>
+            <button class="btn warn-btn" onclick="partagerFicheOiseau('${o.id}')">Partager</button>
+            <button class="btn secondary-btn" onclick="modifierOiseau('${o.id}')">Modifier</button>
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
 function renderPesees() {
   const zone = document.getElementById("listePesees");
   if (!zone) return;
@@ -2191,6 +2264,7 @@ function renderAll() {
   refreshStats();
   refreshBirdSelects();
   renderOiseaux();
+  renderArchivesOiseaux();
   renderPesees();
   renderDocuments();
   renderNourrissage();
@@ -2989,6 +3063,7 @@ window.monterOiseau = monterOiseau;
 window.descendreOiseau = descendreOiseau;
 window.imprimerFicheNourrissage = imprimerFicheNourrissage;
 window.imprimerVacances = imprimerVacances;
+window.renderArchivesOiseaux = renderArchivesOiseaux;
 
 window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;

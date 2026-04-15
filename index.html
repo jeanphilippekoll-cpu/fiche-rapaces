@@ -1175,6 +1175,7 @@ h2 {
         <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
         <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
         <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
+        <button id="btn-archives" onclick="showSection('archives')">Archives oiseaux</button>
       </div>
 
       <div class="menu-group">
@@ -1408,6 +1409,21 @@ h2 {
   <div id="listeOiseaux"></div>
 </div>
         </section>
+
+        <section id="section-archives" class="section hidden">
+  <div class="card">
+    <h2>Archives oiseaux sortis</h2>
+
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div>
+        <label for="searchArchives">Recherche archives</label>
+        <input id="searchArchives" placeholder="Nom, espèce, bague, CITES..." oninput="renderArchivesOiseaux()">
+      </div>
+    </div>
+
+    <div id="listeArchivesOiseaux"></div>
+  </div>
+</section>
 
         <section id="section-pesee" class="section hidden">
           <div class="card">
