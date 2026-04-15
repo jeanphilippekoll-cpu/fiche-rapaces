@@ -986,6 +986,12 @@ function renderOiseaux() {
   const search = document.getElementById("searchOiseaux")?.value.toLowerCase().trim() || "";
 
   let oiseaux = appData.oiseaux
+  .filter((oiseau) => {
+    return !(
+      (oiseau.registreSortie || "").trim() !== "" ||
+      (oiseau.dateSortie || "").trim() !== ""
+    );
+  })
   .slice()
   .sort((a, b) => {
     const ordreA = toNumber(a.ordre) || 9999;
