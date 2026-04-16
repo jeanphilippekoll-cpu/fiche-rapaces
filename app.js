@@ -1208,8 +1208,6 @@ function renderDocuments() {
   `;
 }
 
-
-
 function getWeekKey(dateStr) {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return "";
@@ -2574,6 +2572,78 @@ async function ajouterDocument() {
     console.error(e);
     if (statusEl) statusEl.textContent = "Erreur document";
   }
+}
+
+function ajouterNourrissage() {
+  const date = document.getElementById("feedDate")?.value || todayStr();
+  const remarques = document.getElementById("feedNote")?.value.trim() || "";
+
+  const oiseauxActifs = appData.oiseaux.filter((oiseau) => {
+    return !(
+      (oiseau.registreSortie || "").trim() !== "" ||
+      (oiseau.dateSortie || "").trim() !== ""
+    );
+  });
+
+  if (!oiseauxActifs.length) return;
+
+  const lignes = [];
+
+  oiseauxActifs.forEach((oiseau) => {
+    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
+    const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
+    const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
+    const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
+
+    if (f1 && q1 > 0) {
+      lignes.push({
+        id: editingFeedId || makeId(),
+        date,
+        oiseau: oiseau.nom || "",
+        nourriture: f1,
+        quantite: q1,
+        remarques
+      });
+    }
+
+    if (f2 && q2 > 0) {
+      lignes.push({
+        id: makeId(),
+        date,
+        oiseau: oiseau.nom || "",
+        nourriture: f2,
+        quantite: q2,
+        remarques
+      });
+    }
+  });
+
+  if (!lignes.length) {
+    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
+    return;
+  }
+
+  if (editingFeedId) {
+    const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
+    if (ancien) restoreStockFromDeletedFeed(ancien);
+
+    appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
+    editingFeedId = null;
+  }
+
+  lignes.forEach((ligne) => {
+    decrementStock(ligne.nourriture, ligne.quantite);
+    appData.nourrissage.unshift(ligne);
+  });
+
+  viderTableNourrissage(false);
+
+  const noteEl = document.getElementById("feedNote");
+  if (noteEl) noteEl.value = "";
+
+  renderAll();
+  triggerAutoSave();
+  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
 }
 
 function renderNourrissageTable() {
