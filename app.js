@@ -1245,7 +1245,7 @@ function getFoodOptionsHtml(selected = "", includeEmpty = true) {
       </table>
     </div>
   `;
-}
+    
 
 function sameDay(dateA, dateB) {
   return dateA === dateB;
