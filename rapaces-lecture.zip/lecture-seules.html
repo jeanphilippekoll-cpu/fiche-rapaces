@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dossier lecture seule</title>
+  <style>
+    :root{
+      --bg:#f7f1e3;
+      --bg2:#efe6d1;
+      --panel:#fffaf0;
+      --line:rgba(96, 76, 46, 0.12);
+      --text:#3d3123;
+      --muted:#7b6b57;
+      --accent:#8aa36b;
+      --card-shadow:0 12px 30px rgba(75,57,30,0.08);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(138,163,107,0.18), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      color:var(--text);
+    }
+
+    .app{
+      max-width:1400px;
+      margin:0 auto;
+      padding:24px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+
+    .page-title{
+      margin:0;
+      font-size:38px;
+    }
+
+    .page-subtitle{
+      margin:8px 0 0 0;
+      color:var(--muted);
+    }
+
+    #status{
+      color:var(--muted);
+      margin-top:8px;
+    }
+
+    .nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:18px 0 24px;
+    }
+
+    .nav button{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      background:#e7dcc6;
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .nav button.active{
+      background:var(--accent);
+      color:#fff;
+    }
+
+    .section.hidden{display:none}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,248,235,0.95));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:20px;
+      margin-bottom:18px;
+      box-shadow:var(--card-shadow);
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:14px;
+    }
+
+    input{
+      width:100%;
+      padding:12px 14px;
+      margin-top:6px;
+      border-radius:12px;
+      border:1px solid rgba(96,76,46,0.14);
+      background:#fffdf8;
+      color:var(--text);
+    }
+
+    label{
+      display:block;
+      margin-bottom:4px;
+      font-weight:700;
+    }
+
+    .bird-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:18px;
+    }
+
+    .bird-card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:var(--card-shadow);
+    }
+
+    .bird-card-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:14px;
+    }
+
+    .bird-card-head h3{
+      margin:0;
+      font-size:24px;
+    }
+
+    .bird-species{
+      margin:6px 0 0 0;
+      color:var(--muted);
+    }
+
+    .weight-pill{
+      background:rgba(138,163,107,0.18);
+      color:#50613d;
+      border:1px solid rgba(138,163,107,0.26);
+      border-radius:999px;
+      padding:8px 12px;
+      white-space:nowrap;
+      font-weight:700;
+    }
+
+    .bird-photo{
+      width:100%;
+      height:240px;
+      object-fit:cover;
+      border-radius:16px;
+      display:block;
+      margin-bottom:14px;
+      background:#efe6d1;
+    }
+
+    .bird-photo-placeholder{
+      width:100%;
+      height:240px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      background:#efe6d1;
+      color:var(--muted);
+      border:1px dashed rgba(96,76,46,0.16);
+    }
+
+    .bird-meta{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .bird-meta div{
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .bird-meta span{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:4px;
+    }
+
+    .card-section{
+      margin-top:14px;
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .card-section h4{
+      margin:0 0 10px 0;
+    }
+
+    .doc-link{
+      display:block;
+      padding:10px 12px;
+      border-radius:10px;
+      background:#fffdf8;
+      border:1px solid var(--line);
+      color:#5b7aa2;
+      text-decoration:none;
+      margin-bottom:8px;
+    }
+
+    .doc-link:hover{text-decoration:underline;}
+
+    .muted-line{color:var(--muted);}
+
+    .list-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:14px;
+    }
+
+    .item{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      margin-top:12px;
+    }
+
+    @media (max-width: 700px){
+      .app{padding:16px}
+      .page-title{font-size:30px}
+      .bird-photo,.bird-photo-placeholder{height:210px}
+      .bird-card-head{flex-direction:column}
+      .weight-pill{align-self:flex-start}
+      .bird-meta{grid-template-columns:1fr}
+      .nav button{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1 class="page-title">Dossier lecture seule</h1>
+        <p class="page-subtitle">Consultation des oiseaux, archives, documents et suivi vétérinaire</p>
+        <div id="status">Chargement…</div>
+      </div>
+    </header>
+
+    <nav class="nav">
+      <button id="btn-actifs" class="active" onclick="showSection('actifs')">Oiseaux actifs</button>
+      <button id="btn-archives" onclick="showSection('archives')">Archives oiseaux</button>
+      <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+    </nav>
+
+    <section id="section-actifs" class="section">
+      <div class="card">
+        <h2>Oiseaux actifs</h2>
+        <div class="form-grid" style="margin-bottom:12px;">
+          <div>
+            <label for="searchActifs">Recherche</label>
+            <input id="searchActifs" placeholder="Nom, espèce, bague, CITES..." oninput="renderActifs()">
+          </div>
+        </div>
+        <div id="listeActifs"></div>
+      </div>
+    </section>
+
+    <section id="section-archives" class="section hidden">
+      <div class="card">
+        <h2>Archives oiseaux sortis</h2>
+        <div class="form-grid" style="margin-bottom:12px;">
+          <div>
+            <label for="searchArchives">Recherche archives</label>
+            <input id="searchArchives" placeholder="Nom, espèce, bague, CITES..." oninput="renderArchives()">
+          </div>
+        </div>
+        <div id="listeArchives"></div>
+      </div>
+    </section>
+
+    <section id="section-documents" class="section hidden">
+      <div class="card">
+        <h2>Documents généraux</h2>
+        <div id="listeDocuments"></div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
+      authDomain: "fiche-rapaces.firebaseapp.com",
+      projectId: "fiche-rapaces",
+      storageBucket: "fiche-rapaces.firebasestorage.app",
+      messagingSenderId: "881543403206",
+      appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
+    };
+
+    const firebaseApp = initializeApp(firebaseConfig);
+    const db = getFirestore(firebaseApp);
+
+    const mainRef = doc(db, "rapaces", "data");
+    const userRef = doc(db, "users", "dQPT9eD5g2c7FkjCb86pJnqh4qF3");
+
+    let appData = {
+      oiseaux: [],
+      documents: [],
+      veterinaire: []
+    };
+
+    function safe(v) {
+      return (v ?? "").toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function safeAttr(v) {
+      return safe(v).replaceAll('"', "&quot;");
+    }
+
+    function safeArray(v) {
+      return Array.isArray(v) ? v : [];
+    }
+
+    function toNumber(v) {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatDateFR(dateStr) {
+      if (!dateStr || typeof dateStr !== "string") return "";
+      const parts = dateStr.split("-");
+      if (parts.length !== 3) return dateStr;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function getSafeUrl(value) {
+      if (!value) return "";
+      if (typeof value === "string") return value;
+      if (typeof value.url === "string") return value.url;
+      if (value.url && typeof value.url.url === "string") return value.url.url;
+      if (typeof value.lien === "string") return value.lien;
+      return "";
+    }
+
+    function normalizeDocuments(list) {
+      return safeArray(list).map((docItem) => ({
+        name: docItem?.name || docItem?.nom || docItem?.titre || "Document",
+        url: getSafeUrl(docItem)
+      }));
+    }
+
+    function normalizeVeterinaire(list) {
+      return safeArray(list).map((item) => ({
+        id: item?.id || "",
+        oiseau: item?.oiseau || "",
+        date: item?.date || "",
+        veterinaire: item?.veterinaire || "",
+        motif: item?.motif || "",
+        diagnostic: item?.diagnostic || "",
+        traitement: item?.traitement || "",
+        protocole: item?.protocole || "",
+        observations: item?.observations || "",
+        fichiers: normalizeDocuments(item?.fichiers)
+      }));
+    }
+
+    function getVetForBird(birdName) {
+      return safeArray(appData.veterinaire)
+        .filter((v) => (v.oiseau || "").trim().toLowerCase() === (birdName || "").trim().toLowerCase())
+        .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    }
+
+    function renderVetForBird(birdName) {
+      const items = getVetForBird(birdName);
+
+      if (!items.length) {
+        return `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
+      }
+
+      return items.map((item) => `
+        <div class="item">
+          <p><strong>Date :</strong> ${safe(formatDateFR(item.date || ""))}</p>
+          <p><strong>Vétérinaire :</strong> ${safe(item.veterinaire || "")}</p>
+          <p><strong>Motif :</strong> ${safe(item.motif || "")}</p>
+          <p><strong>Diagnostic :</strong> ${safe(item.diagnostic || "")}</p>
+          <p><strong>Traitement :</strong> ${safe(item.traitement || "")}</p>
+          <p><strong>Protocole :</strong> ${safe(item.protocole || "")}</p>
+          <p><strong>Observations :</strong> ${safe(item.observations || "")}</p>
+          ${
+            safeArray(item.fichiers).length
+              ? safeArray(item.fichiers).map((f) => `
+                  <a class="doc-link" href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer">
+                    ${safe(f.name)}
+                  </a>
+                `).join("")
+              : `<p class="muted-line">Aucun fichier.</p>`
+          }
+        </div>
+      `).join("");
+    }
+
+    function renderDocumentsList(documents) {
+      if (!documents.length) {
+        return `<p class="muted-line">Aucun document lié.</p>`;
+      }
+
+      return documents.map((docItem) => `
+        <a class="doc-link" href="${safeAttr(docItem.url)}" target="_blank" rel="noopener noreferrer">
+          ${safe(docItem.name)}
+        </a>
+      `).join("");
+    }
+
+    function renderBirdCards(list, zoneId) {
+      const zone = document.getElementById(zoneId);
+      if (!zone) return;
+
+      if (!list.length) {
+        zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
+        return;
+      }
+
+      zone.innerHTML = `
+        <div class="bird-grid">
+          ${list.map((oiseau) => `
+            <article class="bird-card">
+              <div class="bird-card-head">
+                <div>
+                  <h3>${safe(oiseau.nom || "")}</h3>
+                  <p class="bird-species">${safe(oiseau.espece || "-")}</p>
+                </div>
+                <div class="weight-pill">${safe(oiseau.statut || "-")}</div>
+              </div>
+
+              ${oiseau.photoUrl ? `
+                <img src="${safeAttr(oiseau.photoUrl)}" alt="${safeAttr(oiseau.nom || "")}" class="bird-photo">
+              ` : `
+                <div class="bird-photo-placeholder">Pas de photo</div>
+              `}
+
+              <div class="bird-meta">
+                <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
+                <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
+                <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
+                <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
+                <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
+                <div><span>Date sortie</span><strong>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</strong></div>
+                <div><span>N° sortie</span><strong>${safe(oiseau.registreSortie || "-")}</strong></div>
+                <div><span>Motif sortie</span><strong>${safe(oiseau.motifSortie || "-")}</strong></div>
+              </div>
+
+              <div class="card-section">
+                <h4>Notes</h4>
+                <p>${safe(oiseau.notes || "Aucune note")}</p>
+              </div>
+
+              <div class="card-section">
+                <h4>Documents liés</h4>
+                ${renderDocumentsList(safeArray(oiseau.documents))}
+              </div>
+
+              <div class="card-section">
+                <h4>Suivi vétérinaire</h4>
+                ${renderVetForBird(oiseau.nom)}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function renderActifs() {
+      const search = document.getElementById("searchActifs")?.value.toLowerCase().trim() || "";
+
+      let oiseaux = appData.oiseaux
+        .filter((o) => {
+          return !(
+            (o.registreSortie || "").trim() !== "" ||
+            (o.dateSortie || "").trim() !== ""
+          );
+        })
+        .slice()
+        .sort((a, b) => {
+          const ordreA = toNumber(a.ordre) || 9999;
+          const ordreB = toNumber(b.ordre) || 9999;
+          if (ordreA !== ordreB) return ordreA - ordreB;
+          return (a.nom || "").localeCompare(b.nom || "");
+        });
+
+      if (search) {
+        oiseaux = oiseaux.filter((o) =>
+          (o.nom || "").toLowerCase().includes(search) ||
+          (o.espece || "").toLowerCase().includes(search) ||
+          (o.bague || "").toLowerCase().includes(search) ||
+          (o.cites || "").toLowerCase().includes(search)
+        );
+      }
+
+      renderBirdCards(oiseaux, "listeActifs");
+    }
+
+    function renderArchives() {
+      const search = document.getElementById("searchArchives")?.value.toLowerCase().trim() || "";
+
+      let oiseaux = appData.oiseaux
+        .filter((o) => {
+          return (
+            (o.registreSortie || "").trim() !== "" ||
+            (o.dateSortie || "").trim() !== ""
+          );
+        })
+        .slice()
+        .sort((a, b) => {
+          const dateA = a.dateSortie || "";
+          const dateB = b.dateSortie || "";
+          const d = dateB.localeCompare(dateA);
+          if (d !== 0) return d;
+          return (a.nom || "").localeCompare(b.nom || "");
+        });
+
+      if (search) {
+        oiseaux = oiseaux.filter((o) =>
+          (o.nom || "").toLowerCase().includes(search) ||
+          (o.espece || "").toLowerCase().includes(search) ||
+          (o.bague || "").toLowerCase().includes(search) ||
+          (o.cites || "").toLowerCase().includes(search)
+        );
+      }
+
+      renderBirdCards(oiseaux, "listeArchives");
+    }
+
+    function renderDocuments() {
+      const zone = document.getElementById("listeDocuments");
+      if (!zone) return;
+
+      if (!appData.documents.length) {
+        zone.innerHTML = `<p class="muted-line">Aucun document.</p>`;
+        return;
+      }
+
+      zone.innerHTML = `
+        <div class="list-grid">
+          ${appData.documents.map((docItem) => `
+            <div class="item">
+              <h3>${safe(docItem.titre || "Document")}</h3>
+              <p><strong>Type :</strong> ${safe(docItem.type || "-")}</p>
+              <p><strong>Description :</strong> ${safe(docItem.description || "-")}</p>
+              ${docItem.lien ? `<a class="doc-link" href="${safeAttr(docItem.lien)}" target="_blank" rel="noopener noreferrer">Ouvrir le document</a>` : `<p class="muted-line">Aucun lien</p>`}
+            </div>
+          `).join("")}
+        </div>
+      `;
+    }
+
+    function showSection(section) {
+      document.querySelectorAll(".section").forEach((el) => el.classList.add("hidden"));
+      document.querySelectorAll(".nav button").forEach((btn) => btn.classList.remove("active"));
+
+      document.getElementById(`section-${section}`)?.classList.remove("hidden");
+      document.getElementById(`btn-${section}`)?.classList.add("active");
+    }
+
+    async function loadData() {
+      try {
+        document.getElementById("status").textContent = "Chargement…";
+
+        const [mainSnap, userSnap] = await Promise.all([
+          getDoc(mainRef),
+          getDoc(userRef)
+        ]);
+
+        const rawRapacesData = mainSnap.exists() ? mainSnap.data() : {};
+        const rawUserData = userSnap.exists() ? userSnap.data() : {};
+
+        const oiseaux = safeArray(rawRapacesData?.oiseaux).map((o) => ({
+          id: o.id || "",
+          nom: o.nom || "",
+          ordre: toNumber(o.ordre),
+          bague: o.bague || "",
+          cites: o.cites || "",
+          espece: o.espece || "",
+          sexe: o.sexe || "",
+          age: o.age || "",
+          annexe: o.annexe || "",
+          dateEntree: o.dateEntree || "",
+          registreEntree: o.registreEntree || "",
+          statut: o.statut || "En place",
+          dateSortie: o.dateSortie || "",
+          registreSortie: o.registreSortie || "",
+          motifSortie: o.motifSortie || "",
+          notes: o.notes || "",
+          photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
+          documents: normalizeDocuments(o.documents)
+        }));
+
+        const documents = [
+          ...safeArray(rawRapacesData?.documents).map((d) => ({
+            titre: d.titre || d.nom || "Document",
+            type: d.type || "Document",
+            description: d.description || "",
+            lien: getSafeUrl(d)
+          })),
+          ...safeArray(rawRapacesData?.documentsGeneraux).map((d) => ({
+            titre: d.titre || d.nom || "Document général",
+            type: d.type || "Document général",
+            description: d.description || "",
+            lien: getSafeUrl(d)
+          }))
+        ];
+
+        const veterinaire = normalizeVeterinaire(rawUserData?.veterinaire || rawRapacesData?.veterinaire || []);
+
+        appData = { oiseaux, documents, veterinaire };
+
+        renderActifs();
+        renderArchives();
+        renderDocuments();
+
+        document.getElementById("status").textContent = "Lecture seule chargée";
+      } catch (e) {
+        console.error(e);
+        document.getElementById("status").textContent = "Erreur chargement";
+      }
+    }
+
+    window.showSection = showSection;
+    window.renderActifs = renderActifs;
+    window.renderArchives = renderArchives;
+
+    loadData();
+  </script>
+</body>
+</html>
