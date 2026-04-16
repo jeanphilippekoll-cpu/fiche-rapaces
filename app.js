@@ -2661,69 +2661,71 @@ async function ajouterDocument() {
   }
 }
 
-function ajouterNourrissage() {
-  const date = document.getElementById("feedDate")?.value || todayStr();
-  const remarques = document.getElementById("feedNote")?.value.trim() || "";
+function renderNourrissageTable() {
+  const zone = document.getElementById("feedTableZone");
+  if (!zone) return;
 
-  if (!appData.oiseaux.length) return;
+  const oiseauxActifs = appData.oiseaux
+    .filter((o) => {
+      return !(
+        (o.registreSortie || "").trim() !== "" ||
+        (o.dateSortie || "").trim() !== ""
+      );
+    })
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a.ordre) || 9999;
+      const ordreB = toNumber(b.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
 
-  const lignes = [];
-
-  appData.oiseaux.forEach((oiseau) => {
-    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
-    const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
-    const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
-    const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
-
-    if (f1 && q1 > 0) {
-      lignes.push({
-        id: editingFeedId || makeId(),
-        date,
-        oiseau: oiseau.nom || "",
-        nourriture: f1,
-        quantite: q1,
-        remarques
-      });
-    }
-
-    if (f2 && q2 > 0) {
-      lignes.push({
-        id: makeId(),
-        date,
-        oiseau: oiseau.nom || "",
-        nourriture: f2,
-        quantite: q2,
-        remarques
-      });
-    }
-  });
-
-  if (!lignes.length) {
-    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
+  if (!oiseauxActifs.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun oiseau disponible.</p>`;
     return;
   }
 
-  if (editingFeedId) {
-    const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
-    if (ancien) restoreStockFromDeletedFeed(ancien);
+  zone.innerHTML = `
+    <div class="feed-toolbar">
+      <button class="btn secondary-btn" onclick="appliquerNourritureHabituelle()">Remplir avec nourriture habituelle</button>
+      <button class="btn secondary-btn" onclick="viderTableNourrissage()">Vider le tableau</button>
+    </div>
 
-    appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
-    editingFeedId = null;
-  }
-
-  lignes.forEach((ligne) => {
-    decrementStock(ligne.nourriture, ligne.quantite);
-    appData.nourrissage.unshift(ligne);
-  });
-
-  viderTableNourrissage(false);
-
-  const noteEl = document.getElementById("feedNote");
-  if (noteEl) noteEl.value = "";
-
-  renderAll();
-  triggerAutoSave();
-  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
+    <div class="feed-table-wrap">
+      <table class="feed-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Espèce</th>
+            <th>Nourriture 1</th>
+            <th>Qté 1</th>
+            <th>Nourriture 2</th>
+            <th>Qté 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${oiseauxActifs.map((oiseau) => `
+            <tr>
+              <td>${safe(oiseau.nom)}</td>
+              <td>${safe(oiseau.espece)}</td>
+              <td>
+                <select id="feedFood1_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("Poussin", false)}</select>
+              </td>
+              <td>
+                <input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
+              </td>
+              <td>
+                <select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("", true)}</select>
+              </td>
+              <td>
+                <input id="feedQty2_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function appliquerNourritureHabituelle() {
