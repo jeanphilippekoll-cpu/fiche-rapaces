@@ -2646,6 +2646,19 @@ function ajouterNourrissage() {
   if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
 }
 
+function getFoodOptionsHtml(selected = "", includeEmpty = true) {
+  const emptyOption = includeEmpty
+    ? `<option value="" ${selected === "" ? "selected" : ""}>Choisir</option>`
+    : "";
+
+  return `
+    ${emptyOption}
+    ${ALIMENTS.map((food) => `
+      <option value="${safeAttr(food)}" ${food === selected ? "selected" : ""}>${safe(food)}</option>
+    `).join("")}
+  `;
+}
+
 function renderNourrissageTable() {
   const zone = document.getElementById("feedTableZone");
   if (!zone) return;
