@@ -1106,6 +1106,7 @@ function renderOiseaux() {
 function renderArchivesOiseaux() {
   const zone = document.getElementById("listeArchivesOiseaux");
   if (!zone) return;
+}
 
   const search = document.getElementById("searchArchives")?.value.toLowerCase().trim() || "";
 
@@ -1133,6 +1134,8 @@ function renderArchivesOiseaux() {
       (o.cites || "").toLowerCase().includes(search)
     );
   }
+
+function renderArchivesOiseaux() {
 
   if (!oiseaux.length) {
     zone.innerHTML = `<p class="muted-line">Aucun oiseau archivé.</p>`;
@@ -1225,7 +1228,22 @@ function renderNourrissageTable() {
   const zone = document.getElementById("feedTableZone");
   if (!zone) return;
 
-  if (!appData.oiseaux.length) {
+  const oiseauxActifs = appData.oiseaux
+    .filter((o) => {
+      return !(
+        (o.registreSortie || "").trim() !== "" ||
+        (o.dateSortie || "").trim() !== ""
+      );
+    })
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a.ordre) || 9999;
+      const ordreB = toNumber(b.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a.nom || "").localeCompare(b.nom || "");
+    });
+
+  if (!oiseauxActifs.length) {
     zone.innerHTML = `<p class="muted-line">Aucun oiseau disponible.</p>`;
     return;
   }
@@ -1249,15 +1267,7 @@ function renderNourrissageTable() {
           </tr>
         </thead>
         <tbody>
-          ${appData.oiseaux
-  .slice()
-  .sort((a, b) => {
-    const ordreA = toNumber(a.ordre) || 9999;
-    const ordreB = toNumber(b.ordre) || 9999;
-    if (ordreA !== ordreB) return ordreA - ordreB;
-    return (a.nom || "").localeCompare(b.nom || "");
-  })
-  .map((oiseau) => `
+          ${oiseauxActifs.map((oiseau) => `
             <tr>
               <td>${safe(oiseau.nom)}</td>
               <td>${safe(oiseau.espece)}</td>
