@@ -2904,56 +2904,16 @@ function renderVeterinaire() {
   }
 
   zone.innerHTML = liste
+    .slice()
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
       <div class="item">
-        <p><strong>${item.oiseau}</strong> - ${item.date}</p>
-        <p>${item.motif || ""}</p>
+        <p><strong>${safe(item.oiseau || "")}</strong> - ${safe(item.date || "")}</p>
+        <p>${safe(item.motif || "")}</p>
         <button onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
       </div>
     `).join("");
 }
-
-window.showSection = showSection;
-window.saveData = saveData;
-window.ajouterOiseau = ajouterOiseau;
-window.modifierOiseau = modifierOiseau;
-window.cancelEditBird = cancelEditBird;
-window.ajouterPesee = ajouterPesee;
-window.ajouterDocument = ajouterDocument;
-window.ajouterNourrissage = ajouterNourrissage;
-window.appliquerNourritureHabituelle = appliquerNourritureHabituelle;
-window.viderTableNourrissage = viderTableNourrissage;
-window.enregistrerStock = enregistrerStock;
-window.ajouterSuiviVeterinaire = ajouterSuiviVeterinaire;
-window.supprimerOiseau = supprimerOiseau;
-window.supprimerDocument = supprimerDocument;
-window.supprimerNourrissage = supprimerNourrissage;
-window.modifierNourrissage = modifierNourrissage;
-window.corrigerDateNourrissage = corrigerDateNourrissage;
-window.supprimerGroupeNourrissage = supprimerGroupeNourrissage;
-window.supprimerSuiviVeterinaire = supprimerSuiviVeterinaire;
-window.quickFeed = quickFeed;
-window.rationHabituelleTerrain = rationHabituelleTerrain;
-window.openBirdSheet = openBirdSheet;
-window.checkPin = checkPin;
-window.partagerFicheOiseau = partagerFicheOiseau;
-window.ajouterEntretien = ajouterEntretien;
-window.supprimerEntretien = supprimerEntretien;
-window.imprimerInventaire = imprimerInventaire;
-window.partagerInventaire = partagerInventaire;
-window.renderVeterinaire = renderVeterinaire;
-window.exportControle = exportControle;
-window.remplirVacances = remplirVacances;
-window.renderOiseaux = renderOiseaux;
-window.monterOiseau = monterOiseau;
-window.descendreOiseau = descendreOiseau;
-window.imprimerFicheNourrissage = imprimerFicheNourrissage;
-window.imprimerVacances = imprimerVacances;
-window.renderArchivesOiseaux = renderArchivesOiseaux;
-
-window.partagerFicheOiseau = partagerFicheOiseau;
-window.ouvrirInventaire = ouvrirInventaire;
 
 function ouvrirFicheOiseau(id) {
   openBirdSheet(id);
@@ -3061,15 +3021,15 @@ function exportControle() {
           <h2>${safe(o.nom)}</h2>
 
           <p><strong>Espèce :</strong> ${safe(o.espece || "-")}</p>
-<p><strong>Âge / date de naissance :</strong> ${safe(o.age || "-")}</p>
-<p><strong>Sexe :</strong> ${safe(o.sexe || "-")}</p>
-<p><strong>N° bague :</strong> ${safe(o.bague || "-")}</p>
-<p><strong>N° CITES :</strong> ${safe(o.cites || "-")}</p>
-<p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
-<p><strong>N° entrée :</strong> ${safe(o.registreEntree || "-")}</p>
-<p><strong>Date d'entrée :</strong> ${safe(formatDateFR(o.dateEntree || "") || "-")}</p>
-<p><strong>Statut :</strong> ${safe(o.statut || "-")}</p>
-<p><strong>Poids :</strong> ${safe(o.poidsActuel || "-")} g</p>
+          <p><strong>Âge / date de naissance :</strong> ${safe(o.age || "-")}</p>
+          <p><strong>Sexe :</strong> ${safe(o.sexe || "-")}</p>
+          <p><strong>N° bague :</strong> ${safe(o.bague || "-")}</p>
+          <p><strong>N° CITES :</strong> ${safe(o.cites || "-")}</p>
+          <p><strong>Annexe :</strong> ${safe(o.annexe || "-")}</p>
+          <p><strong>N° entrée :</strong> ${safe(o.registreEntree || "-")}</p>
+          <p><strong>Date d'entrée :</strong> ${safe(formatDateFR(o.dateEntree || "") || "-")}</p>
+          <p><strong>Statut :</strong> ${safe(o.statut || "-")}</p>
+          <p><strong>Poids :</strong> ${safe(o.poidsActuel || "-")} g</p>
 
           <h3>Documents</h3>
           ${
@@ -3141,8 +3101,46 @@ function exportControle() {
   win.document.close();
 }
 
+window.showSection = showSection;
+window.saveData = saveData;
+window.ajouterOiseau = ajouterOiseau;
+window.modifierOiseau = modifierOiseau;
+window.cancelEditBird = cancelEditBird;
+window.ajouterPesee = ajouterPesee;
+window.ajouterDocument = ajouterDocument;
+window.ajouterNourrissage = ajouterNourrissage;
+window.appliquerNourritureHabituelle = appliquerNourritureHabituelle;
+window.viderTableNourrissage = viderTableNourrissage;
+window.enregistrerStock = enregistrerStock;
+window.ajouterSuiviVeterinaire = ajouterSuiviVeterinaire;
+window.supprimerOiseau = supprimerOiseau;
+window.supprimerDocument = supprimerDocument;
+window.supprimerNourrissage = supprimerNourrissage;
+window.modifierNourrissage = modifierNourrissage;
+window.corrigerDateNourrissage = corrigerDateNourrissage;
+window.supprimerGroupeNourrissage = supprimerGroupeNourrissage;
+window.supprimerSuiviVeterinaire = supprimerSuiviVeterinaire;
+window.quickFeed = quickFeed;
+window.rationHabituelleTerrain = rationHabituelleTerrain;
+window.openBirdSheet = openBirdSheet;
+window.checkPin = checkPin;
+window.partagerFicheOiseau = partagerFicheOiseau;
+window.ajouterEntretien = ajouterEntretien;
+window.supprimerEntretien = supprimerEntretien;
+window.imprimerInventaire = imprimerInventaire;
+window.partagerInventaire = partagerInventaire;
+window.renderVeterinaire = renderVeterinaire;
+window.remplirVacances = remplirVacances;
+window.renderOiseaux = renderOiseaux;
+window.monterOiseau = monterOiseau;
+window.descendreOiseau = descendreOiseau;
+window.imprimerFicheNourrissage = imprimerFicheNourrissage;
+window.imprimerVacances = imprimerVacances;
+window.renderArchivesOiseaux = renderArchivesOiseaux;
+window.ouvrirInventaire = ouvrirInventaire;
 window.ouvrirFicheOiseau = ouvrirFicheOiseau;
 window.ouvrirVetoOiseau = ouvrirVetoOiseau;
+window.exportControle = exportControle;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
@@ -3163,6 +3161,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  resetBirdForm();
+  if (typeof resetBirdForm === "function") {
+    resetBirdForm();
+  }
+
   showSection("accueil");
 });
