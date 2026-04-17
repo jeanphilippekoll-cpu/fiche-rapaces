@@ -2892,6 +2892,28 @@ function renderEntretien() {
   `;
 }
 
+function renderVeterinaire() {
+  const zone = document.getElementById("listeVeterinaire");
+  if (!zone) return;
+
+  const liste = Array.isArray(appData.veterinaire) ? appData.veterinaire : [];
+
+  if (!liste.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
+    return;
+  }
+
+  zone.innerHTML = liste
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .map((item) => `
+      <div class="item">
+        <p><strong>${item.oiseau}</strong> - ${item.date}</p>
+        <p>${item.motif || ""}</p>
+        <button onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
+      </div>
+    `).join("");
+}
+
 window.showSection = showSection;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
