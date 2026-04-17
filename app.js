@@ -95,6 +95,36 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function sameDay(d1, d2) {
+  return (d1 || "") === (d2 || "");
+}
+
+function isBirdArchived(oiseau) {
+  return (
+    (oiseau?.registreSortie || "").trim() !== "" ||
+    (oiseau?.dateSortie || "").trim() !== ""
+  );
+}
+
+function getActiveBirds() {
+  return safeArray(appData.oiseaux).filter((o) => !isBirdArchived(o));
+}
+
+function getArchivedBirds() {
+  return safeArray(appData.oiseaux).filter((o) => isBirdArchived(o));
+}
+
+function getSortedBirds(list) {
+  return safeArray(list)
+    .slice()
+    .sort((a, b) => {
+      const ordreA = toNumber(a?.ordre) || 9999;
+      const ordreB = toNumber(b?.ordre) || 9999;
+      if (ordreA !== ordreB) return ordreA - ordreB;
+      return (a?.nom || "").localeCompare(b?.nom || "");
+    });
+}
+
 function formatDateFR(dateStr) {
   if (!dateStr || typeof dateStr !== "string") return "";
   const parts = dateStr.split("-");
@@ -465,14 +495,14 @@ function refreshStats() {
   const statDocuments = document.getElementById("statDocuments");
   const statNourrissages = document.getElementById("statNourrissages");
 
-  if (statOiseaux) statOiseaux.textContent = appData.oiseaux.length;
+  if (statOiseaux) statOiseaux.textContent = getActiveBirds().length;
   if (statPesees) statPesees.textContent = appData.pesees.length;
   if (statDocuments) statDocuments.textContent = appData.documents.length;
   if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
 }
 
 function refreshBirdSelects() {
-  const birds = appData.oiseaux
+  const birds = getSortedBirds(getActiveBirds())
     .map((o) => `<option value="${safeAttr(o.nom)}">${safe(o.nom)}</option>`)
     .join("");
 
@@ -985,20 +1015,7 @@ function renderOiseaux() {
 
   const search = document.getElementById("searchOiseaux")?.value.toLowerCase().trim() || "";
 
-  let oiseaux = appData.oiseaux
-  .filter((oiseau) => {
-    return !(
-      (oiseau.registreSortie || "").trim() !== "" ||
-      (oiseau.dateSortie || "").trim() !== ""
-    );
-  })
-  .slice()
-  .sort((a, b) => {
-    const ordreA = toNumber(a.ordre) || 9999;
-    const ordreB = toNumber(b.ordre) || 9999;
-    if (ordreA !== ordreB) return ordreA - ordreB;
-    return (a.nom || "").localeCompare(b.nom || "");
-  });
+  let oiseaux = getSortedBirds(getActiveBirds());
 
   if (search) {
     oiseaux = oiseaux.filter((oiseau) =>
@@ -1090,13 +1107,13 @@ function renderOiseaux() {
           </div>
 
           <div class="small-actions">
-  <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
-  <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>
-  <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-  <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
-  <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
-  <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
-</div>
+            <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
+            <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>
+            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
+            <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
+            <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
+            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+          </div>
         </article>
       `).join("")}
     </div>
@@ -1109,13 +1126,7 @@ function renderArchivesOiseaux() {
 
   const search = document.getElementById("searchArchives")?.value.toLowerCase().trim() || "";
 
-  let oiseaux = appData.oiseaux
-    .filter((oiseau) => {
-      return (
-        (oiseau.registreSortie || "").trim() !== "" ||
-        (oiseau.dateSortie || "").trim() !== ""
-      );
-    })
+  let oiseaux = getArchivedBirds()
     .slice()
     .sort((a, b) => {
       const dateA = a.dateSortie || "";
@@ -1555,16 +1566,9 @@ function renderTerrain() {
   const zone = document.getElementById("terrainZone");
   if (!zone) return;
 
-  const search = document.getElementById("terrainSearch")?.value.toLowerCase() || "";
+  const search = document.getElementById("terrainSearch")?.value.toLowerCase().trim() || "";
 
-  let oiseaux = appData.oiseaux
-  .slice()
-  .sort((a, b) => {
-    const ordreA = toNumber(a.ordre) || 9999;
-    const ordreB = toNumber(b.ordre) || 9999;
-    if (ordreA !== ordreB) return ordreA - ordreB;
-    return (a.nom || "").localeCompare(b.nom || "");
-  });
+  let oiseaux = getSortedBirds(getActiveBirds());
 
   if (search) {
     oiseaux = oiseaux.filter((o) =>
@@ -1611,173 +1615,18 @@ function renderTerrain() {
   `;
 }
 
-function renderVeterinaire() {
-  const zone = document.getElementById("listeVeterinaire");
-  const filtre = document.getElementById("vetFilterBird")?.value || "";
-  if (!zone) return;
-
-  const normaliser = (txt) =>
-    String(txt || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-
-  let liste = safeArray(appData.veterinaire);
-
-  if (filtre) {
-    const filtreNormalise = normaliser(filtre);
-
-    liste = liste.filter((item) => {
-      const nomItem = normaliser(item.oiseau);
-      return nomItem === filtreNormalise;
-    });
-  }
-
-  if (!liste.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
-    return;
-  }
-
-  const groupes = {};
-
-  liste.forEach((item) => {
-    const nomOiseau = item.oiseau || "Sans oiseau";
-    if (!groupes[nomOiseau]) groupes[nomOiseau] = [];
-    groupes[nomOiseau].push(item);
-  });
-
-  const oiseauxTries = Object.keys(groupes).sort((a, b) => a.localeCompare(b));
-
-  const totalSuivis = liste.length;
-  const totalOiseaux = oiseauxTries.length;
-
-  zone.innerHTML = `
-    <div class="summary-grid" style="margin-bottom:18px;">
-      <div class="summary-card">
-        <div>Nombre de suivis vétérinaires</div>
-        <div class="summary-total">${totalSuivis}</div>
-      </div>
-      <div class="summary-card">
-        <div>Oiseaux concernés</div>
-        <div class="summary-total">${totalOiseaux}</div>
-      </div>
-    </div>
-
-    ${oiseauxTries.map((nomOiseau) => {
-      const suivis = groupes[nomOiseau]
-        .slice()
-        .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-
-      return `
-        <div class="card-section" style="margin-bottom:18px;">
-          <h3 style="margin-top:0;">${safe(nomOiseau)}</h3>
-          <p class="muted-line" style="margin-top:-4px;">
-            ${suivis.length} suivi(s) vétérinaire(s)
-          </p>
-
-          <div class="list-grid">
-            ${suivis.map((item) => `
-              <div class="item">
-                <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">
-                  <div>
-                    <p style="margin:0 0 8px 0;font-size:18px;font-weight:700;">
-                      ${safe(formatDateFR(item.date))}
-                    </p>
-                    <p><strong>Vétérinaire :</strong> ${safe(item.veterinaire || "-")}</p>
-                    <p><strong>Motif :</strong> ${safe(item.motif || "-")}</p>
-                    <p><strong>Diagnostic :</strong> ${safe(item.diagnostic || "-")}</p>
-                    <p><strong>Traitement :</strong> ${safe(item.traitement || "-")}</p>
-                  </div>
-                </div>
-
-                <div class="card-section">
-                  <h4>Protocole</h4>
-                  <p>${safe(item.protocole || "Aucun protocole")}</p>
-                </div>
-
-                <div class="card-section">
-                  <h4>Observations</h4>
-                  <p>${safe(item.observations || "Aucune observation")}</p>
-                </div>
-
-                <div class="card-section">
-                  <h4>Fichiers vétérinaires</h4>
-                  ${
-                    safeArray(item.fichiers).length
-                      ? `
-                        <div class="stack-list">
-                          ${safeArray(item.fichiers).map((f) => `
-                            <div class="item" style="margin-top:0;">
-                              <p style="margin-top:0;"><strong>${safe(f.name)}</strong></p>
-                              <div class="actions">
-                                <a class="doc-link" href="${safeAttr(f.url)}" target="_blank" rel="noopener noreferrer">Ouvrir</a>
-                              </div>
-                              <p class="muted-line" style="word-break:break-all;font-size:12px;">
-                                ${safe(f.url)}
-                              </p>
-                            </div>
-                          `).join("")}
-                        </div>
-                      `
-                      : `<p class="muted-line">Aucun fichier.</p>`
-                  }
-                </div>
-
-                <div class="small-actions">
-                  <button class="btn btn-danger" onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </div>
-      `;
-    }).join("")}
-  `;
-}
-
-function renderNourrissage() {
-  renderNourrissageTable();
-  renderNourrissageSummary();
-  renderNourrissageHistory();
-  renderTerrain();
-}
-
-function fillStockForm() {
-  syncBoitesFromPoussins();
-
-  const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
-  const stockPoussin = document.getElementById("stockPoussin");
-  const stockCaille = document.getElementById("stockCaille");
-  const stockPigeon = document.getElementById("stockPigeon");
-  const stockLapin = document.getElementById("stockLapin");
-  const stockPoisson = document.getElementById("stockPoisson");
-  const stockSouris = document.getElementById("stockSouris");
-  const stockCailleteau30gr = document.getElementById("stockCailleteau30gr");
-
-  if (stockBoxes) stockBoxes.value = appData.stock.boitePoussinsMoyenne225 ?? 0;
-  if (stockPoussin) stockPoussin.value = appData.stock.poussin ?? 0;
-  if (stockCaille) stockCaille.value = appData.stock.caille ?? 0;
-  if (stockPigeon) stockPigeon.value = appData.stock.pigeon ?? 0;
-  if (stockLapin) stockLapin.value = appData.stock.lapin ?? 0;
-  if (stockPoisson) stockPoisson.value = appData.stock.poisson ?? 0;
-  if (stockSouris) stockSouris.value = appData.stock.souris ?? 0;
-  if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
-}
-
 function renderInventaire() {
   const zone = document.getElementById("inventaireZone");
   if (!zone) return;
 
-  if (!appData.oiseaux.length) {
+  const oiseauxActifs = getSortedBirds(getActiveBirds());
+
+  if (!oiseauxActifs.length) {
     zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
     return;
   }
 
-  const rows = appData.oiseaux
-    .filter((o) => (o.statut || "En place") === "En place")
-    .slice()
-    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+  const rows = oiseauxActifs
     .map((oiseau) => `
       <tr>
         <td>${safe(oiseau.nom || "")}</td>
@@ -1836,6 +1685,35 @@ function renderInventaire() {
   `;
 }
 
+function renderNourrissage() {
+  renderNourrissageTable();
+  renderNourrissageSummary();
+  renderNourrissageHistory();
+  renderTerrain();
+}
+
+function fillStockForm() {
+  syncBoitesFromPoussins();
+
+  const stockBoxes = document.getElementById("stockBoitePoussinsMoyenne225");
+  const stockPoussin = document.getElementById("stockPoussin");
+  const stockCaille = document.getElementById("stockCaille");
+  const stockPigeon = document.getElementById("stockPigeon");
+  const stockLapin = document.getElementById("stockLapin");
+  const stockPoisson = document.getElementById("stockPoisson");
+  const stockSouris = document.getElementById("stockSouris");
+  const stockCailleteau30gr = document.getElementById("stockCailleteau30gr");
+
+  if (stockBoxes) stockBoxes.value = appData.stock.boitePoussinsMoyenne225 ?? 0;
+  if (stockPoussin) stockPoussin.value = appData.stock.poussin ?? 0;
+  if (stockCaille) stockCaille.value = appData.stock.caille ?? 0;
+  if (stockPigeon) stockPigeon.value = appData.stock.pigeon ?? 0;
+  if (stockLapin) stockLapin.value = appData.stock.lapin ?? 0;
+  if (stockPoisson) stockPoisson.value = appData.stock.poisson ?? 0;
+  if (stockSouris) stockSouris.value = appData.stock.souris ?? 0;
+  if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
+}
+
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
@@ -1848,9 +1726,7 @@ function ouvrirInventaire() {
 }
 
 function getInventaireHtml() {
-  const rows = appData.oiseaux
-    .slice()
-    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
+  const rows = getSortedBirds(getActiveBirds())
     .map((oiseau) => `
       <tr>
         <td>${safe(oiseau.nom || "")}</td>
@@ -1985,26 +1861,23 @@ function partagerInventaire() {
   let texte = `Inventaire oiseaux présents sur site\n`;
   texte += `Date : ${formatDateFR(todayStr())}\n\n`;
 
-  appData.oiseaux
-    .slice()
-    .sort((a, b) => (a.nom || "").localeCompare(b.nom || ""))
-    .forEach((oiseau) => {
-      texte += `- ${oiseau.nom || ""}\n`;
-      texte += `  Espèce : ${oiseau.espece || "-"}\n`;
-      texte += `  Âge : ${oiseau.age || "-"}\n`;
-      texte += `  Sexe : ${oiseau.sexe || "-"}\n`;
-      texte += `  Annexe : ${oiseau.annexe || "-"}\n`;
-      texte += `  Poids : ${oiseau.poidsActuel || "-"} g\n`;
+  getSortedBirds(getActiveBirds()).forEach((oiseau) => {
+    texte += `- ${oiseau.nom || ""}\n`;
+    texte += `  Espèce : ${oiseau.espece || "-"}\n`;
+    texte += `  Âge : ${oiseau.age || "-"}\n`;
+    texte += `  Sexe : ${oiseau.sexe || "-"}\n`;
+    texte += `  Annexe : ${oiseau.annexe || "-"}\n`;
+    texte += `  Poids : ${oiseau.poidsActuel || "-"} g\n`;
 
-      if (safeArray(oiseau.documents).length) {
-        texte += `  Documents :\n`;
-        safeArray(oiseau.documents).forEach((doc) => {
-          texte += `    * ${doc.name}\n`;
-          texte += `      ${doc.url}\n`;
-        });
-      }
-      texte += `\n`;
-    });
+    if (safeArray(oiseau.documents).length) {
+      texte += `  Documents :\n`;
+      safeArray(oiseau.documents).forEach((doc) => {
+        texte += `    * ${doc.name}\n`;
+        texte += `      ${doc.url}\n`;
+      });
+    }
+    texte += `\n`;
+  });
 
   if (navigator.share) {
     navigator.share({
@@ -2025,7 +1898,9 @@ function renderVacances() {
   const zone = document.getElementById("tableVacances");
   if (!zone) return;
 
-  if (!appData.oiseaux.length) {
+  const oiseauxActifs = getSortedBirds(getActiveBirds());
+
+  if (!oiseauxActifs.length) {
     zone.innerHTML = `<p class="muted-line">Aucun oiseau.</p>`;
     return;
   }
@@ -2044,24 +1919,16 @@ function renderVacances() {
           </tr>
         </thead>
         <tbody>
-          ${appData.oiseaux
-            .slice()
-            .sort((a, b) => {
-              const ordreA = toNumber(a.ordre) || 9999;
-              const ordreB = toNumber(b.ordre) || 9999;
-              if (ordreA !== ordreB) return ordreA - ordreB;
-              return (a.nom || "").localeCompare(b.nom || "");
-            })
-            .map((o) => `
-              <tr>
-                <td><strong>${safe(o.nom)}</strong></td>
-                <td><input value="${safeAttr(o.nourritureHabituelle || "")}"></td>
-                <td><input type="number" value="${safeAttr(o.quantiteHabituelle || 0)}"></td>
-                <td><input value="${safeAttr(o.nourritureHabituelle2 || "")}"></td>
-                <td><input type="number" value="${safeAttr(o.quantiteHabituelle2 || 0)}"></td>
-                <td><input placeholder="Remarque"></td>
-              </tr>
-            `).join("")}
+          ${oiseauxActifs.map((o) => `
+            <tr>
+              <td><strong>${safe(o.nom)}</strong></td>
+              <td><input value="${safeAttr(o.nourritureHabituelle || "")}"></td>
+              <td><input type="number" value="${safeAttr(o.quantiteHabituelle || 0)}"></td>
+              <td><input value="${safeAttr(o.nourritureHabituelle2 || "")}"></td>
+              <td><input type="number" value="${safeAttr(o.quantiteHabituelle2 || 0)}"></td>
+              <td><input placeholder="Remarque"></td>
+            </tr>
+          `).join("")}
         </tbody>
       </table>
     </div>
@@ -2578,12 +2445,7 @@ function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
 
-  const oiseauxActifs = appData.oiseaux.filter((oiseau) => {
-    return !(
-      (oiseau.registreSortie || "").trim() !== "" ||
-      (oiseau.dateSortie || "").trim() !== ""
-    );
-  });
+  const oiseauxActifs = getSortedBirds(getActiveBirds());
 
   if (!oiseauxActifs.length) return;
 
@@ -2663,20 +2525,7 @@ function renderNourrissageTable() {
   const zone = document.getElementById("feedTableZone");
   if (!zone) return;
 
-  const oiseauxActifs = appData.oiseaux
-    .filter((o) => {
-      return !(
-        (o.registreSortie || "").trim() !== "" ||
-        (o.dateSortie || "").trim() !== ""
-      );
-    })
-    .slice()
-    .sort((a, b) => {
-      const ordreA = toNumber(a.ordre) || 9999;
-      const ordreB = toNumber(b.ordre) || 9999;
-      if (ordreA !== ordreB) return ordreA - ordreB;
-      return (a.nom || "").localeCompare(b.nom || "");
-    });
+  const oiseauxActifs = getSortedBirds(getActiveBirds());
 
   if (!oiseauxActifs.length) {
     zone.innerHTML = `<p class="muted-line">Aucun oiseau disponible.</p>`;
@@ -2727,7 +2576,7 @@ function renderNourrissageTable() {
 }
 
 function appliquerNourritureHabituelle() {
-  appData.oiseaux.forEach((oiseau) => {
+  getActiveBirds().forEach((oiseau) => {
     const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
     const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
     const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
@@ -2743,7 +2592,7 @@ function appliquerNourritureHabituelle() {
 }
 
 function viderTableNourrissage(showMessage = true) {
-  appData.oiseaux.forEach((oiseau) => {
+  getActiveBirds().forEach((oiseau) => {
     const f1 = document.getElementById(`feedFood1_${oiseau.id}`);
     const f2 = document.getElementById(`feedFood2_${oiseau.id}`);
     const q1 = document.getElementById(`feedQty1_${oiseau.id}`);
@@ -2941,13 +2790,13 @@ function supprimerSuiviVeterinaire(id) {
 }
 
 function quickFeed(id, food, qty) {
-  const bird = appData.oiseaux.find((o) => o.id === id);
+  const bird = getActiveBirds().find((o) => o.id === id);
   if (!bird) return;
   addQuickFeed(food, qty, bird);
 }
 
 function rationHabituelleTerrain(id) {
-  const bird = appData.oiseaux.find((o) => o.id === id);
+  const bird = getActiveBirds().find((o) => o.id === id);
   if (!bird) return;
 
   if (bird.nourritureHabituelle && toNumber(bird.quantiteHabituelle) > 0) {
@@ -3085,11 +2934,7 @@ window.partagerFicheOiseau = partagerFicheOiseau;
 window.ouvrirInventaire = ouvrirInventaire;
 
 function ouvrirFicheOiseau(id) {
-  showSection("oiseaux");
-  setTimeout(() => {
-    const el = document.querySelector(`[onclick="modifierOiseau('${id}')"]`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, 300);
+  openBirdSheet(id);
 }
 
 function ouvrirVetoOiseau(nom) {
