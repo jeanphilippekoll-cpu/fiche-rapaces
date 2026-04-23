@@ -562,6 +562,36 @@ function getFeedsForBird(birdName) {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
+function getBirdFeedStats(birdName) {
+  const feeds = getFeedsForBird(birdName);
+
+  const totalParJour = {};
+  const totalParAliment = {};
+  let totalGeneral = 0;
+
+  feeds.forEach((item) => {
+    const date = item.date || "";
+    const food = item.nourriture || "Inconnu";
+    const qty = toNumber(item.quantite);
+
+    totalParJour[date] = (totalParJour[date] || 0) + qty;
+    totalParAliment[food] = (totalParAliment[food] || 0) + qty;
+    totalGeneral += qty;
+  });
+
+  const jours = Object.entries(totalParJour)
+    .sort((a, b) => b[0].localeCompare(a[0]));
+
+  const aliments = Object.entries(totalParAliment)
+    .sort((a, b) => b[1] - a[1]);
+
+  return {
+    totalGeneral,
+    jours,
+    aliments
+  };
+}
+
 function partagerFicheOiseau(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -638,6 +668,7 @@ function openBirdSheet(id) {
 
   const birdFeeds = getFeedsForBird(bird.nom);
   const birdVet = getVetForBird(bird.nom);
+  const birdStats = getBirdFeedStats(bird.nom);
 
   const poidsRows = safeArray(bird.historiquePoids)
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
@@ -2439,6 +2470,63 @@ async function ajouterDocument() {
   }
 }
 
+function dupliquerNourrissageJourPrecedent() {
+  const dateCible = document.getElementById("feedDate")?.value || todayStr();
+
+  const datesDisponibles = [...new Set(
+    safeArray(appData.nourrissage)
+      .map((n) => n.date || "")
+      .filter((d) => d && d < dateCible)
+  )].sort((a, b) => b.localeCompare(a));
+
+  const dateSource = datesDisponibles[0];
+
+  if (!dateSource) {
+    alert("Aucun jour précédent à dupliquer.");
+    return;
+  }
+
+  const oiseauxActifs = getSortedBirds(getActiveBirds());
+
+  if (!oiseauxActifs.length) {
+    alert("Aucun oiseau actif.");
+    return;
+  }
+
+  viderTableNourrissage(false);
+
+  oiseauxActifs.forEach((oiseau) => {
+    const lignesSource = safeArray(appData.nourrissage)
+      .filter((n) =>
+        (n.date || "") === dateSource &&
+        (n.oiseau || "").trim().toLowerCase() === (oiseau.nom || "").trim().toLowerCase()
+      )
+      .slice(0, 2);
+
+    const l1 = lignesSource[0];
+    const l2 = lignesSource[1];
+
+    const food1 = document.getElementById(`feedFood1_${oiseau.id}`);
+    const qty1 = document.getElementById(`feedQty1_${oiseau.id}`);
+    const food2 = document.getElementById(`feedFood2_${oiseau.id}`);
+    const qty2 = document.getElementById(`feedQty2_${oiseau.id}`);
+
+    if (l1) {
+      if (food1) food1.value = l1.nourriture || "Poussin";
+      if (qty1) qty1.value = toNumber(l1.quantite) || "";
+    }
+
+    if (l2) {
+      if (food2) food2.value = l2.nourriture || "";
+      if (qty2) qty2.value = toNumber(l2.quantite) || "";
+    }
+  });
+
+  if (statusEl) {
+    statusEl.textContent = `Table nourrissage remplie depuis le ${formatDateFR(dateSource)}`;
+  }
+}
+
 function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
@@ -2539,9 +2627,10 @@ function renderNourrissageTable() {
 
   zone.innerHTML = `
     <div class="feed-toolbar">
-      <button class="btn secondary-btn" onclick="appliquerNourritureHabituelle()">Remplir avec nourriture habituelle</button>
-      <button class="btn secondary-btn" onclick="viderTableNourrissage()">Vider le tableau</button>
-    </div>
+  <button class="btn secondary-btn" onclick="appliquerNourritureHabituelle()">Remplir avec nourriture habituelle</button>
+  <button class="btn secondary-btn" onclick="dupliquerNourrissageJourPrecedent()">Dupliquer le jour précédent</button>
+  <button class="btn secondary-btn" onclick="viderTableNourrissage()">Vider le tableau</button>
+</div>
 
     <div class="feed-table-wrap">
       <table class="feed-table">
@@ -3146,6 +3235,7 @@ window.ouvrirInventaire = ouvrirInventaire;
 window.ouvrirFicheOiseau = ouvrirFicheOiseau;
 window.ouvrirVetoOiseau = ouvrirVetoOiseau;
 window.exportControle = exportControle;
+window.dupliquerNourrissageJourPrecedent = dupliquerNourrissageJourPrecedent;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
