@@ -173,9 +173,7 @@ function setPoussinsFromBoxes(boxes) {
 }
 
 function getLatestFeedDate() {
-  if (!appData.nourrissage.length) return todayStr();
-  const dates = appData.nourrissage.map((n) => n.date || "").filter(Boolean).sort((a, b) => b.localeCompare(a));
-  return dates[0] || todayStr();
+  return todayStr();
 }
 
 function triggerAutoSave(delay = 600) {
@@ -1543,7 +1541,7 @@ function restoreStockFromDeletedFeed(item) {
 function addQuickFeed(food, qty, bird, note = "Mode terrain") {
   if (!bird || !food || qty <= 0) return;
 
-  const date = document.getElementById("feedDate")?.value || getLatestFeedDate() || todayStr();
+ const date = todayStr();
 
   const line = {
     id: makeId(),
@@ -2500,12 +2498,19 @@ function ajouterNourrissage() {
 
   viderTableNourrissage(false);
 
-  const noteEl = document.getElementById("feedNote");
-  if (noteEl) noteEl.value = "";
+ const noteEl = document.getElementById("feedNote");
+if (noteEl) noteEl.value = "";
 
-  renderAll();
-  triggerAutoSave();
-  if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
+const feedDateEl = document.getElementById("feedDate");
+if (feedDateEl) feedDateEl.value = todayStr();
+
+renderAll();
+
+const feedDateElAfterRender = document.getElementById("feedDate");
+if (feedDateElAfterRender) feedDateElAfterRender.value = todayStr();
+
+triggerAutoSave();
+if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
 }
 
 function getFoodOptionsHtml(selected = "", includeEmpty = true) {
