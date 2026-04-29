@@ -3276,7 +3276,6 @@ function ouvrirVetoOiseau(nom) {
   }, 300);
 }
 
-
 // 👇 COLLE TA FONCTION ICI 👇
 
 function enregistrerPrixNourriture() {
