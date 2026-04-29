@@ -3520,6 +3520,7 @@ window.ouvrirFicheOiseau = ouvrirFicheOiseau;
 window.ouvrirVetoOiseau = ouvrirVetoOiseau;
 window.exportControle = exportControle;
 window.dupliquerNourrissageJourPrecedent = dupliquerNourrissageJourPrecedent;
+window.enregistrerPrixNourriture = enregistrerPrixNourriture;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");

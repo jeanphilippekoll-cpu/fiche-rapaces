@@ -1688,6 +1688,19 @@ h2 {
                 <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
               </div>
             </div>
+            <h3>Prix nourriture (€ / pièce)</h3>
+
+<div class="form-grid">
+  <input type="number" step="0.01" id="prixPoussin" placeholder="Prix poussin">
+  <input type="number" step="0.01" id="prixCaille" placeholder="Prix caille">
+  <input type="number" step="0.01" id="prixPigeon" placeholder="Prix pigeon">
+  <input type="number" step="0.01" id="prixLapin" placeholder="Prix lapin">
+  <input type="number" step="0.01" id="prixPoisson" placeholder="Prix poisson">
+  <input type="number" step="0.01" id="prixSouris" placeholder="Prix souris">
+  <input type="number" step="0.01" id="prixCailleteau" placeholder="Prix cailleteau 30gr">
+</div>
+
+<button class="btn" onclick="enregistrerPrixNourriture()">Enregistrer les prix</button>
 
             <div class="actions">
               <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
