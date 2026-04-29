@@ -1592,34 +1592,37 @@ function renderFoodConsumptionHistory() {
   const months = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
 
   if (!months.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun historique de consommation.</p>`;
+    zone.innerHTML = `
+      <section class="card-section">
+        <h2>Consommation nourriture par mois</h2>
+        <p class="muted-line">Aucun historique de consommation.</p>
+      </section>
+    `;
     return;
   }
 
   zone.innerHTML = `
-    <div class="card-section">
-      <h3>Historique consommation nourriture par mois</h3>
-      <div class="feed-table-wrap">
-        <table class="feed-table">
-          <thead>
-            <tr>
-              <th>Mois</th>
-              ${ALIMENTS.map((food) => `<th>${safe(food)}</th>`).join("")}
-            </tr>
-          </thead>
-          <tbody>
-            ${months.map(([month, foods]) => `
-              <tr>
-                <td>${safe(month)}</td>
-                ${ALIMENTS.map((food) => `
-                  <td>${safe(foods[food] || 0)}</td>
-                `).join("")}
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
+    <section class="card-section">
+      <h2>Consommation nourriture par mois</h2>
+
+      <div class="summary-grid">
+        ${months.map(([month, foods]) => {
+          const total = ALIMENTS.reduce((sum, food) => sum + toNumber(foods[food] || 0), 0);
+
+          return `
+            <div class="summary-card">
+              <h3>${safe(month)}</h3>
+              <p class="summary-total">${safe(total)} pièce(s)</p>
+              ${ALIMENTS.map((food) => {
+                const qty = toNumber(foods[food] || 0);
+                if (qty <= 0) return "";
+                return `<p>${safe(food)} : ${safe(qty)}</p>`;
+              }).join("")}
+            </div>
+          `;
+        }).join("")}
       </div>
-    </div>
+    </section>
   `;
 }
 
@@ -1836,7 +1839,6 @@ function renderNourrissage() {
   renderNourrissageTable();
   renderNourrissageSummary();
   renderNourrissageHistory();
-  renderFeedStatsHistory();
   renderFoodConsumptionHistory();
   renderTerrain();
 }
