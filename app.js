@@ -1565,6 +1565,64 @@ function renderNourrissageHistory() {
   }).join("");
 }
 
+function getFoodConsumptionByMonth() {
+  const result = {};
+
+  safeArray(appData.nourrissage).forEach((n) => {
+    const month = (n.date || "").slice(0, 7);
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite || 0);
+
+    if (!month) return;
+
+    if (!result[month]) result[month] = {};
+    if (!result[month][food]) result[month][food] = 0;
+
+    result[month][food] += qty;
+  });
+
+  return result;
+}
+
+function renderFoodConsumptionHistory() {
+  const zone = document.getElementById("foodConsumptionHistoryZone");
+  if (!zone) return;
+
+  const data = getFoodConsumptionByMonth();
+  const months = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
+
+  if (!months.length) {
+    zone.innerHTML = `<p class="muted-line">Aucun historique de consommation.</p>`;
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="card-section">
+      <h3>Historique consommation nourriture par mois</h3>
+      <div class="feed-table-wrap">
+        <table class="feed-table">
+          <thead>
+            <tr>
+              <th>Mois</th>
+              ${ALIMENTS.map((food) => `<th>${safe(food)}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${months.map(([month, foods]) => `
+              <tr>
+                <td>${safe(month)}</td>
+                ${ALIMENTS.map((food) => `
+                  <td>${safe(foods[food] || 0)}</td>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
 function corrigerDateNourrissage(groupKey) {
   const items = appData.nourrissage.filter(
     (n) => makeFeedGroupKey(n.date, n.oiseau) === groupKey
@@ -1779,6 +1837,7 @@ function renderNourrissage() {
   renderNourrissageSummary();
   renderNourrissageHistory();
   renderFeedStatsHistory();
+  renderFoodConsumptionHistory();
   renderTerrain();
 }
 
