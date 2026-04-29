@@ -50,20 +50,19 @@ let editingFeedId = null;
 
 let appData = {
   oiseaux: [],
-  pesees: [],
-  documents: [],
   nourrissage: [],
+  stock: {},
   veterinaire: [],
   entretien: [],
-  stock: {
-    poussin: 0,
-    caille: 0,
-    pigeon: 0,
-    lapin: 0,
-    poisson: 0,
-    souris: 0,
-    cailleteau30gr: 0,
-    boitePoussinsMoyenne225: 0
+
+  prixNourriture: {
+    "Poussin": 0,
+    "Caille": 0,
+    "Pigeon": 0,
+    "Lapin": 0,
+    "Poisson": 0,
+    "Souris": 0,
+    "Cailleteau 30gr": 0
   }
 };
 
@@ -354,8 +353,17 @@ function normalizeData(rapacesData, userData) {
     documents,
     nourrissage: normalizeNourrissage(nourrissageSource),
     veterinaire: normalizeVeterinaire(veterinaireSource),
-    entretien: safeArray(userData?.entretien || rapacesData?.entretien),
-    stock
+   entretien: safeArray(userData?.entretien || rapacesData?.entretien),
+   stock,
+   prixNourriture: {
+    "Poussin": toNumber(rapacesData?.prixNourriture?.["Poussin"]),
+    "Caille": toNumber(rapacesData?.prixNourriture?.["Caille"]),
+    "Pigeon": toNumber(rapacesData?.prixNourriture?.["Pigeon"]),
+    "Lapin": toNumber(rapacesData?.prixNourriture?.["Lapin"]),
+    "Poisson": toNumber(rapacesData?.prixNourriture?.["Poisson"]),
+    "Souris": toNumber(rapacesData?.prixNourriture?.["Souris"]),
+    "Cailleteau 30gr": toNumber(rapacesData?.prixNourriture?.["Cailleteau 30gr"])
+}
   };
 }
 
@@ -432,7 +440,8 @@ function buildRapacesPayload() {
         type: d.type || "Document général",
         description: d.description || "",
         lien: d.lien || ""
-      }))
+      })),
+      prixNourriture: appData.prixNourriture,
   };
 }
 
