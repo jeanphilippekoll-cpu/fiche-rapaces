@@ -3276,18 +3276,6 @@ function ouvrirVetoOiseau(nom) {
   }, 300);
 }
 
-function ouvrirVetoOiseau(nom) {
-  showSection("veterinaire");
-
-  setTimeout(() => {
-    const select = document.getElementById("vetFilterBird");
-    if (select) {
-      select.value = nom;
-      renderVeterinaire();
-    }
-  }, 300);
-}
-
 
 // 👇 COLLE TA FONCTION ICI 👇
 
@@ -3305,9 +3293,6 @@ function enregistrerPrixNourriture() {
   saveData();
   alert("Prix enregistrés");
 }
-
-
-function exportControle() {
 
 function exportControle() {
   const win = window.open("", "_blank");
