@@ -951,6 +951,66 @@ function openBirdSheet(id) {
           : `<p class="small">Aucun poids enregistré.</p>`
       }
 
+      <h2>Statistiques nourrissage</h2>
+${
+  birdStats.totalGeneral > 0
+    ? `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Total distribué</th>
+            <th>Nb jours encodés</th>
+            <th>Aliment principal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>${safe(birdStats.totalGeneral)}</td>
+            <td>${safe(birdStats.jours.length)}</td>
+            <td>${safe(birdStats.aliments[0]?.[0] || "-")}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:16px;">Total par jour</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${birdStats.jours.map(([date, total]) => `
+            <tr>
+              <td>${safe(formatDateFR(date))}</td>
+              <td>${safe(total)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:16px;">Total par aliment</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Aliment</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${birdStats.aliments.map(([food, total]) => `
+            <tr>
+              <td>${safe(food)}</td>
+              <td>${safe(total)}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `
+    : `<p class="small">Aucune statistique nourrissage disponible.</p>`
+}
+
       <h2>Historique nourrissage</h2>
       ${
         feedRows
@@ -1718,6 +1778,7 @@ function renderNourrissage() {
   renderNourrissageTable();
   renderNourrissageSummary();
   renderNourrissageHistory();
+  renderFeedStatsHistory();
   renderTerrain();
 }
 
@@ -2082,6 +2143,126 @@ function imprimerVacances() {
 
 function remplirVacances() {
   renderVacances();
+}
+
+// ===== STATS NOURRISSAGE =====
+
+function getWeekStart(dateStr) {
+  const d = new Date(dateStr);
+  const day = d.getDay() || 7;
+  if (day !== 1) d.setDate(d.getDate() - day + 1);
+  return d.toISOString().slice(0, 10);
+}
+
+function getTotalFoodByWeek() {
+  const result = {};
+
+  (appData.nourrissage || []).forEach(n => {
+    const week = getWeekStart(n.date);
+    const qty = toNumber(n.quantite || 0);
+
+    if (!result[week]) result[week] = 0;
+    result[week] += qty;
+  });
+
+  return result;
+}
+
+function getTotalFoodByMonth() {
+  const result = {};
+
+  (appData.nourrissage || []).forEach(n => {
+    const month = (n.date || "").slice(0, 7);
+    const qty = toNumber(n.quantite || 0);
+
+    if (!result[month]) result[month] = 0;
+    result[month] += qty;
+  });
+
+  return result;
+}
+
+function getFoodByBird() {
+  const result = {};
+
+  (appData.nourrissage || []).forEach(n => {
+    const bird = n.oiseau || "Inconnu";
+    const qty = toNumber(n.quantite || 0);
+
+    if (!result[bird]) result[bird] = 0;
+    result[bird] += qty;
+  });
+
+  return result;
+}
+
+function renderFeedStatsHistory() {
+  const zone = document.getElementById("feedStatsHistoryZone");
+  if (!zone) return;
+
+  const byWeek = getTotalFoodByWeek();
+  const byMonth = getTotalFoodByMonth();
+
+  const weeks = Object.entries(byWeek).sort((a, b) => b[0].localeCompare(a[0]));
+  const months = Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0]));
+
+  zone.innerHTML = `
+    <div class="card-section">
+      <h3>Historique nourriture par semaine</h3>
+      ${
+        weeks.length
+          ? `
+            <div class="feed-table-wrap">
+              <table class="feed-table">
+                <thead>
+                  <tr>
+                    <th>Semaine du lundi</th>
+                    <th>Total nourriture</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${weeks.map(([week, total]) => `
+                    <tr>
+                      <td>${safe(formatDateFR(week))}</td>
+                      <td>${safe(total)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `
+          : `<p class="muted-line">Aucune donnée.</p>`
+      }
+    </div>
+
+    <div class="card-section">
+      <h3>Historique nourriture par mois</h3>
+      ${
+        months.length
+          ? `
+            <div class="feed-table-wrap">
+              <table class="feed-table">
+                <thead>
+                  <tr>
+                    <th>Mois</th>
+                    <th>Total nourriture</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${months.map(([month, total]) => `
+                    <tr>
+                      <td>${safe(month)}</td>
+                      <td>${safe(total)}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `
+          : `<p class="muted-line">Aucune donnée.</p>`
+      }
+    </div>
+  `;
 }
 
 function renderAll() {
