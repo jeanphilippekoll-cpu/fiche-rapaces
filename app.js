@@ -1943,40 +1943,6 @@ function renderCoutParOiseau() {
     `).join("");
 }
 
-function renderCoutParOiseau() {
-  const zone = document.getElementById("coutParOiseauZone");
-  if (!zone) return;
-
-  const prix = appData.prixNourriture || {};
-  const result = {};
-
-  safeArray(appData.nourrissage).forEach((n) => {
-    const bird = n.oiseau || "Inconnu";
-    const food = n.nourriture || "Inconnu";
-    const qty = toNumber(n.quantite);
-    const price = toNumber(prix[food]);
-    const cost = qty * price;
-
-    if (!result[bird]) result[bird] = { total: 0, aliments: {} };
-    if (!result[bird].aliments[food]) result[bird].aliments[food] = { qty: 0, cost: 0 };
-
-    result[bird].aliments[food].qty += qty;
-    result[bird].aliments[food].cost += cost;
-    result[bird].total += cost;
-  });
-
-  zone.innerHTML = Object.entries(result)
-    .sort((a, b) => b[1].total - a[1].total)
-    .map(([bird, data]) => `
-      <div class="item">
-        <h3>${safe(bird)} - ${data.total.toFixed(2)} €</h3>
-        ${Object.entries(data.aliments).map(([food, item]) => `
-          <p>${safe(food)} : ${safe(item.qty)} → ${item.cost.toFixed(2)} €</p>
-        `).join("")}
-      </div>
-    `).join("");
-}
-
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
