@@ -1943,6 +1943,40 @@ function renderCoutParOiseau() {
     `).join("");
 }
 
+function renderCoutNourriture() {
+  const zone = document.getElementById("coutNourritureZone");
+  if (!zone) return;
+
+  const prix = appData.prixNourriture || {};
+  let total = 0;
+
+  const result = {};
+
+  safeArray(appData.nourrissage).forEach((n) => {
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
+
+    if (!result[food]) result[food] = { qty: 0, cost: 0 };
+
+    result[food].qty += qty;
+    result[food].cost += cost;
+    total += cost;
+  });
+
+  zone.innerHTML = `
+    <div class="card">
+      <h3>Coût total nourriture</h3>
+      <p><strong>${total.toFixed(2)} €</strong></p>
+
+      ${Object.entries(result).map(([food, data]) => `
+        <p>${food} : ${data.qty} → ${data.cost.toFixed(2)} €</p>
+      `).join("")}
+    </div>
+  `;
+}
+
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
