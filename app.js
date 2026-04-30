@@ -364,7 +364,8 @@ function normalizeData(rapacesData, userData) {
     "Poisson": toNumber(rapacesData?.prixNourriture?.["Poisson"]),
     "Souris": toNumber(rapacesData?.prixNourriture?.["Souris"]),
     "Cailleteau 30gr": toNumber(rapacesData?.prixNourriture?.["Cailleteau 30gr"])
-}
+},
+coutOiseauxMasques: safeArray(rapacesData?.coutOiseauxMasques)
   };
 }
 
@@ -443,6 +444,7 @@ function buildRapacesPayload() {
         lien: d.lien || ""
       })),
       prixNourriture: appData.prixNourriture,
+      coutOiseauxMasques: safeArray(rapacesData?.coutOiseauxMasques)
   };
 }
 
@@ -1979,8 +1981,8 @@ const rows = Object.entries(result)
                 <h3>${safe(data.nom)}</h3>
                 <p class="summary-total">${data.total.toFixed(2)} €</p>
 
-                <button onclick="masquerOiseauCout('${data.key}')">❌ Masquer</button>
-                
+                <button class="btn btn-danger" onclick="masquerOiseauCout('${data.key}')">Masquer</button>
+
                 <p>Jour : ${data.jour.toFixed(2)} €</p>
                 <p>Semaine : ${data.semaine.toFixed(2)} €</p>
                 <p>Mois : ${data.mois.toFixed(2)} €</p>
@@ -2003,12 +2005,18 @@ const rows = Object.entries(result)
 }
 
 function masquerOiseauCout(key) {
+  if (!Array.isArray(appData.coutOiseauxMasques)) {
+    appData.coutOiseauxMasques = [];
+  }
+
   if (!appData.coutOiseauxMasques.includes(key)) {
     appData.coutOiseauxMasques.push(key);
   }
 
   renderCoutParOiseau();
   triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Oiseau masqué du coût nourriture";
 }
 
 function renderCoutNourriture() {
