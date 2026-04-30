@@ -443,8 +443,8 @@ function buildRapacesPayload() {
         description: d.description || "",
         lien: d.lien || ""
       })),
-      prixNourriture: appData.prixNourriture,
-      coutOiseauxMasques: safeArray(rapacesData?.coutOiseauxMasques)
+      prixNourriture: appData.prixNourriture || {},
+      coutOiseauxMasques: safeArray(appData.coutOiseauxMasques)
   };
 }
 
