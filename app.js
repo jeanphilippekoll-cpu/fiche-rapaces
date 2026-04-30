@@ -1953,32 +1953,80 @@ function renderCoutNourriture() {
   if (!zone) return;
 
   const prix = appData.prixNourriture || {};
-  let total = 0;
+  const today = todayStr();
+  const week = getWeekStart(today);
+  const month = today.slice(0, 7);
+  const year = today.slice(0, 4);
 
-  const result = {};
+  const periodes = [
+    {
+      label: "Aujourd’hui",
+      match: (n) => (n.date || "") === today
+    },
+    {
+      label: "Cette semaine",
+      match: (n) => getWeekStart(n.date || "") === week
+    },
+    {
+      label: "Ce mois",
+      match: (n) => (n.date || "").slice(0, 7) === month
+    },
+    {
+      label: "Cette année",
+      match: (n) => (n.date || "").slice(0, 4) === year
+    }
+  ];
 
-  safeArray(appData.nourrissage).forEach((n) => {
-    const food = n.nourriture || "Inconnu";
-    const qty = toNumber(n.quantite);
-    const price = toNumber(prix[food]);
-    const cost = qty * price;
+  const calcPeriod = (match) => {
+    const aliments = {};
+    let total = 0;
 
-    if (!result[food]) result[food] = { qty: 0, cost: 0 };
+    safeArray(appData.nourrissage)
+      .filter(match)
+      .forEach((n) => {
+        const food = n.nourriture || "Inconnu";
+        const qty = toNumber(n.quantite);
+        const price = toNumber(prix[food]);
+        const cost = qty * price;
 
-    result[food].qty += qty;
-    result[food].cost += cost;
-    total += cost;
-  });
+        if (!aliments[food]) aliments[food] = { qty: 0, cost: 0 };
+        aliments[food].qty += qty;
+        aliments[food].cost += cost;
+        total += cost;
+      });
+
+    return { aliments, total };
+  };
 
   zone.innerHTML = `
-    <div class="card">
-      <h3>Coût total nourriture</h3>
-      <p><strong>${total.toFixed(2)} €</strong></p>
+    <section class="card-section">
+      <h2>Coût nourriture</h2>
 
-      ${Object.entries(result).map(([food, data]) => `
-        <p>${food} : ${data.qty} → ${data.cost.toFixed(2)} €</p>
-      `).join("")}
-    </div>
+      <div class="summary-grid">
+        ${periodes.map((periode) => {
+          const data = calcPeriod(periode.match);
+
+          return `
+            <div class="summary-card">
+              <h3>${safe(periode.label)}</h3>
+              <p class="summary-total">${data.total.toFixed(2)} €</p>
+
+              ${
+                Object.keys(data.aliments).length
+                  ? Object.entries(data.aliments).map(([food, item]) => `
+                      <p>
+                        ${safe(food)} :
+                        ${safe(item.qty)} × ${safe(toNumber(prix[food]).toFixed(2))} €
+                        = <strong>${safe(item.cost.toFixed(2))} €</strong>
+                      </p>
+                    `).join("")
+                  : `<p class="muted-line">Aucune consommation.</p>`
+              }
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </section>
   `;
 }
 
