@@ -63,7 +63,8 @@ let appData = {
     "Poisson": 0,
     "Souris": 0,
     "Cailleteau 30gr": 0
-  }
+  },
+  coutOiseauxMasques: [],
 };
 
 function makeId() {
@@ -1959,7 +1960,12 @@ function renderCoutParOiseau() {
     if (date.slice(0, 4) === year) result[key].annee += cost;
   });
 
-  const rows = Object.values(result).sort((a, b) => b.total - a.total);
+const masques = appData.coutOiseauxMasques || [];
+
+const rows = Object.entries(result)
+  .filter(([key]) => !masques.includes(key))
+  .map(([key, data]) => ({ key, ...data }))
+  .sort((a, b) => b.total - a.total);
 
   zone.innerHTML = `
     <section class="card-section">
@@ -1972,6 +1978,9 @@ function renderCoutParOiseau() {
               <div class="summary-card">
                 <h3>${safe(data.nom)}</h3>
                 <p class="summary-total">${data.total.toFixed(2)} €</p>
+
+                <button onclick="masquerOiseauCout('${data.key}')">❌ Masquer</button>
+                
                 <p>Jour : ${data.jour.toFixed(2)} €</p>
                 <p>Semaine : ${data.semaine.toFixed(2)} €</p>
                 <p>Mois : ${data.mois.toFixed(2)} €</p>
@@ -1991,6 +2000,15 @@ function renderCoutParOiseau() {
       </div>
     </section>
   `;
+}
+
+function masquerOiseauCout(key) {
+  if (!appData.coutOiseauxMasques.includes(key)) {
+    appData.coutOiseauxMasques.push(key);
+  }
+
+  renderCoutParOiseau();
+  triggerAutoSave();
 }
 
 function renderCoutNourriture() {
@@ -3698,6 +3716,7 @@ window.ouvrirVetoOiseau = ouvrirVetoOiseau;
 window.exportControle = exportControle;
 window.dupliquerNourrissageJourPrecedent = dupliquerNourrissageJourPrecedent;
 window.enregistrerPrixNourriture = enregistrerPrixNourriture;
+window.masquerOiseauCout = masquerOiseauCout;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
