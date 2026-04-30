@@ -1874,6 +1874,23 @@ function fillStockForm() {
   if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
 }
 
+function fillPrixNourritureForm() {
+  const prix = appData.prixNourriture || {};
+
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value || "";
+  };
+
+  set("prixPoussin", prix["Poussin"]);
+  set("prixCaille", prix["Caille"]);
+  set("prixPigeon", prix["Pigeon"]);
+  set("prixLapin", prix["Lapin"]);
+  set("prixPoisson", prix["Poisson"]);
+  set("prixSouris", prix["Souris"]);
+  set("prixCailleteau", prix["Cailleteau 30gr"]);
+}
+
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
@@ -2348,6 +2365,7 @@ function renderAll() {
   renderInventaire();
   renderEntretien();
   fillStockForm();
+  fillPrixNourritureForm();
 }
 
 function saveLocalBackup() {
@@ -3278,7 +3296,7 @@ function ouvrirVetoOiseau(nom) {
 
 // 👇 COLLE TA FONCTION ICI 👇
 
-function enregistrerPrixNourriture() {
+async function enregistrerPrixNourriture() {
   appData.prixNourriture = {
     "Poussin": toNumber(document.getElementById("prixPoussin")?.value),
     "Caille": toNumber(document.getElementById("prixCaille")?.value),
@@ -3289,7 +3307,10 @@ function enregistrerPrixNourriture() {
     "Cailleteau 30gr": toNumber(document.getElementById("prixCailleteau")?.value)
   };
 
-  saveData();
+  await saveData();
+  fillPrixNourritureForm();
+
+  if (statusEl) statusEl.textContent = "Prix nourriture enregistrés";
   alert("Prix enregistrés");
 }
 
