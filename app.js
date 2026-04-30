@@ -1904,11 +1904,16 @@ function renderCoutParOiseau() {
   const result = {};
 
   safeArray(appData.nourrissage).forEach((n) => {
-    const bird = n.oiseau || "Inconnu";
-    const food = n.nourriture || "Inconnu";
-    const qty = toNumber(n.quantite);
-    const price = toNumber(prix[food]);
-    const cost = qty * price;
+  const birdRaw = (n.oiseau || n.nom || "Inconnu").trim();
+  const birdObj = safeArray(appData.oiseaux).find((o) =>
+    (o.nom || "").trim().toLowerCase() === birdRaw.toLowerCase()
+  );
+
+  const bird = birdObj?.nom || birdRaw;
+  const food = n.nourriture || "Inconnu";
+  const qty = toNumber(n.quantite);
+  const price = toNumber(prix[food]);
+  const cost = qty * price;
 
     const date = n.date || "";
 
