@@ -1892,7 +1892,7 @@ function fillPrixNourritureForm() {
 }
 
 function normalizeBirdKey(name) {
-  return String(name || "Inconnu")
+  return String(name || "")
     .trim()
     .toLowerCase()
     .normalize("NFD")
@@ -1900,14 +1900,14 @@ function normalizeBirdKey(name) {
     .replace(/\s+/g, " ");
 }
 
-function getDisplayBirdName(name) {
-  const key = normalizeBirdKey(name);
+function getBirdCanonicalName(rawName) {
+  const key = normalizeBirdKey(rawName);
 
   const bird = safeArray(appData.oiseaux).find((o) =>
     normalizeBirdKey(o.nom) === key
   );
 
-  return bird?.nom || String(name || "Inconnu").trim() || "Inconnu";
+  return bird ? bird.nom : `Ancien/Inconnu : ${String(rawName || "Sans nom").trim()}`;
 }
 
 function renderCoutParOiseau() {
@@ -1923,9 +1923,9 @@ function renderCoutParOiseau() {
   const result = {};
 
   safeArray(appData.nourrissage).forEach((n) => {
-    const rawName = n.oiseau || n.nom || "Inconnu";
-    const key = normalizeBirdKey(rawName);
-    const bird = getDisplayBirdName(rawName);
+    const rawName = n.oiseau || n.nom || "Sans nom";
+    const canonicalName = getBirdCanonicalName(rawName);
+    const key = normalizeBirdKey(canonicalName);
 
     const food = n.nourriture || "Inconnu";
     const qty = toNumber(n.quantite);
@@ -1935,7 +1935,7 @@ function renderCoutParOiseau() {
 
     if (!result[key]) {
       result[key] = {
-        nom: bird,
+        nom: canonicalName,
         total: 0,
         jour: 0,
         semaine: 0,
