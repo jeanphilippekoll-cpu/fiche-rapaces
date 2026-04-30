@@ -1891,64 +1891,56 @@ function fillPrixNourritureForm() {
   set("prixCailleteau", prix["Cailleteau 30gr"]);
 }
 
-function renderCoutNourriture() {
-  const zone = document.getElementById("coutNourritureZone");
+function renderCoutParOiseau() {
+  const zone = document.getElementById("coutParOiseauZone");
   if (!zone) return;
 
   const prix = appData.prixNourriture || {};
-  const now = todayStr();
-  const week = getWeekStart(now);
-  const month = now.slice(0, 7);
-  const year = now.slice(0, 4);
+  const today = todayStr();
+  const week = getWeekStart(today);
+  const month = today.slice(0, 7);
+  const year = today.slice(0, 4);
 
-  const periodes = {
-    "Aujourd’hui": (n) => n.date === now,
-    "Cette semaine": (n) => getWeekStart(n.date) === week,
-    "Ce mois": (n) => (n.date || "").slice(0, 7) === month,
-    "Cette année": (n) => (n.date || "").slice(0, 4) === year
-  };
+  const result = {};
 
-  const calc = (filterFn) => {
-    const result = {};
-    let total = 0;
+  safeArray(appData.nourrissage).forEach((n) => {
+    const bird = n.oiseau || "Inconnu";
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
 
-    safeArray(appData.nourrissage).filter(filterFn).forEach((n) => {
-      const food = n.nourriture || "Inconnu";
-      const qty = toNumber(n.quantite);
-      const price = toNumber(prix[food]);
-      const cost = qty * price;
+    const date = n.date || "";
 
-      if (!result[food]) result[food] = { qty: 0, cost: 0 };
-      result[food].qty += qty;
-      result[food].cost += cost;
-      total += cost;
-    });
+    if (!result[bird]) {
+      result[bird] = {
+        total: 0,
+        jour: 0,
+        semaine: 0,
+        mois: 0,
+        annee: 0
+      };
+    }
 
-    return { result, total };
-  };
+    result[bird].total += cost;
 
-  zone.innerHTML = `
-    <section class="card-section">
-      <h3>Coût nourriture</h3>
-      <div class="summary-grid">
-        ${Object.entries(periodes).map(([label, filterFn]) => {
-          const data = calc(filterFn);
+    if (date === today) result[bird].jour += cost;
+    if (getWeekStart(date) === week) result[bird].semaine += cost;
+    if (date.slice(0, 7) === month) result[bird].mois += cost;
+    if (date.slice(0, 4) === year) result[bird].annee += cost;
+  });
 
-          return `
-            <div class="summary-card">
-              <h3>${safe(label)}</h3>
-              <p class="summary-total">${data.total.toFixed(2)} €</p>
-              ${ALIMENTS.map((food) => {
-                const item = data.result[food];
-                if (!item || item.qty <= 0) return "";
-                return `<p>${safe(food)} : ${safe(item.qty)} × ${safe(toNumber(prix[food]).toFixed(2))} € = ${safe(item.cost.toFixed(2))} €</p>`;
-              }).join("")}
-            </div>
-          `;
-        }).join("")}
+  zone.innerHTML = Object.entries(result)
+    .map(([bird, data]) => `
+      <div class="item">
+        <h3>${safe(bird)}</h3>
+        <p>Jour : ${data.jour.toFixed(2)} €</p>
+        <p>Semaine : ${data.semaine.toFixed(2)} €</p>
+        <p>Mois : ${data.mois.toFixed(2)} €</p>
+        <p>Année : ${data.annee.toFixed(2)} €</p>
+        <p><strong>Total : ${data.total.toFixed(2)} €</strong></p>
       </div>
-    </section>
-  `;
+    `).join("");
 }
 
 function renderCoutParOiseau() {
