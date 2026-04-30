@@ -2086,6 +2086,60 @@ function renderCoutNourriture() {
   `;
 }
 
+function renderHistoriqueCoutMensuel() {
+  const zone = document.getElementById("historiqueCoutMensuelZone");
+  if (!zone) return;
+
+  const prix = appData.prixNourriture || {};
+  const result = {};
+
+  safeArray(appData.nourrissage).forEach((n) => {
+    const month = (n.date || "").slice(0, 7);
+    if (!month) return;
+
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
+
+    if (!result[month]) result[month] = { total: 0, aliments: {} };
+    if (!result[month].aliments[food]) result[month].aliments[food] = { qty: 0, cost: 0 };
+
+    result[month].total += cost;
+    result[month].aliments[food].qty += qty;
+    result[month].aliments[food].cost += cost;
+  });
+
+  const months = Object.entries(result).sort((a, b) => b[0].localeCompare(a[0]));
+
+  zone.innerHTML = `
+    <section class="card-section">
+      <h2>Historique coût mensuel</h2>
+
+      ${
+        months.length
+          ? `
+            <div class="summary-grid">
+              ${months.map(([month, data]) => `
+                <div class="summary-card">
+                  <h3>${safe(month)}</h3>
+                  <p class="summary-total">${data.total.toFixed(2)} €</p>
+
+                  ${Object.entries(data.aliments)
+                    .sort((a, b) => b[1].cost - a[1].cost)
+                    .map(([food, item]) => `
+                      <p>${safe(food)} : ${safe(item.qty)} pièce(s) = ${item.cost.toFixed(2)} €</p>
+                    `).join("")}
+                </div>
+              `).join("")}
+            </div>
+          `
+          : `<p class="muted-line">Aucun historique mensuel.</p>`
+      }
+    </section>
+  `;
+}
+
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
@@ -2563,6 +2617,7 @@ function renderAll() {
   fillPrixNourritureForm();
   renderCoutNourriture();
   renderCoutParOiseau();
+  renderHistoriqueCoutMensuel();
 }
 
 function saveLocalBackup() {
