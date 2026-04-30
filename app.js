@@ -2140,6 +2140,74 @@ function renderHistoriqueCoutMensuel() {
   `;
 }
 
+function renderHistoriqueCoutMensuelParOiseau() {
+  const zone = document.getElementById("historiqueCoutMensuelParOiseauZone");
+  if (!zone) return;
+
+  const prix = appData.prixNourriture || {};
+  const result = {};
+
+  safeArray(appData.nourrissage).forEach((n) => {
+    const month = (n.date || "").slice(0, 7);
+    if (!month) return;
+
+    const rawName = n.oiseau || n.nom || "Sans nom";
+    const bird = typeof getBirdCanonicalName === "function"
+      ? getBirdCanonicalName(rawName)
+      : rawName;
+
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
+
+    if (!result[month]) result[month] = {};
+    if (!result[month][bird]) result[month][bird] = { total: 0, aliments: {} };
+    if (!result[month][bird].aliments[food]) {
+      result[month][bird].aliments[food] = { qty: 0, cost: 0 };
+    }
+
+    result[month][bird].total += cost;
+    result[month][bird].aliments[food].qty += qty;
+    result[month][bird].aliments[food].cost += cost;
+  });
+
+  const months = Object.entries(result).sort((a, b) => b[0].localeCompare(a[0]));
+
+  zone.innerHTML = `
+    <section class="card-section">
+      <h2>Historique coût mensuel par oiseau</h2>
+
+      ${
+        months.length
+          ? months.map(([month, birds]) => `
+            <div class="card-section">
+              <h3>${safe(month)}</h3>
+
+              <div class="summary-grid">
+                ${Object.entries(birds)
+                  .sort((a, b) => b[1].total - a[1].total)
+                  .map(([bird, data]) => `
+                    <div class="summary-card">
+                      <h3>${safe(bird)}</h3>
+                      <p class="summary-total">${data.total.toFixed(2)} €</p>
+
+                      ${Object.entries(data.aliments)
+                        .sort((a, b) => b[1].cost - a[1].cost)
+                        .map(([food, item]) => `
+                          <p>${safe(food)} : ${safe(item.qty)} pièce(s) = ${item.cost.toFixed(2)} €</p>
+                        `).join("")}
+                    </div>
+                  `).join("")}
+              </div>
+            </div>
+          `).join("")
+          : `<p class="muted-line">Aucun historique par oiseau.</p>`
+      }
+    </section>
+  `;
+}
+
 function ouvrirInventaire() {
   const win = window.open("", "_blank");
   if (!win) {
@@ -2618,6 +2686,7 @@ function renderAll() {
   renderCoutNourriture();
   renderCoutParOiseau();
   renderHistoriqueCoutMensuel();
+  renderHistoriqueCoutMensuelParOiseau();
 }
 
 function saveLocalBackup() {
