@@ -1891,6 +1891,25 @@ function fillPrixNourritureForm() {
   set("prixCailleteau", prix["Cailleteau 30gr"]);
 }
 
+function normalizeBirdKey(name) {
+  return String(name || "Inconnu")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function getDisplayBirdName(name) {
+  const key = normalizeBirdKey(name);
+
+  const bird = safeArray(appData.oiseaux).find((o) =>
+    normalizeBirdKey(o.nom) === key
+  );
+
+  return bird?.nom || String(name || "Inconnu").trim() || "Inconnu";
+}
+
 function renderCoutParOiseau() {
   const zone = document.getElementById("coutParOiseauZone");
   if (!zone) return;
@@ -1904,48 +1923,74 @@ function renderCoutParOiseau() {
   const result = {};
 
   safeArray(appData.nourrissage).forEach((n) => {
-  const birdRaw = (n.oiseau || n.nom || "Inconnu").trim();
-  const birdObj = safeArray(appData.oiseaux).find((o) =>
-    (o.nom || "").trim().toLowerCase() === birdRaw.toLowerCase()
-  );
+    const rawName = n.oiseau || n.nom || "Inconnu";
+    const key = normalizeBirdKey(rawName);
+    const bird = getDisplayBirdName(rawName);
 
-  const bird = birdObj?.nom || birdRaw;
-  const food = n.nourriture || "Inconnu";
-  const qty = toNumber(n.quantite);
-  const price = toNumber(prix[food]);
-  const cost = qty * price;
-
+    const food = n.nourriture || "Inconnu";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
     const date = n.date || "";
 
-    if (!result[bird]) {
-      result[bird] = {
+    if (!result[key]) {
+      result[key] = {
+        nom: bird,
         total: 0,
         jour: 0,
         semaine: 0,
         mois: 0,
-        annee: 0
+        annee: 0,
+        aliments: {}
       };
     }
 
-    result[bird].total += cost;
+    if (!result[key].aliments[food]) {
+      result[key].aliments[food] = { qty: 0, cost: 0 };
+    }
 
-    if (date === today) result[bird].jour += cost;
-    if (getWeekStart(date) === week) result[bird].semaine += cost;
-    if (date.slice(0, 7) === month) result[bird].mois += cost;
-    if (date.slice(0, 4) === year) result[bird].annee += cost;
+    result[key].total += cost;
+    result[key].aliments[food].qty += qty;
+    result[key].aliments[food].cost += cost;
+
+    if (date === today) result[key].jour += cost;
+    if (getWeekStart(date) === week) result[key].semaine += cost;
+    if (date.slice(0, 7) === month) result[key].mois += cost;
+    if (date.slice(0, 4) === year) result[key].annee += cost;
   });
 
-  zone.innerHTML = Object.entries(result)
-    .map(([bird, data]) => `
-      <div class="item">
-        <h3>${safe(bird)}</h3>
-        <p>Jour : ${data.jour.toFixed(2)} €</p>
-        <p>Semaine : ${data.semaine.toFixed(2)} €</p>
-        <p>Mois : ${data.mois.toFixed(2)} €</p>
-        <p>Année : ${data.annee.toFixed(2)} €</p>
-        <p><strong>Total : ${data.total.toFixed(2)} €</strong></p>
+  const rows = Object.values(result).sort((a, b) => b.total - a.total);
+
+  zone.innerHTML = `
+    <section class="card-section">
+      <h2>Coût nourriture par oiseau</h2>
+
+      <div class="summary-grid">
+        ${
+          rows.length
+            ? rows.map((data) => `
+              <div class="summary-card">
+                <h3>${safe(data.nom)}</h3>
+                <p class="summary-total">${data.total.toFixed(2)} €</p>
+                <p>Jour : ${data.jour.toFixed(2)} €</p>
+                <p>Semaine : ${data.semaine.toFixed(2)} €</p>
+                <p>Mois : ${data.mois.toFixed(2)} €</p>
+                <p>Année : ${data.annee.toFixed(2)} €</p>
+
+                <hr>
+
+                ${Object.entries(data.aliments)
+                  .sort((a, b) => b[1].cost - a[1].cost)
+                  .map(([food, item]) => `
+                    <p>${safe(food)} : ${safe(item.qty)} pièce(s) = ${item.cost.toFixed(2)} €</p>
+                  `).join("")}
+              </div>
+            `).join("")
+            : `<p class="muted-line">Aucune donnée de coût par oiseau.</p>`
+        }
       </div>
-    `).join("");
+    </section>
+  `;
 }
 
 function renderCoutNourriture() {
