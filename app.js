@@ -281,6 +281,7 @@ function normalizeData(rapacesData, userData) {
   ordre: toNumber(o.ordre),
   bague: o.bague || "",
   cites: o.cites || "",
+  carteVerte: o.carteVerte || "",
   espece: o.espece || "",
   sexe: o.sexe || "",
   age: o.age || "",
@@ -382,6 +383,7 @@ function buildRapacesPayload() {
       ordre: toNumber(o.ordre),
       bague: o.bague || "",
       cites: o.cites || "",
+      carteVerte: o.carteVerte || "",
       espece: o.espece || "",
       sexe: o.sexe || "",
       age: o.age || "",
@@ -1156,6 +1158,7 @@ function renderOiseaux() {
             <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
             <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
             <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
+            <div><span>Carte verte</span><strong>${safe(oiseau.carteVerte || "-")}</strong></div>
             <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
             <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
             <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
@@ -1173,6 +1176,7 @@ function renderOiseaux() {
             <p><strong>Sexe :</strong> ${safe(oiseau.sexe || "-")}</p>
             <p><strong>N° bague :</strong> ${safe(oiseau.bague || "-")}</p>
             <p><strong>N° CITES :</strong> ${safe(oiseau.cites || "-")}</p>
+            <p><strong>Carte verte :</strong> ${safe(oiseau.carteVerte || "-")}</p>
             <p><strong>Annexe :</strong> ${safe(oiseau.annexe || "-")}</p>
             <p><strong>N° entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
             <p><strong>Date entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
@@ -2766,6 +2770,7 @@ function resetBirdForm() {
   "oiseauOrdre",
   "oiseauBague",
   "oiseauCites",
+  "oiseauCarteVerte",
   "oiseauEspece",
   "oiseauSexe",
   "oiseauAge",
@@ -2811,6 +2816,7 @@ async function ajouterOiseau() {
   const ordre = toNumber(document.getElementById("oiseauOrdre")?.value || 0);
   const bague = document.getElementById("oiseauBague")?.value.trim() || "";
   const cites = document.getElementById("oiseauCites")?.value.trim() || "";
+  const carteVerte = document.getElementById("oiseauCarteVerte")?.value.trim() || "";
   const espece = document.getElementById("oiseauEspece")?.value.trim() || "";
   const sexe = document.getElementById("oiseauSexe")?.value.trim() || "";
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
@@ -2870,6 +2876,7 @@ async function ajouterOiseau() {
       existingBird.ordre = ordre;
       existingBird.bague = bague;
       existingBird.cites = cites;
+      existingBird.carteVerte = carteVerte;
       existingBird.espece = espece;
       existingBird.sexe = sexe;
       existingBird.age = age;
@@ -2897,6 +2904,7 @@ async function ajouterOiseau() {
         ordre,
         bague,
         cites,
+        carteVerte,
         espece,
         sexe,
         age,
@@ -2946,6 +2954,7 @@ function modifierOiseau(id) {
   set("oiseauOrdre", bird.ordre);
   set("oiseauBague", bird.bague);
   set("oiseauCites", bird.cites);
+  set("oiseauCarteVerte", bird.carteVerte);
   set("oiseauEspece", bird.espece);
   set("oiseauSexe", bird.sexe);
   set("oiseauAge", bird.age);
