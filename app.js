@@ -1804,10 +1804,10 @@ function renderInventaire() {
     .map((oiseau) => `
       <tr>
         <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.bague || "-")}</td>
         <td>${safe(oiseau.cites || "-")}</td>
         <td>${safe(oiseau.carteVerte || "-")}</td>
-        <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.age || "")}</td>
         <td>${safe(oiseau.sexe || "")}</td>
         <td>${safe(oiseau.annexe || "-")}</td>
@@ -1837,10 +1837,10 @@ function renderInventaire() {
         <thead>
           <tr>
             <th>Nom</th>
+            <th>Espèce</th>
             <th>N° bague</th>
             <th>N° CITES</th>
             <th>Carte verte</th>
-            <th>Espèce</th>
             <th>Âge</th>
             <th>Sexe</th>
             <th>Annexe</th>
@@ -2238,10 +2238,10 @@ function getInventaireHtml() {
     .map((oiseau) => `
       <tr>
         <td>${safe(oiseau.nom || "")}</td>
+        <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.bague || "-")}</td>
         <td>${safe(oiseau.cites || "-")}</td>
         <td>${safe(oiseau.carteVerte || "-")}</td>
-        <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.age || "")}</td>
         <td>${safe(oiseau.sexe || "")}</td>
         <td>${safe(oiseau.annexe || "-")}</td>
@@ -2339,10 +2339,10 @@ function getInventaireHtml() {
         <thead>
           <tr>
             <th>Nom</th>
+            <th>Espèce</th>
             <th>Bague</th>
             <th>CITES</th>
             <th>Carte verte</th>
-            <th>Espèce</th>
             <th>Âge</th>
             <th>Sexe</th>
             <th>Annexe</th>
