@@ -881,6 +881,7 @@ function openBirdSheet(id) {
     <td>${safe(bird.espece || "-")}</td>
   </tr>
   <tr>
+  <tr>
     <th>Date de naissance / Âge</th>
     <td>${safe(bird.age || "-")}</td>
     <th>Sexe</th>
@@ -892,6 +893,13 @@ function openBirdSheet(id) {
     <th>N° CITES</th>
     <td>${safe(bird.cites || "-")}</td>
   </tr>
+  <tr>
+  <th>Carte verte</th>
+  <td>${safe(bird.carteVerte || "-")}</td>
+
+  <th></th>
+  <td></td>
+</tr>
   <tr>
     <th>Annexe</th>
     <td>${safe(bird.annexe || "-")}</td>
@@ -1798,6 +1806,7 @@ function renderInventaire() {
         <td>${safe(oiseau.nom || "")}</td>
         <td>${safe(oiseau.bague || "-")}</td>
         <td>${safe(oiseau.cites || "-")}</td>
+        <td>${safe(oiseau.carteVerte || "-")}</td>
         <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.age || "")}</td>
         <td>${safe(oiseau.sexe || "")}</td>
@@ -1830,6 +1839,7 @@ function renderInventaire() {
             <th>Nom</th>
             <th>N° bague</th>
             <th>N° CITES</th>
+            <th>Carte verte</th>
             <th>Espèce</th>
             <th>Âge</th>
             <th>Sexe</th>
