@@ -2784,6 +2784,7 @@ function resetBirdForm() {
   "oiseauCites",
   "oiseauCarteVerte",
   "oiseauEspece",
+  "oiseauAnnexe",
   "oiseauSexe",
   "oiseauAge",
   "oiseauPoids",
@@ -2967,6 +2968,7 @@ function modifierOiseau(id) {
   set("oiseauBague", bird.bague);
   set("oiseauCites", bird.cites);
   set("oiseauCarteVerte", bird.carteVerte);
+  set("oiseauAnnexe", bird.annexe);
   set("oiseauEspece", bird.espece);
   set("oiseauSexe", bird.sexe);
   set("oiseauAge", bird.age);
