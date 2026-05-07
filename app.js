@@ -2240,6 +2240,7 @@ function getInventaireHtml() {
         <td>${safe(oiseau.nom || "")}</td>
         <td>${safe(oiseau.bague || "-")}</td>
         <td>${safe(oiseau.cites || "-")}</td>
+        <td>${safe(oiseau.carteVerte || "-")}</td>
         <td>${safe(oiseau.espece || "")}</td>
         <td>${safe(oiseau.age || "")}</td>
         <td>${safe(oiseau.sexe || "")}</td>
@@ -2340,6 +2341,7 @@ function getInventaireHtml() {
             <th>Nom</th>
             <th>Bague</th>
             <th>CITES</th>
+            <th>Carte verte</th>
             <th>Espèce</th>
             <th>Âge</th>
             <th>Sexe</th>
