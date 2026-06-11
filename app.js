@@ -1462,84 +1462,74 @@ function renderNourrissageHistory() {
     return;
   }
 
-  const groupes = {};
+  const groupesParDate = {};
 
   appData.nourrissage.forEach((item) => {
     const date = item.date || "";
-    const oiseau = item.oiseau || "";
-    const key = makeFeedGroupKey(date, oiseau);
-
-    if (!groupes[key]) {
-      groupes[key] = {
-        key,
-        date,
-        oiseau,
-        total: 0,
-        aliments: {}
-      };
-    }
-
-    const qty = toNumber(item.quantite);
-    const nourriture = item.nourriture || "Inconnu";
-
-    groupes[key].total += qty;
-    groupes[key].aliments[nourriture] =
-      (groupes[key].aliments[nourriture] || 0) + qty;
-  });
-
-  const groupesParDate = {};
-
-  Object.values(groupes).forEach((entry) => {
-    if (!groupesParDate[entry.date]) groupesParDate[entry.date] = [];
-    groupesParDate[entry.date].push(entry);
+    if (!groupesParDate[date]) groupesParDate[date] = [];
+    groupesParDate[date].push(item);
   });
 
   const datesTriees = Object.keys(groupesParDate).sort((a, b) => b.localeCompare(a));
 
-  zone.innerHTML = datesTriees.map((date) => {
-    const rows = groupesParDate[date]
-      .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
-      .map((entry) => {
-        const detailNourriture = Object.entries(entry.aliments)
-          .map(([food, qty]) => `${safe(food)} x${safe(qty)}`)
-          .join(" | ");
+  zone.innerHTML = `
+    <div class="card-section">
+      <h3>Historique des nourrissages</h3>
 
-        return `
-          <tr>
-            <td>${safe(entry.oiseau || "")}</td>
-            <td>${detailNourriture}</td>
-            <td>${safe(entry.total)}</td>
-            <td>
-              <div class="small-actions">
-                <button class="btn secondary-btn" onclick="corrigerDateNourrissage('${entry.key}')">Corriger date</button>
-                <button class="btn btn-danger" onclick="supprimerGroupeNourrissage('${entry.key}')">Supprimer</button>
+      <div class="list-grid">
+        ${datesTriees.map((date) => {
+          const items = groupesParDate[date];
+          const total = items.reduce((sum, item) => sum + toNumber(item.quantite), 0);
+
+          return `
+            <div class="item">
+              <h3>${safe(formatDateFR(date || ""))}</h3>
+              <p><strong>Total :</strong> ${safe(total)} pièce(s)</p>
+
+              <button class="btn secondary-btn" onclick="toggleNourrissageDate('${date}')">
+                Voir détail
+              </button>
+
+              <div id="detailNourrissage_${safeAttr(date)}" class="hidden" style="margin-top:12px;">
+                <div class="feed-table-wrap">
+                  <table class="feed-table">
+                    <thead>
+                      <tr>
+                        <th>Oiseau</th>
+                        <th>Nourriture</th>
+                        <th>Quantité</th>
+                        <th>Remarque</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${items
+                        .slice()
+                        .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
+                        .map((item) => `
+                          <tr>
+                            <td>${safe(item.oiseau || "")}</td>
+                            <td>${safe(item.nourriture || "")}</td>
+                            <td>${safe(item.quantite || 0)}</td>
+                            <td>${safe(item.remarques || "")}</td>
+                          </tr>
+                        `).join("")}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-    return `
-      <div class="card-section">
-        <h4>${safe(formatDateFR(date || ""))}</h4>
-        <div class="feed-table-wrap">
-          <table class="feed-table">
-            <thead>
-              <tr>
-                <th>Oiseau</th>
-                <th>Nourriture donnée</th>
-                <th>Total</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rows}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          `;
+        }).join("")}
       </div>
-    `;
-  }).join("");
+    </div>
+  `;
+}
+
+function toggleNourrissageDate(date) {
+  const el = document.getElementById(`detailNourrissage_${date}`);
+  if (!el) return;
+
+  el.classList.toggle("hidden");
 }
 
 function getFoodConsumptionByMonth() {
@@ -3791,6 +3781,7 @@ window.showSection = showSection;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
 window.modifierOiseau = modifierOiseau;
+window.toggleNourrissageDate = toggleNourrissageDate;
 window.cancelEditBird = cancelEditBird;
 window.ajouterPesee = ajouterPesee;
 window.ajouterDocument = ajouterDocument;
