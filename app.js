@@ -1139,7 +1139,8 @@ function renderOiseaux() {
       (oiseau.nom || "").toLowerCase().includes(search) ||
       (oiseau.espece || "").toLowerCase().includes(search) ||
       (oiseau.bague || "").toLowerCase().includes(search) ||
-      (oiseau.cites || "").toLowerCase().includes(search)
+      (oiseau.cites || "").toLowerCase().includes(search) ||
+      (oiseau.carteVerte || "").toLowerCase().includes(search)
     );
   }
 
@@ -1155,9 +1156,8 @@ function renderOiseaux() {
           <div class="bird-card-head">
             <div>
               <h3>${safe(oiseau.nom)}</h3>
-              <p class="bird-species">${safe(oiseau.espece || "Espèce non renseignée")}</p>
+              <p class="bird-species">${safe(oiseau.espece || "")}</p>
             </div>
-            <div class="weight-pill">${safe(oiseau.poidsActuel || "-")} g</div>
           </div>
 
           ${oiseau.photoUrl ? `
@@ -1167,62 +1167,9 @@ function renderOiseaux() {
           `}
 
           <div class="bird-meta">
+            <div><span>Nom</span><strong>${safe(oiseau.nom || "-")}</strong></div>
             <div><span>Espèce</span><strong>${safe(oiseau.espece || "-")}</strong></div>
-            <div><span>Date de naissance / Âge</span><strong>${safe(oiseau.age || "-")}</strong></div>
-            <div><span>Sexe</span><strong>${safe(oiseau.sexe || "-")}</strong></div>
-            <div><span>N° bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
-            <div><span>N° CITES</span><strong>${safe(oiseau.cites || "-")}</strong></div>
-            <div><span>Carte verte</span><strong>${safe(oiseau.carteVerte || "-")}</strong></div>
-            <div><span>Annexe</span><strong>${safe(oiseau.annexe || "-")}</strong></div>
-            <div><span>N° entrée</span><strong>${safe(oiseau.registreEntree || "-")}</strong></div>
-            <div><span>Date entrée</span><strong>${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</strong></div>
-            <div><span>Date sortie</span><strong>${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</strong></div>
-            <div><span>N° sortie</span><strong>${safe(oiseau.registreSortie || "-")}</strong></div>
-            <div><span>Motif sortie</span><strong>${safe(oiseau.motifSortie || "-")}</strong></div>
-            <div><span>Poids</span><strong>${safe(oiseau.poidsActuel || "-")} g</strong></div>
-          </div>
-
-          <div class="card-section">
-            <h4>Identification / registre</h4>
-            <p><strong>Nom :</strong> ${safe(oiseau.nom || "-")}</p>
-            <p><strong>Espèce :</strong> ${safe(oiseau.espece || "-")}</p>
-            <p><strong>Date de naissance / Âge :</strong> ${safe(oiseau.age || "-")}</p>
-            <p><strong>Sexe :</strong> ${safe(oiseau.sexe || "-")}</p>
-            <p><strong>N° bague :</strong> ${safe(oiseau.bague || "-")}</p>
-            <p><strong>N° CITES :</strong> ${safe(oiseau.cites || "-")}</p>
-            <p><strong>Carte verte :</strong> ${safe(oiseau.carteVerte || "-")}</p>
-            <p><strong>Annexe :</strong> ${safe(oiseau.annexe || "-")}</p>
-            <p><strong>N° entrée :</strong> ${safe(oiseau.registreEntree || "-")}</p>
-            <p><strong>Date entrée :</strong> ${safe(formatDateFR(oiseau.dateEntree || "") || "-")}</p>
-            <p><strong>Date sortie :</strong> ${safe(formatDateFR(oiseau.dateSortie || "") || "-")}</p>
-            <p><strong>N° sortie :</strong> ${safe(oiseau.registreSortie || "-")}</p>
-            <p><strong>Motif sortie :</strong> ${safe(oiseau.motifSortie || "-")}</p>
-          </div>
-
-          <div class="card-section">
-            <h4>Notes</h4>
-            <p>${safe(oiseau.notes || "Aucune note")}</p>
-          </div>
-
-          <div class="card-section">
-            <h4>Suivi vétérinaire</h4>
-            ${renderVetForBird(oiseau.nom)}
-          </div>
-
-          <div class="card-section">
-            <h4>Nourriture habituelle</h4>
-            <p>${safe(oiseau.nourritureHabituelle || "Non définie")} — ${safe(oiseau.quantiteHabituelle || 0)} pièce(s)</p>
-            <p>${safe(oiseau.nourritureHabituelle2 || "Aucune")}${oiseau.nourritureHabituelle2 ? " — " + safe(oiseau.quantiteHabituelle2 || 0) + " pièce(s)" : ""}</p>
-          </div>
-
-          <div class="card-section">
-            <h4>Documents liés</h4>
-            ${renderDocumentsList(oiseau.documents)}
-          </div>
-
-          <div class="card-section">
-            <h4>Poids enregistrés</h4>
-            ${renderHistoriquePoidsTable(oiseau.historiquePoids)}
+            <div><span>Bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
           </div>
 
           <div class="small-actions">
