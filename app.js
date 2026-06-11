@@ -744,12 +744,49 @@ function renderPoidsChart(historique) {
   `;
 }
 
+function getBirdFoodCostSummary(birdName) {
+  const prix = appData.prixNourriture || {};
+  const today = todayStr();
+  const week = getWeekStart(today);
+  const month = today.slice(0, 7);
+  const year = today.slice(0, 4);
+
+  const result = {
+    jour: 0,
+    semaine: 0,
+    mois: 0,
+    annee: 0
+  };
+
+  safeArray(appData.nourrissage).forEach((n) => {
+    const sameBird =
+      (n.oiseau || "").trim().toLowerCase() ===
+      (birdName || "").trim().toLowerCase();
+
+    if (!sameBird) return;
+
+    const food = n.nourriture || "";
+    const qty = toNumber(n.quantite);
+    const price = toNumber(prix[food]);
+    const cost = qty * price;
+    const date = n.date || "";
+
+    if (date === today) result.jour += cost;
+    if (getWeekStart(date) === week) result.semaine += cost;
+    if (date.slice(0, 7) === month) result.mois += cost;
+    if (date.slice(0, 4) === year) result.annee += cost;
+  });
+
+  return result;
+}
+
 function openBirdSheet(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
 
   const birdFeeds = getFeedsForBird(bird.nom);
   const birdVet = getVetForBird(bird.nom);
+  const birdCost = getBirdFoodCostSummary(bird.nom);
   const birdStats = getBirdFeedStats(bird.nom);
 
   const poidsRows = safeArray(bird.historiquePoids)
@@ -1004,6 +1041,37 @@ function openBirdSheet(id) {
 </table>   
         </div>
       </div>
+
+      <h2>Résumé alimentation</h2>
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>Poids actuel</th>
+      <th>Nourriture habituelle</th>
+      <th>Coût jour</th>
+      <th>Coût semaine</th>
+      <th>Coût mois</th>
+      <th>Coût année</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>${safe(bird.poidsActuel || "-")} g</td>
+      <td>
+        ${safe(bird.nourritureHabituelle || "-")} x${safe(bird.quantiteHabituelle || 0)}
+        ${
+          bird.nourritureHabituelle2
+            ? `<br>${safe(bird.nourritureHabituelle2)} x${safe(bird.quantiteHabituelle2 || 0)}`
+            : ""
+        }
+      </td>
+      <td>${birdCost.jour.toFixed(2)} €</td>
+      <td>${birdCost.semaine.toFixed(2)} €</td>
+      <td>${birdCost.mois.toFixed(2)} €</td>
+      <td>${birdCost.annee.toFixed(2)} €</td>
+    </tr>
+  </tbody>
+</table>
 
       <h2>Notes</h2>
       <div class="notes-box">${safe(bird.notes || "Aucune note")}</div>
