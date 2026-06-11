@@ -693,6 +693,57 @@ function partagerFicheOiseau(id) {
     .catch(() => alert("Impossible de partager automatiquement sur cet appareil."));
 }
 
+function renderPoidsChart(historique) {
+  const data = safeArray(historique)
+    .filter((h) => h.date && h.poids)
+    .map((h) => ({
+      date: h.date,
+      poids: toNumber(h.poids)
+    }))
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+
+  if (data.length < 2) {
+    return `<p class="small">Pas assez de données pour afficher une courbe.</p>`;
+  }
+
+  const width = 700;
+  const height = 260;
+  const padding = 40;
+
+  const poidsValues = data.map((d) => d.poids);
+  const min = Math.min(...poidsValues);
+  const max = Math.max(...poidsValues);
+  const range = max - min || 1;
+
+  const points = data.map((d, i) => {
+    const x = padding + (i * (width - padding * 2)) / (data.length - 1);
+    const y = height - padding - ((d.poids - min) / range) * (height - padding * 2);
+    return { ...d, x, y };
+  });
+
+  const polyline = points.map((p) => `${p.x},${p.y}`).join(" ");
+
+  return `
+    <svg width="100%" viewBox="0 0 ${width} ${height}" style="border:1px solid #ccc;border-radius:10px;background:#fff;">
+      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#999"/>
+      <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="#999"/>
+
+      <polyline points="${polyline}" fill="none" stroke="#2f4f2f" stroke-width="3"/>
+
+      ${points.map((p) => `
+        <circle cx="${p.x}" cy="${p.y}" r="5" fill="#2f4f2f"/>
+        <text x="${p.x}" y="${p.y - 10}" font-size="12" text-anchor="middle">${p.poids}g</text>
+      `).join("")}
+
+      <text x="${padding}" y="${height - 10}" font-size="12">${safe(formatDateFR(data[0].date))}</text>
+      <text x="${width - padding}" y="${height - 10}" font-size="12" text-anchor="end">${safe(formatDateFR(data[data.length - 1].date))}</text>
+
+      <text x="${padding}" y="${padding - 12}" font-size="12">${max}g</text>
+      <text x="${padding}" y="${height - padding + 18}" font-size="12">${min}g</text>
+    </svg>
+  `;
+}
+
 function openBirdSheet(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -976,6 +1027,9 @@ function openBirdSheet(id) {
           : `<p class="small">Aucun document lié.</p>`
       }
 
+      <h2>Courbe d'évolution du poids</h2>
+       ${renderPoidsChart(bird.historiquePoids)}
+
       <h2>Historique des poids</h2>
       ${
         poidsRows
@@ -1065,6 +1119,7 @@ ${
                   <th>Date</th>
                   <th>Nourriture</th>
                   <th>Quantité</th>
+                  <th>Remarque</th>
                 </tr>
               </thead>
               <tbody>
