@@ -1490,6 +1490,10 @@ function renderNourrissageHistory() {
                 Voir détail
               </button>
 
+              <button class="btn info-btn" onclick="imprimerNourrissageDate('${date}')">
+               Imprimer ce jour
+              </button>
+
               <div id="detailNourrissage_${safeAttr(date)}" class="hidden" style="margin-top:12px;">
                 <div class="feed-table-wrap">
                   <table class="feed-table">
@@ -1530,6 +1534,86 @@ function toggleNourrissageDate(date) {
   if (!el) return;
 
   el.classList.toggle("hidden");
+}
+
+function imprimerNourrissageDate(date) {
+  const items = safeArray(appData.nourrissage)
+    .filter((n) => (n.date || "") === date)
+    .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""));
+
+  if (!items.length) {
+    alert("Aucun nourrissage pour cette date.");
+    return;
+  }
+
+  const total = items.reduce((sum, item) => sum + toNumber(item.quantite), 0);
+
+  const rows = items.map((item) => `
+    <tr>
+      <td>${safe(item.oiseau || "")}</td>
+      <td>${safe(item.nourriture || "")}</td>
+      <td>${safe(item.quantite || 0)}</td>
+      <td>${safe(item.remarques || "")}</td>
+    </tr>
+  `).join("");
+
+  const win = window.open("", "_blank");
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre d'impression.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Nourrissage ${safe(formatDateFR(date))}</title>
+      <style>
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;background:#fff;padding:20px;}
+        .top-actions{margin-bottom:15px;}
+        .btn{padding:10px 14px;border:none;border-radius:8px;background:#333;color:#fff;font-weight:700;cursor:pointer;}
+        .header-doc{border-bottom:2px solid #444;padding-bottom:10px;margin-bottom:15px;}
+        h1{color:#2f4f2f;border-bottom:2px solid #ccc;padding-bottom:5px;}
+        table{width:100%;border-collapse:collapse;margin-top:12px;}
+        th,td{border:1px solid #ccc;padding:8px;text-align:left;}
+        th{background:#e8f0e8;color:#2f4f2f;}
+        @media print{.top-actions{display:none}}
+      </style>
+    </head>
+    <body>
+      <div class="top-actions">
+        <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+      </div>
+
+      <div class="header-doc">
+        <strong>Koll Jean-Philippe</strong><br>
+        Rue du Canal 82, 4800 Ensival<br>
+        +32 473 47 03 87<br>
+        jeanphilippekoll@gmail.com
+      </div>
+
+      <h1>Nourrissage du ${safe(formatDateFR(date))}</h1>
+      <p><strong>Total :</strong> ${safe(total)} pièce(s)</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Nourriture</th>
+            <th>Quantité</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 function getFoodConsumptionByMonth() {
@@ -3782,6 +3866,7 @@ window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
 window.modifierOiseau = modifierOiseau;
 window.toggleNourrissageDate = toggleNourrissageDate;
+window.imprimerNourrissageDate = imprimerNourrissageDate;
 window.cancelEditBird = cancelEditBird;
 window.ajouterPesee = ajouterPesee;
 window.ajouterDocument = ajouterDocument;
