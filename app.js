@@ -617,6 +617,17 @@ function partagerFicheOiseau(id) {
   if (!bird) return;
 
   const birdFeeds = getFeedsForBird(bird.nom);
+  const feedRowsByBird = birdFeeds
+  .slice()
+  .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+  .map((item) => `
+    <tr>
+      <td>${safe(formatDateFR(item.date || ""))}</td>
+      <td>${safe(item.nourriture || "")}</td>
+      <td>${safe(item.quantite || 0)}</td>
+      <td>${safe(item.remarques || "")}</td>
+    </tr>
+  `).join("");
   const birdVet = getVetForBird(bird.nom);
 
   let texte = `Fiche oiseau : ${bird.nom}\n`;
@@ -691,22 +702,27 @@ function openBirdSheet(id) {
   const birdStats = getBirdFeedStats(bird.nom);
 
   const poidsRows = safeArray(bird.historiquePoids)
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
-    .map((item) => `
-      <tr>
-        <td>${safe(formatDateFR(item.date || ""))}</td>
-        <td>${safe(item.poids || "")}</td>
-      </tr>
-    `).join("");
+  .slice()
+  .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+  .map((item) => `
+    <tr>
+      <td>${safe(formatDateFR(item.date || ""))}</td>
+      <td>${safe(item.poids || "")} g</td>
+    </tr>
+  `).join("");
 
   const feedRows = birdFeeds
-    .map((item) => `
-      <tr>
-        <td>${safe(formatDateFR(item.date || ""))}</td>
-        <td>${safe(item.nourriture || "")}</td>
-        <td>${safe(item.quantite || 0)}</td>
-      </tr>
-    `).join("");
+  .slice()
+  .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+  .map((item) => `
+    <tr>
+      <td>${safe(formatDateFR(item.date || ""))}</td>
+      <td>${safe(item.nourriture || "")}</td>
+      <td>${safe(item.quantite || 0)}</td>
+      <td>${safe(item.remarques || "")}</td>
+    </tr>
+  `)
+  .join("");
 
   const vetRows = birdVet
     .map((v) => `
