@@ -39,6 +39,7 @@ const ALIMENTS = [
   "Lapin",
   "Poisson",
   "Souris",
+  "Rat",
   "Cailleteau 30gr"
 ];
 
@@ -62,6 +63,7 @@ let appData = {
     "Lapin": 0,
     "Poisson": 0,
     "Souris": 0,
+    "Rat": 0,
     "Cailleteau 30gr": 0
   },
   coutOiseauxMasques: [],
@@ -153,6 +155,7 @@ function foodToStockKey(food) {
   if (key === "lapin") return "lapin";
   if (key === "poisson") return "poisson";
   if (key === "souris") return "souris";
+  if (key === "rat") return "rat";
   if (key === "cailleteau 30gr") return "cailleteau30gr";
   return null;
 }
@@ -339,6 +342,7 @@ function normalizeData(rapacesData, userData) {
     lapin: toNumber(rapacesData?.stock?.lapin),
     poisson: toNumber(rapacesData?.stock?.poisson),
     souris: toNumber(rapacesData?.stock?.souris),
+    rat: toNumber(rapacesData?.stock?.rat),
     cailleteau30gr: toNumber(rapacesData?.stock?.cailleteau30gr),
     boitePoussinsMoyenne225: toNumber(rapacesData?.stock?.boitePoussinsMoyenne225)
   };
@@ -364,6 +368,7 @@ function normalizeData(rapacesData, userData) {
     "Lapin": toNumber(rapacesData?.prixNourriture?.["Lapin"]),
     "Poisson": toNumber(rapacesData?.prixNourriture?.["Poisson"]),
     "Souris": toNumber(rapacesData?.prixNourriture?.["Souris"]),
+    "Rat": toNumber(rapacesData?.prixNourriture?.["Rat"]),
     "Cailleteau 30gr": toNumber(rapacesData?.prixNourriture?.["Cailleteau 30gr"])
 },
 coutOiseauxMasques: safeArray(rapacesData?.coutOiseauxMasques)
@@ -424,6 +429,7 @@ function buildRapacesPayload() {
       lapin: toNumber(appData.stock.lapin),
       poisson: toNumber(appData.stock.poisson),
       souris: toNumber(appData.stock.souris),
+      rat: toNumber(appData.stock.rat),
       cailleteau30gr: toNumber(appData.stock.cailleteau30gr),
       boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
     },
@@ -1879,6 +1885,7 @@ function fillStockForm() {
   const stockLapin = document.getElementById("stockLapin");
   const stockPoisson = document.getElementById("stockPoisson");
   const stockSouris = document.getElementById("stockSouris");
+  const stockRat = document.getElementById("stockRat");
   const stockCailleteau30gr = document.getElementById("stockCailleteau30gr");
 
   if (stockBoxes) stockBoxes.value = appData.stock.boitePoussinsMoyenne225 ?? 0;
@@ -1888,6 +1895,7 @@ function fillStockForm() {
   if (stockLapin) stockLapin.value = appData.stock.lapin ?? 0;
   if (stockPoisson) stockPoisson.value = appData.stock.poisson ?? 0;
   if (stockSouris) stockSouris.value = appData.stock.souris ?? 0;
+  if (stockRat) stockRat.value = appData.stock.rat ?? 0;
   if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
 }
 
@@ -1905,6 +1913,7 @@ function fillPrixNourritureForm() {
   set("prixLapin", prix["Lapin"]);
   set("prixPoisson", prix["Poisson"]);
   set("prixSouris", prix["Souris"]);
+  set("prixRat", prix["Rat"]);
   set("prixCailleteau", prix["Cailleteau 30gr"]);
 }
 
@@ -3323,6 +3332,7 @@ function enregistrerStock() {
   appData.stock.lapin = Math.max(0, toNumber(document.getElementById("stockLapin")?.value || 0));
   appData.stock.poisson = Math.max(0, toNumber(document.getElementById("stockPoisson")?.value || 0));
   appData.stock.souris = Math.max(0, toNumber(document.getElementById("stockSouris")?.value || 0));
+  appData.stock.rat = Math.max(0, toNumber(document.getElementById("stockRat")?.value || 0));
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
@@ -3648,6 +3658,7 @@ async function enregistrerPrixNourriture() {
     "Lapin": toNumber(document.getElementById("prixLapin")?.value),
     "Poisson": toNumber(document.getElementById("prixPoisson")?.value),
     "Souris": toNumber(document.getElementById("prixSouris")?.value),
+    "Rat": toNumber(document.getElementById("prixRat")?.value),
     "Cailleteau 30gr": toNumber(document.getElementById("prixCailleteau")?.value)
   };
 
