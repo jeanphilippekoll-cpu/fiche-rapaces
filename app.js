@@ -4095,7 +4095,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function openBirdDocuments(id) {
-  alert("Documents : à créer");
+  const bird = appData.oiseaux.find(o => o.id === id);
+  if (!bird) return;
+
+  const docs = safeArray(bird.documents);
+
+  if (!docs.length) {
+    alert("Aucun document.");
+    return;
+  }
+
+  const html = docs.map(doc => `
+    <p>
+      <a href="${safeAttr(doc.url || doc.lien || "")}"
+         target="_blank">
+         📎 ${safe(doc.name || doc.titre || "Document")}
+      </a>
+    </p>
+  `).join("");
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Documents - ${safe(bird.nom)}</title>
+    </head>
+    <body style="font-family:Arial;padding:20px">
+      <h2>Documents de ${safe(bird.nom)}</h2>
+      ${html}
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 function openBirdVet(id) {
