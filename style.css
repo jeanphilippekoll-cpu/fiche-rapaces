@@ -165,48 +165,42 @@
   }
 }
 
-.bird-badges {
+.bird-card .bird-badges {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
   margin: 14px 0;
 }
 
-.bird-badges .badge {
-  border: none;
-  background: #f3ead7;
-  color: #3d3022;
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 800;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+.bird-card .bird-badges button.badge {
+  border: none !important;
+  background: #f3ead7 !important;
+  color: #3d3022 !important;
+  border-radius: 999px !important;
+  padding: 9px 14px !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.bird-badges .badge:hover {
+.bird-card .bird-badges button.badge:nth-child(1) {
+  background: #eef3ea !important;
+}
+
+.bird-card .bird-badges button.badge:nth-child(2) {
+  background: #f5e6ef !important;
+}
+
+.bird-card .bird-badges button.badge:nth-child(3) {
+  background: #f7ead8 !important;
+}
+
+.bird-card .bird-badges button.badge:nth-child(4) {
+  background: #e8f0f7 !important;
+}
+
+.bird-card .bird-badges button.badge:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.22) !important;
 }
-
-.bird-badges .badge:active {
-  transform: translateY(0);
-}
-
-.bird-badges .badge:nth-child(1) {
-  background: #eef3ea;
-}
-
-.bird-badges .badge:nth-child(2) {
-  background: #f5e6ef;
-}
-
-.bird-badges .badge:nth-child(3) {
-  background: #f7ead8;
-}
-
-.bird-badges .badge:nth-child(4) {
-  background: #e8f0f7;
-}
-
