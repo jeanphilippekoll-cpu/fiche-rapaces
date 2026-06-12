@@ -4321,19 +4321,32 @@ function openBirdFeed(id) {
     <html>
       <head>
         <title>Nourrissage - ${safe(bird.nom)}</title>
+        <style>
+          body{font-family:Arial,sans-serif;background:#f5f7f4;padding:20px;color:#2f3b2f;}
+          .card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+          h2{margin-top:0;color:#2f4f2f;}
+          table{width:100%;border-collapse:collapse;}
+          th{background:#2f4f2f;color:white;padding:10px;text-align:left;}
+          td{padding:10px;border-bottom:1px solid #ddd;}
+          tr:nth-child(even){background:#f7faf7;}
+          .print-btn{background:#2f4f2f;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;margin-bottom:15px;}
+        </style>
       </head>
-      <body style="font-family:Arial;padding:20px">
-        <h2>Historique nourrissage - ${safe(bird.nom)}</h2>
+      <body>
+        <div class="card">
+          <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+          <h2>🍗 Historique nourrissage - ${safe(bird.nom)}</h2>
 
-        <table border="1" cellpadding="8" cellspacing="0">
-          <tr>
-            <th>Date</th>
-            <th>Nourriture</th>
-            <th>Quantité</th>
-            <th>Remarque</th>
-          </tr>
-          ${rows}
-        </table>
+          <table>
+            <tr>
+              <th>Date</th>
+              <th>Nourriture</th>
+              <th>Quantité</th>
+              <th>Remarque</th>
+            </tr>
+            ${rows}
+          </table>
+        </div>
       </body>
     </html>
   `);
@@ -4362,17 +4375,30 @@ function openBirdWeights(id) {
     <html>
       <head>
         <title>Poids - ${safe(bird.nom)}</title>
+        <style>
+          body{font-family:Arial,sans-serif;background:#f5f7f4;padding:20px;color:#2f3b2f;}
+          .card{background:white;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08);}
+          h2{margin-top:0;color:#2f4f2f;}
+          table{width:100%;border-collapse:collapse;}
+          th{background:#2f4f2f;color:white;padding:10px;text-align:left;}
+          td{padding:10px;border-bottom:1px solid #ddd;}
+          tr:nth-child(even){background:#f7faf7;}
+          .print-btn{background:#2f4f2f;color:white;border:none;padding:10px 16px;border-radius:8px;cursor:pointer;margin-bottom:15px;}
+        </style>
       </head>
-      <body style="font-family:Arial;padding:20px">
-        <h2>Historique des poids - ${safe(bird.nom)}</h2>
+      <body>
+        <div class="card">
+          <button class="print-btn" onclick="window.print()">🖨️ Imprimer</button>
+          <h2>⚖️ Historique des poids - ${safe(bird.nom)}</h2>
 
-        <table border="1" cellpadding="8" cellspacing="0">
-          <tr>
-            <th>Date</th>
-            <th>Poids</th>
-          </tr>
-          ${rows}
-        </table>
+          <table>
+            <tr>
+              <th>Date</th>
+              <th>Poids</th>
+            </tr>
+            ${rows}
+          </table>
+        </div>
       </body>
     </html>
   `);
