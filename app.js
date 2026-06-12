@@ -799,9 +799,10 @@ function openBirdSheet(id) {
     </tr>
   `).join("");
 
-  const feedRows = birdFeeds
+ const feedRows = birdFeeds
   .slice()
   .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+  .slice(0, 10)
   .map((item) => `
     <tr>
       <td>${safe(formatDateFR(item.date || ""))}</td>
@@ -1177,7 +1178,7 @@ ${
     : `<p class="small">Aucune statistique nourrissage disponible.</p>`
 }
 
-      <h2>Historique nourrissage</h2>
+      <h2>Historique nourrissage — 10 derniers</h2>
       ${
         feedRows
           ? `
