@@ -4063,6 +4063,10 @@ window.exportControle = exportControle;
 window.dupliquerNourrissageJourPrecedent = dupliquerNourrissageJourPrecedent;
 window.enregistrerPrixNourriture = enregistrerPrixNourriture;
 window.masquerOiseauCout = masquerOiseauCout;
+window.openBirdDocuments = openBirdDocuments;
+window.openBirdVet = openBirdVet;
+window.openBirdFeed = openBirdFeed;
+window.openBirdWeights = openBirdWeights;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
