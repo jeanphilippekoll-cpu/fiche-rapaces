@@ -296,6 +296,8 @@ function normalizeData(rapacesData, userData) {
   registreSortie: o.registreSortie || "",
   motifSortie: o.motifSortie || "",
   poidsActuel: o.poidsActuel ?? "",
+  poidsVol: toNumber(o.poidsVol),
+  toleranceVol: toNumber(o.toleranceVol),
   notes: o.notes || "",
   photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
   documents: normalizeDocuments(o.documents),
@@ -400,6 +402,8 @@ function buildRapacesPayload() {
       registreSortie: o.registreSortie || "",
       motifSortie: o.motifSortie || "",
       poidsActuel: o.poidsActuel ?? "",
+      poidsVol: toNumber(o.poidsVol),
+      toleranceVol: toNumber(o.toleranceVol),
       notes: o.notes || "",
       nourritureHabituelle: o.nourritureHabituelle || "Poussin",
       quantiteHabituelle: toNumber(o.quantiteHabituelle),
@@ -1416,25 +1420,40 @@ function renderTableauPoidsGlobal() {
       .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
     const dernier = poids[0];
-    const precedent = poids[1];
 
-    const dernierPoids = dernier ? toNumber(dernier.poids) : 0;
-    const precedentPoids = precedent ? toNumber(precedent.poids) : 0;
-    const variation = dernier && precedent ? dernierPoids - precedentPoids : 0;
+    const poidsActuel = dernier ? toNumber(dernier.poids) : toNumber(bird.poidsActuel);
+    const poidsVol = toNumber(bird.poidsVol);
+    const tolerance = toNumber(bird.toleranceVol);
+
+    const ecart = poidsVol > 0 ? poidsActuel - poidsVol : 0;
 
     let classe = "";
-    if (variation <= -20 || variation >= 20) classe = "alert-weight";
-    else if (variation <= -10 || variation >= 10) classe = "warn-weight";
-    else classe = "ok-weight";
+    let statut = "-";
+
+    if (!poidsVol || !poidsActuel) {
+      classe = "";
+      statut = "⚪ À compléter";
+    } else if (poidsActuel > poidsVol + tolerance) {
+      classe = "warn-weight";
+      statut = "🟠 Trop lourd";
+    } else if (poidsActuel < poidsVol - tolerance) {
+      classe = "alert-weight";
+      statut = "🔴 Trop léger";
+    } else {
+      classe = "ok-weight";
+      statut = "🟢 Prêt à voler";
+    }
 
     return `
       <tr class="${classe}">
         <td>${safe(bird.nom || "-")}</td>
         <td>${safe(bird.espece || "-")}</td>
-        <td>${dernier ? `${safe(dernierPoids)} g` : "-"}</td>
+        <td>${poidsActuel ? `${safe(poidsActuel)} g` : "-"}</td>
         <td>${dernier ? safe(formatDateFR(dernier.date || "")) : "-"}</td>
-        <td>${precedent ? `${safe(precedentPoids)} g` : "-"}</td>
-        <td>${dernier && precedent ? `${variation > 0 ? "+" : ""}${variation} g` : "-"}</td>
+        <td>${poidsVol ? `${safe(poidsVol)} g` : "-"}</td>
+        <td>${tolerance ? `${safe(tolerance)} g` : "-"}</td>
+        <td>${poidsVol && poidsActuel ? `${ecart > 0 ? "+" : ""}${safe(ecart)} g` : "-"}</td>
+        <td>${safe(statut)}</td>
       </tr>
     `;
   }).join("");
@@ -1446,10 +1465,12 @@ function renderTableauPoidsGlobal() {
           <tr>
             <th>Oiseau</th>
             <th>Espèce</th>
-            <th>Dernier poids</th>
-            <th>Date</th>
-            <th>Poids précédent</th>
-            <th>Variation</th>
+            <th>Poids actuel</th>
+            <th>Date pesée</th>
+            <th>Poids de vol</th>
+            <th>Tolérance</th>
+            <th>Écart</th>
+            <th>Statut</th>
           </tr>
         </thead>
         <tbody>
@@ -3064,6 +3085,8 @@ async function ajouterOiseau() {
   const sexe = document.getElementById("oiseauSexe")?.value.trim() || "";
   const age = document.getElementById("oiseauAge")?.value.trim() || "";
   const poidsActuel = document.getElementById("oiseauPoids")?.value.trim() || "";
+  const poidsVol = toNumber(document.getElementById("oiseauPoidsVol")?.value || 0);
+  const toleranceVol = toNumber(document.getElementById("oiseauTolerance")?.value || 0);
   const notes = document.getElementById("oiseauNotes")?.value.trim() || "";
   const nourritureHabituelle = document.getElementById("oiseauHabitudeFood")?.value || "Poussin";
   const quantiteHabituelle = toNumber(document.getElementById("oiseauHabitudeQty")?.value || 0);
@@ -3125,6 +3148,8 @@ async function ajouterOiseau() {
       existingBird.age = age;
       existingBird.annexe = annexe;
       existingBird.poidsActuel = poidsActuel;
+      existingBird.poidsVol = poidsVol;
+      existingBird.toleranceVol = toleranceVol;
       existingBird.notes = notes;
       existingBird.nourritureHabituelle = nourritureHabituelle;
       existingBird.quantiteHabituelle = quantiteHabituelle;
@@ -3159,6 +3184,8 @@ async function ajouterOiseau() {
         registreSortie,
         motifSortie,
         poidsActuel,
+        poidsVol,
+        toleranceVol,
         notes,
         nourritureHabituelle,
         quantiteHabituelle,
@@ -3203,6 +3230,8 @@ function modifierOiseau(id) {
   set("oiseauSexe", bird.sexe);
   set("oiseauAge", bird.age);
   set("oiseauPoids", bird.poidsActuel);
+  set("oiseauPoidsVol", bird.poidsVol);
+  set("oiseauTolerance", bird.toleranceVol);
   set("oiseauNotes", bird.notes);
   set("oiseauHabitudeFood", bird.nourritureHabituelle || "Poussin");
   set("oiseauHabitudeQty", bird.quantiteHabituelle);

@@ -1208,6 +1208,17 @@ bird-card .bird-badges {
   background: #cfb694;
 }
 
+.ok-weight td {
+  background: #f4fbf4 !important;
+}
+
+.warn-weight td {
+  background: #fff4df !important;
+}
+
+.alert-weight td {
+  background: #fde8e8 !important;
+}
   </style>
 </head>
 <body>
@@ -1391,6 +1402,16 @@ bird-card .bird-badges {
                 <label for="oiseauPoids">Poids</label>
                 <input id="oiseauPoids" placeholder="Poids (g)">
               </div>
+
+              <div>
+  <label for="oiseauPoidsVol">Poids de vol (g)</label>
+  <input id="oiseauPoidsVol" type="number" placeholder="Ex : 620">
+</div>
+
+<div>
+  <label for="oiseauTolerance">Tolérance (g)</label>
+  <input id="oiseauTolerance" type="number" value="10" placeholder="Ex : 10">
+</div>
 
               <div>
                 <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
