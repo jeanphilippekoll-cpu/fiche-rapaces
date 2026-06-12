@@ -4100,31 +4100,36 @@ function openBirdDocuments(id) {
 
   const docs = safeArray(bird.documents);
 
-  if (!docs.length) {
-    alert("Aucun document.");
-    return;
-  }
-
-  const html = docs.map(doc => `
-    <p>
-      <a href="${safeAttr(doc.url || doc.lien || "")}"
-         target="_blank">
-         📎 ${safe(doc.name || doc.titre || "Document")}
-      </a>
-    </p>
+  const rows = docs.map(doc => `
+    <tr>
+      <td>${safe(doc.name || doc.titre || "Document")}</td>
+      <td>
+        <a href="${safeAttr(doc.url || doc.lien || "")}"
+           target="_blank">
+           Ouvrir
+        </a>
+      </td>
+    </tr>
   `).join("");
 
   const win = window.open("", "_blank");
 
   win.document.write(`
     <html>
-    <head>
-      <title>Documents - ${safe(bird.nom)}</title>
-    </head>
-    <body style="font-family:Arial;padding:20px">
-      <h2>Documents de ${safe(bird.nom)}</h2>
-      ${html}
-    </body>
+      <head>
+        <title>Documents - ${safe(bird.nom)}</title>
+      </head>
+      <body style="font-family:Arial;padding:20px">
+        <h2>Documents - ${safe(bird.nom)}</h2>
+
+        <table border="1" cellpadding="8" cellspacing="0">
+          <tr>
+            <th>Document</th>
+            <th>Action</th>
+          </tr>
+          ${rows}
+        </table>
+      </body>
     </html>
   `);
 
@@ -4132,11 +4137,89 @@ function openBirdDocuments(id) {
 }
 
 function openBirdVet(id) {
-  alert("Suivi vétérinaire : à créer");
+  const bird = appData.oiseaux.find(o => o.id === id);
+  if (!bird) return;
+
+  const rows = getVetForBird(bird.nom)
+    .map(item => `
+      <tr>
+        <td>${safe(formatDateFR(item.date || ""))}</td>
+        <td>${safe(item.veterinaire || "")}</td>
+        <td>${safe(item.motif || "")}</td>
+        <td>${safe(item.diagnostic || "")}</td>
+        <td>${safe(item.traitement || "")}</td>
+      </tr>
+    `)
+    .join("");
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Vétérinaire - ${safe(bird.nom)}</title>
+      </head>
+      <body style="font-family:Arial;padding:20px">
+        <h2>Historique vétérinaire - ${safe(bird.nom)}</h2>
+
+        <table border="1" cellpadding="8" cellspacing="0">
+          <tr>
+            <th>Date</th>
+            <th>Vétérinaire</th>
+            <th>Motif</th>
+            <th>Diagnostic</th>
+            <th>Traitement</th>
+          </tr>
+          ${rows}
+        </table>
+      </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 function openBirdFeed(id) {
-  alert("Historique nourrissage : à créer");
+  const bird = appData.oiseaux.find(o => o.id === id);
+  if (!bird) return;
+
+  const rows = getFeedsForBird(bird.nom)
+    .slice()
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .map(item => `
+      <tr>
+        <td>${safe(formatDateFR(item.date || ""))}</td>
+        <td>${safe(item.nourriture || "")}</td>
+        <td>${safe(item.quantite || 0)}</td>
+        <td>${safe(item.remarques || "")}</td>
+      </tr>
+    `)
+    .join("");
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Nourrissage - ${safe(bird.nom)}</title>
+      </head>
+      <body style="font-family:Arial;padding:20px">
+        <h2>Historique nourrissage - ${safe(bird.nom)}</h2>
+
+        <table border="1" cellpadding="8" cellspacing="0">
+          <tr>
+            <th>Date</th>
+            <th>Nourriture</th>
+            <th>Quantité</th>
+            <th>Remarque</th>
+          </tr>
+          ${rows}
+        </table>
+      </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 function openBirdWeights(id) {
