@@ -1313,21 +1313,6 @@ function renderOiseaux() {
 </div>
 
 ${
-  safeArray(oiseau.documents).length
-    ? `
-      <div class="card-section">
-        <h4>Documents</h4>
-        <div class="stack-list">
-          ${safeArray(oiseau.documents).map((doc) => `
-            <a class="doc-link" href="${safeAttr(doc.url)}" target="_blank" rel="noopener noreferrer">
-              ${safe(doc.name || "Document")}
-            </a>
-          `).join("")}
-        </div>
-      </div>
-    `
-    : ""
-}
 
           <div class="small-actions">
             <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
