@@ -1294,23 +1294,23 @@ function renderOiseaux() {
             <div><span>Bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
           </div>
     
-          <div class="bird-badges">
-          <button class="btn btn-secondary badge" onclick="openBirdDocuments('${oiseau.id}')">
-           📎 Docs (${safeArray(oiseau.documents).length})
-          </button>
+         <div class="bird-badges">
+  <button class="bird-badge-btn" onclick="openBirdDocuments('${oiseau.id}')">
+    📎 Docs (${safeArray(oiseau.documents).length})
+  </button>
 
-          <button class="btn btn-secondary badge" onclick="openBirdVet('${oiseau.id}')">
-  🏥 Véto (${getVetForBird(oiseau.nom).length})
-</button>
+  <button class="bird-badge-btn" onclick="openBirdVet('${oiseau.id}')">
+    🏥 Véto (${getVetForBird(oiseau.nom).length})
+  </button>
 
-<button class="btn btn-secondary badge" onclick="openBirdFeed('${oiseau.id}')">
-  🍗 Nourr. (${getFeedsForBird(oiseau.nom).length})
-</button>
+  <button class="bird-badge-btn" onclick="openBirdFeed('${oiseau.id}')">
+    🍗 Nourr. (${getFeedsForBird(oiseau.nom).length})
+  </button>
 
-<button class="btn btn-secondary badge" onclick="openBirdWeights('${oiseau.id}')">
-  ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
-</button>
-</div>
+  <button class="bird-badge-btn" onclick="openBirdWeights('${oiseau.id}')">
+    ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
+  </button>
+</div> 
 
 
           <div class="small-actions">
