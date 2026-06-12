@@ -1624,7 +1624,6 @@ function renderNourrissageHistory() {
           return `
             <div class="item">
               <h3>${safe(formatDateFR(date || ""))}</h3>
-              <p><strong>Total :</strong> ${safe(total)} pièce(s)</p>
 
               <button class="btn secondary-btn" onclick="toggleNourrissageDate('${date}')">
                 Voir détail
