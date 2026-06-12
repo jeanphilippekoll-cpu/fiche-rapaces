@@ -1139,24 +1139,6 @@ ${
         </tbody>
       </table>
 
-      <h3 style="margin-top:16px;">Total par jour</h3>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${birdStats.jours.map(([date, total]) => `
-            <tr>
-              <td>${safe(formatDateFR(date))}</td>
-              <td>${safe(total)}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
-
       <h3 style="margin-top:16px;">Total par aliment</h3>
       <table class="data-table">
         <thead>
