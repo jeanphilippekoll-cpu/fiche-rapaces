@@ -1295,11 +1295,24 @@ function renderOiseaux() {
           </div>
     
           <div class="bird-badges">
-  <span class="badge">📎 ${safeArray(oiseau.documents).length} doc</span>
-  <span class="badge">🏥 ${getVetForBird(oiseau.nom).length} véto</span>
-  <span class="badge">🍗 ${getFeedsForBird(oiseau.nom).length} nourr.</span>
-  <span class="badge">⚖️ ${safeArray(oiseau.historiquePoids).length} poids</span>
-</div>
+          <button class="badge"
+  onclick="openBirdDocuments('${oiseau.id}')">
+  📎 ${safeArray(oiseau.documents).length}
+</button>
+ <button class="badge"
+  onclick="openBirdVet('${oiseau.id}')">
+  🏥 ${getVetForBird(oiseau.nom).length}
+</button>
+
+<button class="badge"
+  onclick="openBirdFeed('${oiseau.id}')">
+  🍗 ${getFeedsForBird(oiseau.nom).length}
+</button>
+
+<button class="badge"
+  onclick="openBirdWeights('${oiseau.id}')">
+  ⚖️ ${safeArray(oiseau.historiquePoids).length}
+</button>
           ${
   safeArray(oiseau.documents).length
     ? `
@@ -4076,3 +4089,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   showSection("accueil");
 });
+
+function openBirdDocuments(id) {
+  alert("Documents : à créer");
+}
+
+function openBirdVet(id) {
+  alert("Suivi vétérinaire : à créer");
+}
+
+function openBirdFeed(id) {
+  alert("Historique nourrissage : à créer");
+}
+
+function openBirdWeights(id) {
+  alert("Historique poids : à créer");
+}
