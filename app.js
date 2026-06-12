@@ -4140,5 +4140,40 @@ function openBirdFeed(id) {
 }
 
 function openBirdWeights(id) {
-  alert("Historique poids : à créer");
+  const bird = appData.oiseaux.find(o => o.id === id);
+  if (!bird) return;
+
+  const rows = safeArray(bird.historiquePoids)
+    .slice()
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .map(item => `
+      <tr>
+        <td>${safe(formatDateFR(item.date || ""))}</td>
+        <td>${safe(item.poids || "")} g</td>
+      </tr>
+    `)
+    .join("");
+
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <html>
+      <head>
+        <title>Poids - ${safe(bird.nom)}</title>
+      </head>
+      <body style="font-family:Arial;padding:20px">
+        <h2>Historique des poids - ${safe(bird.nom)}</h2>
+
+        <table border="1" cellpadding="8" cellspacing="0">
+          <tr>
+            <th>Date</th>
+            <th>Poids</th>
+          </tr>
+          ${rows}
+        </table>
+      </body>
+    </html>
+  `);
+
+  win.document.close();
 }
