@@ -1312,8 +1312,6 @@ function renderOiseaux() {
   </button>
 </div>
 
-${
-
           <div class="small-actions">
             <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
             <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>

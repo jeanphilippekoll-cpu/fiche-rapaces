@@ -204,3 +204,47 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.22) !important;
 }
+
+.bird-card .bird-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.bird-card .bird-badges .badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 36px;
+  border: none !important;
+  border-radius: 12px !important;
+  padding: 8px 12px !important;
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: #3b3024 !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14) !important;
+  cursor: pointer;
+}
+
+.bird-card .bird-badges .badge:nth-child(1) {
+  background: #dbead2 !important;
+}
+
+.bird-card .bird-badges .badge:nth-child(2) {
+  background: #ead8e8 !important;
+}
+
+.bird-card .bird-badges .badge:nth-child(3) {
+  background: #f1d9bf !important;
+}
+
+.bird-card .bird-badges .badge:nth-child(4) {
+  background: #d7e7ec !important;
+}
+
+.bird-card .bird-badges .badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.22) !important;
+}
