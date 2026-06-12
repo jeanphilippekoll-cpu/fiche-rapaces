@@ -216,3 +216,33 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(0,0,0,0.22) !important;
 }
+
+.bird-card .bird-badges button.badge {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  background: #dcc7ab !important;
+  color: #4f3d2d !important;
+
+  border: none !important;
+  outline: none !important;
+  border-radius: 12px !important;
+
+  padding: 11px 14px !important;
+  margin: 0 !important;
+
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+.bird-card .bird-badges {
+  gap: 8px !important;
+}
