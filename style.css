@@ -172,46 +172,6 @@
   margin: 14px 0;
 }
 
-.bird-card .bird-badges button.badge {
-  border: none !important;
-  background: #f3ead7 !important;
-  color: #3d3022 !important;
-  border-radius: 999px !important;
-  padding: 9px 14px !important;
-  font-size: 15px !important;
-  font-weight: 800 !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15) !important;
-  cursor: pointer;
-}
-
-.bird-card .bird-badges button.badge:nth-child(1) {
-  background: #eef3ea !important;
-}
-
-.bird-card .bird-badges button.badge:nth-child(2) {
-  background: #f5e6ef !important;
-}
-
-.bird-card .bird-badges button.badge:nth-child(3) {
-  background: #f7ead8 !important;
-}
-
-.bird-card .bird-badges button.badge:nth-child(4) {
-  background: #e8f0f7 !important;
-}
-
-.bird-card .bird-badges button.badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.22) !important;
-}
-
-.bird-card .bird-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin: 14px 0;
-}
-
 .bird-card .bird-badges .badge {
   display: inline-flex !important;
   align-items: center;
