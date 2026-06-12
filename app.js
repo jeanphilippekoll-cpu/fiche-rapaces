@@ -1397,7 +1397,67 @@ function renderArchivesOiseaux() {
 function renderPesees() {
   const zone = document.getElementById("listePesees");
   if (!zone) return;
-  zone.innerHTML = `<p class="muted-line">Les poids sont enregistrés directement dans la fiche de chaque oiseau.</p>`;
+  zone.innerHTML = `
+  <p class="muted-line">Les poids sont enregistrés directement dans la fiche de chaque oiseau.</p>
+  <div id="tableauPoidsGlobal"></div>
+`;
+
+renderTableauPoidsGlobal();
+}
+
+function renderTableauPoidsGlobal() {
+  const zone = document.getElementById("tableauPoidsGlobal");
+  if (!zone) return;
+
+  const rows = getSortedBirds(getActiveBirds()).map((bird) => {
+    const poids = safeArray(bird.historiquePoids)
+      .slice()
+      .filter((p) => p.date && p.poids)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+    const dernier = poids[0];
+    const precedent = poids[1];
+
+    const dernierPoids = dernier ? toNumber(dernier.poids) : 0;
+    const precedentPoids = precedent ? toNumber(precedent.poids) : 0;
+    const variation = dernier && precedent ? dernierPoids - precedentPoids : 0;
+
+    let classe = "";
+    if (variation <= -20 || variation >= 20) classe = "alert-weight";
+    else if (variation <= -10 || variation >= 10) classe = "warn-weight";
+    else classe = "ok-weight";
+
+    return `
+      <tr class="${classe}">
+        <td>${safe(bird.nom || "-")}</td>
+        <td>${safe(bird.espece || "-")}</td>
+        <td>${dernier ? `${safe(dernierPoids)} g` : "-"}</td>
+        <td>${dernier ? safe(formatDateFR(dernier.date || "")) : "-"}</td>
+        <td>${precedent ? `${safe(precedentPoids)} g` : "-"}</td>
+        <td>${dernier && precedent ? `${variation > 0 ? "+" : ""}${variation} g` : "-"}</td>
+      </tr>
+    `;
+  }).join("");
+
+  zone.innerHTML = `
+    <div class="feed-table-wrap">
+      <table class="feed-table simple-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Espèce</th>
+            <th>Dernier poids</th>
+            <th>Date</th>
+            <th>Poids précédent</th>
+            <th>Variation</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function renderDocuments() {
