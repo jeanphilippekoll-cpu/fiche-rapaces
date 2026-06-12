@@ -164,3 +164,20 @@
     font-size:28px;
   }
 }
+
+.bird-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef3ea;
+  border: 1px solid #c9d8c0;
+  font-size: 13px;
+  font-weight: 700;
+}

@@ -1293,6 +1293,13 @@ function renderOiseaux() {
             <div><span>Espèce</span><strong>${safe(oiseau.espece || "-")}</strong></div>
             <div><span>Bague</span><strong>${safe(oiseau.bague || "-")}</strong></div>
           </div>
+    
+          <div class="bird-badges">
+  <span class="badge">📎 ${safeArray(oiseau.documents).length} doc</span>
+  <span class="badge">🏥 ${getVetForBird(oiseau.nom).length} véto</span>
+  <span class="badge">🍗 ${getFeedsForBird(oiseau.nom).length} nourr.</span>
+  <span class="badge">⚖️ ${safeArray(oiseau.historiquePoids).length} poids</span>
+</div>
           ${
   safeArray(oiseau.documents).length
     ? `
