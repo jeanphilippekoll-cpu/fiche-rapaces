@@ -183,16 +183,17 @@
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  min-width: 54px;
-  height: 36px;
+  background: #dcc7ab !important;
+  color: #4f3d2d !important;
   border: none !important;
   border-radius: 12px !important;
-  padding: 8px 12px !important;
-  font-size: 15px !important;
-  font-weight: 800 !important;
-  color: #3b3024 !important;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.14) !important;
+  padding: 10px 16px !important;
+  height: auto !important;
+  min-width: auto !important;
+  font-size: 14px !important;
+  font-weight: bold !important;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.14) !important;
 }
 
 .bird-card .bird-badges .badge:nth-child(1) {

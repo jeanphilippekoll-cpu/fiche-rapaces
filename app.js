@@ -1296,19 +1296,19 @@ function renderOiseaux() {
     
           <div class="bird-badges">
   <button class="badge" onclick="openBirdDocuments('${oiseau.id}')">
-    📎 ${safeArray(oiseau.documents).length}
+    📎 Docs (${safeArray(oiseau.documents).length})
   </button>
 
   <button class="badge" onclick="openBirdVet('${oiseau.id}')">
-    🏥 ${getVetForBird(oiseau.nom).length}
+   🏥 Véto (${getVetForBird(oiseau.nom).length}) 
   </button>
 
   <button class="badge" onclick="openBirdFeed('${oiseau.id}')">
-    🍗 ${getFeedsForBird(oiseau.nom).length}
+    🍗 Nourr. (${getFeedsForBird(oiseau.nom).length})
   </button>
 
   <button class="badge" onclick="openBirdWeights('${oiseau.id}')">
-    ⚖️ ${safeArray(oiseau.historiquePoids).length}
+    ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
   </button>
 </div>
 
