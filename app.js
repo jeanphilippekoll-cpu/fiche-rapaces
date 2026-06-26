@@ -512,15 +512,17 @@ function showSection(section) {
 }
 
 function refreshStats() {
-  const statOiseaux = document.getElementById("statOiseaux");
-  const statPesees = document.getElementById("statPesees");
-  const statDocuments = document.getElementById("statDocuments");
-  const statNourrissages = document.getElementById("statNourrissages");
+  const setText = (ids, value) => {
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    });
+  };
 
-  if (statOiseaux) statOiseaux.textContent = getActiveBirds().length;
-  if (statPesees) statPesees.textContent = appData.pesees.length;
-  if (statDocuments) statDocuments.textContent = appData.documents.length;
-  if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
+  setText(["statOiseaux", "stat-oiseaux"], getActiveBirds().length);
+  setText(["statPesees", "stat-pesees"], appData.pesees.length);
+  setText(["statDocuments", "stat-documents"], appData.documents.length);
+  setText(["statNourrissages", "stat-nourrissages"], appData.nourrissage.length);
 }
 
 
