@@ -526,9 +526,13 @@ function refreshStats() {
 }
 
 
-function dashboardRow(title, detail, badge, type = "info") {
+function dashboardRow(title, detail, badge, type = "info", birdName = "") {
+  const clickAttr = birdName
+    ? ` onclick="openBirdFromDashboard('${safeAttr(birdName)}')"`
+    : "";
+
   return `
-    <div class="dashboard-row">
+    <div class="dashboard-row"${clickAttr}>
       <div>
         <strong>${safe(title)}</strong>
         <small>${safe(detail)}</small>
@@ -3443,6 +3447,28 @@ function modifierOiseau(id) {
 
   showSection("oiseaux");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function openBirdFromDashboard(nom) {
+  const bird = getActiveBirds().find(
+    o => o.nom.toLowerCase() === nom.toLowerCase()
+  );
+
+  if (!bird) return;
+
+  modifierOiseau(bird.id);
+}
+
+window.openBirdFromDashboard = openBirdFromDashboard;
+
+function openBirdFromDashboard(nom) {
+  const bird = getActiveBirds().find(
+    (o) => (o.nom || "").trim().toLowerCase() === (nom || "").trim().toLowerCase()
+  );
+
+  if (!bird) return;
+
+  modifierOiseau(bird.id);
 }
 
 function cancelEditBird() {
