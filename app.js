@@ -583,13 +583,129 @@ function renderDashboardIntelligent() {
   const tasksEl = document.getElementById("dashboardTasks");
   const alertsEl = document.getElementById("dashboardAlerts");
 
-  if (dateEl) dateEl.textContent = "dashboard OK";
-  if (toWeighEl) toWeighEl.innerHTML = `<p class="muted-line">Dashboard connecté : pesées à analyser.</p>`;
-  if (toFlyEl) toFlyEl.innerHTML = `<p class="muted-line">Dashboard connecté : poids de vol à analyser.</p>`;
-  if (complementsEl) complementsEl.innerHTML = `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
-  if (surveillanceEl) surveillanceEl.innerHTML = `<p class="muted-line">Aucun soin actif renseigné.</p>`;
-  if (tasksEl) tasksEl.innerHTML = `<p class="muted-line">Contrôle eau, fientes, comportement et stock.</p>`;
-  if (alertsEl) alertsEl.innerHTML = `<p class="muted-line">Aucune alerte active.</p>`;
+  const today = todayStr();
+  const now = new Date();
+  const birds = getSortedBirds(getActiveBirds());
+
+  if (dateEl) {
+    dateEl.textContent = now.toLocaleDateString("fr-BE", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long"
+    });
+  }
+
+  const latestWeightDate = (bird) => {
+    const hist = safeArray(bird.historiquePoids)
+      .filter(p => p.date)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    return hist[0]?.date || "";
+  };
+
+  const daysSince = (dateStr) => {
+    if (!dateStr) return 999;
+    const d1 = new Date(dateStr);
+    const d2 = new Date(today);
+    return Math.floor((d2 - d1) / 86400000);
+  };
+
+  const weighedToday = new Set(
+    safeArray(appData.pesees)
+      .filter(p => p.date === today)
+      .map(p => (p.nom || "").trim().toLowerCase())
+  );
+
+  const fedToday = new Set(
+    safeArray(appData.nourrissage)
+      .filter(n => n.date === today)
+      .map(n => (n.oiseau || "").trim().toLowerCase())
+  );
+
+  const toWeigh = birds.filter(b => {
+    const name = (b.nom || "").trim().toLowerCase();
+    return !weighedToday.has(name) && daysSince(latestWeightDate(b)) >= 2;
+  });
+
+  const toFly = birds.filter(b => {
+    const poids = getLatestBirdWeight(b);
+    const poidsVol = toNumber(b.poidsVol);
+    const tolerance = toNumber(b.toleranceVol) || 20;
+    return poidsVol > 0 && poids > 0 && Math.abs(poids - poidsVol) <= tolerance;
+  });
+
+  const complements = birds
+    .map(b => {
+      const plan = getDashboardComplementPlan(now.getDay(), b);
+      if (!plan) return null;
+      return { bird: b, plan };
+    })
+    .filter(Boolean);
+
+  const soins = birds.filter(b => {
+    const txt = `${b.notes || ""} ${b.statut || ""}`.toLowerCase();
+    return txt.includes("soin") || txt.includes("bless") || txt.includes("convalescence") || txt.includes("traitement");
+  });
+
+  const alerts = [];
+
+  birds.forEach(b => {
+    const poids = getLatestBirdWeight(b);
+    const poidsVol = toNumber(b.poidsVol);
+    if (poidsVol > 0 && poids > 0 && poids > poidsVol + 40) {
+      alerts.push(dashboardRow(b.nom, `${poids} g / point de vol ${poidsVol} g`, "Trop haut", "danger"));
+    }
+
+    const name = (b.nom || "").trim().toLowerCase();
+    if (!fedToday.has(name)) {
+      alerts.push(dashboardRow(b.nom, "Aucun nourrissage enregistré aujourd’hui", "Nourrir", "warn"));
+    }
+  });
+
+  const stock = appData.stock || {};
+  if (toNumber(stock.poussin) > 0 && toNumber(stock.poussin) < 30) {
+    alerts.push(dashboardRow("Stock poussins", `${stock.poussin} restants`, "Faible", "warn"));
+  }
+  if (toNumber(stock.caille) > 0 && toNumber(stock.caille) < 10) {
+    alerts.push(dashboardRow("Stock cailles", `${stock.caille} restantes`, "Faible", "warn"));
+  }
+
+  if (toWeighEl) {
+    toWeighEl.innerHTML = toWeigh.length
+      ? toWeigh.map(b => dashboardRow(b.nom, `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`, "À peser", "warn")).join("")
+      : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
+  }
+
+  if (toFlyEl) {
+    toFlyEl.innerHTML = toFly.length
+      ? toFly.map(b => dashboardRow(b.nom, `${getLatestBirdWeight(b)} g / point de vol ${toNumber(b.poidsVol)} g`, "Prêt", "ok")).join("")
+      : `<p class="muted-line">Aucun oiseau dans sa plage de vol.</p>`;
+  }
+
+  if (complementsEl) {
+    complementsEl.innerHTML = complements.length
+      ? complements.map(x => dashboardRow(x.bird.nom, `${x.plan} - ${getComplementDoseMl(x.bird)}`, "Aujourd’hui", "info")).join("")
+      : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
+  }
+
+  if (surveillanceEl) {
+    surveillanceEl.innerHTML = soins.length
+      ? soins.map(b => dashboardRow(b.nom, b.notes || "Surveillance indiquée", "Soins", "danger")).join("")
+      : `<p class="muted-line">Aucun oiseau en soin renseigné.</p>`;
+  }
+
+  if (tasksEl) {
+    tasksEl.innerHTML = `
+      ${dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok")}
+      ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info")}
+      ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn")}
+    `;
+  }
+
+  if (alertsEl) {
+    alertsEl.innerHTML = alerts.length
+      ? alerts.slice(0, 8).join("")
+      : `<p class="muted-line">Aucune alerte active.</p>`;
+  }
 }
 
 function refreshBirdSelects() {
