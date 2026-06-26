@@ -1537,6 +1537,8 @@ bird-card .bird-badges {
 </div>
             <input id="oiseauEditId" type="hidden">
 
+            <div id="birdTab-general" class="bird-tab-content">
+
             <div class="form-grid">
               <div>
                 <label for="oiseauNom">Nom</label>
@@ -1691,9 +1693,58 @@ bird-card .bird-badges {
               <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
             </div>
           </div>
+         </div> 
 
           <div class="card">
   <h2>Fiches oiseaux</h2>
+
+  <div id="birdTab-poids" class="bird-tab-content hidden">
+  <div class="card-section">
+    <h3>⚖️ Poids</h3>
+    <p class="muted-line">Historique et courbe de poids de l’oiseau sélectionné.</p>
+
+    <div class="form-grid">
+      <div>
+        <strong>Poids actuel</strong>
+        <p id="birdPremiumCurrentWeight">Non renseigné</p>
+      </div>
+
+      <div>
+        <strong>Point de vol</strong>
+        <p id="birdPremiumFlightWeight">Non renseigné</p>
+      </div>
+
+      <div>
+        <strong>Dernière pesée</strong>
+        <p id="birdPremiumLastWeightDate">Non renseignée</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="birdTab-sante" class="bird-tab-content hidden">
+  <div class="card-section">
+    <h3>💊 Santé</h3>
+    <p class="muted-line">Soins, traitements, observations et suivi vétérinaire.</p>
+    <div id="birdPremiumHealth">Aucun suivi affiché pour l’instant.</div>
+  </div>
+</div>
+
+<div id="birdTab-documents" class="bird-tab-content hidden">
+  <div class="card-section">
+    <h3>📄 Documents</h3>
+    <p class="muted-line">Documents liés à cet oiseau : CITES, carte verte, certificats, photos.</p>
+    <div id="birdPremiumDocuments">Aucun document affiché pour l’instant.</div>
+  </div>
+</div>
+
+<div id="birdTab-reproduction" class="bird-tab-content hidden">
+  <div class="card-section">
+    <h3>🥚 Reproduction</h3>
+    <p class="muted-line">Ponte, incubation, mirage, éclosion et jeunes.</p>
+    <div id="birdPremiumReproduction">Aucune donnée reproduction affichée pour l’instant.</div>
+  </div>
+</div>
 
   <div class="form-grid" style="margin-bottom:12px;">
     <div>
