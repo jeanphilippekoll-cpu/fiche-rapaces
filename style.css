@@ -246,3 +246,100 @@
 .bird-card .bird-badges {
   gap: 8px !important;
 }
+
+.dashboard-hero{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:30px;
+margin-bottom:20px;
+background:linear-gradient(135deg,#2f4f2f,#4d7a4d);
+color:#fff;
+border-radius:18px;
+box-shadow:0 10px 25px rgba(0,0,0,.15);
+}
+
+.dashboard-hero h2{
+margin:8px 0;
+font-size:32px;
+color:#fff;
+}
+
+.dashboard-hero p{
+margin:0;
+opacity:.95;
+}
+
+.dashboard-hero-badge{
+background:#fff;
+color:#2f4f2f;
+padding:14px 22px;
+border-radius:50px;
+font-weight:bold;
+font-size:18px;
+}
+
+.stats-number{
+font-size:42px;
+font-weight:bold;
+margin:12px 0;
+color:#2f4f2f;
+}
+
+.dashboard-card{
+transition:.25s;
+cursor:pointer;
+}
+
+.dashboard-card:hover{
+transform:translateY(-6px);
+box-shadow:0 12px 28px rgba(0,0,0,.15);
+}
+
+.dashboard-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px 0;
+border-bottom:1px solid #ececec;
+}
+
+.dashboard-row:last-child{
+border-bottom:none;
+}
+
+.dashboard-row strong{
+display:block;
+font-size:15px;
+}
+
+.dashboard-row small{
+color:#777;
+}
+
+.dashboard-badge{
+padding:6px 12px;
+border-radius:30px;
+font-size:12px;
+font-weight:bold;
+}
+
+.dashboard-badge.ok{
+background:#dff7df;
+color:#157515;
+}
+
+.dashboard-badge.warn{
+background:#fff4d5;
+color:#9b6700;
+}
+
+.dashboard-badge.danger{
+background:#ffdede;
+color:#b00020;
+}
+
+.dashboard-badge.info{
+background:#dfefff;
+color:#0d5cab;
+}
