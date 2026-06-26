@@ -4347,15 +4347,25 @@ function exportControle() {
 }
 
 function showBirdTab(tabName, button) {
-  document.querySelectorAll(".bird-tab").forEach((btn) => {
-    btn.classList.remove("active");
-  });
 
-  if (button) {
-    button.classList.add("active");
-  }
+    document.querySelectorAll(".bird-tab-content").forEach(tab => {
+        tab.classList.add("hidden");
+    });
 
-  console.log("Onglet fiche oiseau :", tabName);
+    const active = document.getElementById("birdTab-" + tabName);
+    if (active) {
+        active.classList.remove("hidden");
+    }
+
+    document.querySelectorAll(".bird-tab").forEach(btn => {
+        btn.classList.remove("active");
+    });
+
+    if (button) {
+        button.classList.add("active");
+    }
+
+    console.log("Onglet fiche oiseau :", tabName);
 }
 
 
