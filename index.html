@@ -1520,6 +1520,13 @@ bird-card .bird-badges {
         <section id="section-oiseaux" class="section hidden">
           <div class="card oiseaux">
             <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
+            <div class="bird-tabs">
+  <button class="bird-tab active" onclick="showBirdTab('general',this)">🦅 Général</button>
+  <button class="bird-tab" onclick="showBirdTab('poids',this)">⚖️ Poids</button>
+  <button class="bird-tab" onclick="showBirdTab('sante',this)">💊 Santé</button>
+  <button class="bird-tab" onclick="showBirdTab('documents',this)">📄 Documents</button>
+  <button class="bird-tab" onclick="showBirdTab('reproduction',this)">🥚 Reproduction</button>
+</div>
             <input id="oiseauEditId" type="hidden">
 
             <div class="form-grid">

@@ -405,3 +405,24 @@ font-weight:700;
         grid-template-columns:1fr;
     }
 }
+
+.bird-tabs{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:15px 0 20px;
+}
+
+.bird-tab{
+    border:none;
+    padding:10px 16px;
+    border-radius:10px;
+    background:#ece4d2;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.bird-tab.active{
+    background:#6f8f52;
+    color:#fff;
+}
