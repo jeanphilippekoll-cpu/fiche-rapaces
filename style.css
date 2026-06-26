@@ -343,3 +343,35 @@ color:#b00020;
 background:#dfefff;
 color:#0d5cab;
 }
+
+.stats-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:20px;
+margin:20px 0;
+}
+
+.dashboard-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+gap:20px;
+margin-top:20px;
+}
+
+.border-green{border-left:6px solid #37b24d;}
+.border-blue{border-left:6px solid #228be6;}
+.border-orange{border-left:6px solid #f59f00;}
+.border-red{border-left:6px solid #fa5252;}
+
+.card{
+border-radius:18px;
+padding:22px;
+background:#fff;
+box-shadow:0 10px 30px rgba(0,0,0,.08);
+}
+
+.card h3{
+margin-bottom:15px;
+font-size:28px;
+font-weight:700;
+}
