@@ -3461,16 +3461,6 @@ function openBirdFromDashboard(nom) {
 
 window.openBirdFromDashboard = openBirdFromDashboard;
 
-function openBirdFromDashboard(nom) {
-  const bird = getActiveBirds().find(
-    (o) => (o.nom || "").trim().toLowerCase() === (nom || "").trim().toLowerCase()
-  );
-
-  if (!bird) return;
-
-  modifierOiseau(bird.id);
-}
-
 function cancelEditBird() {
   resetBirdForm();
   if (statusEl) statusEl.textContent = "Modification annulée";
