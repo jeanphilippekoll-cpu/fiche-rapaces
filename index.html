@@ -1428,56 +1428,37 @@ bird-card .bird-badges {
 
 <div class="dashboard-grid">
 
-<div class="card dashboard-card">
+  <div class="card dashboard-card" onclick="showSection('pesee')">
+    <h3>⚖️ À peser</h3>
+    <div id="dashboardToWeigh"></div>
+  </div>
 
-<h3>⚖️ À peser</h3>
+  <div class="card dashboard-card" onclick="showSection('terrain')">
+    <h3>🦅 À voler</h3>
+    <div id="dashboardToFly"></div>
+  </div>
 
-<div id="dashboardToWeigh"></div>
+  <div class="card dashboard-card" onclick="showSection('nourrissage')">
+    <h3>💊 Compléments</h3>
+    <div id="dashboardComplements"></div>
+  </div>
 
-</div>
+  <div class="card dashboard-card" onclick="showSection('veterinaire')">
+    <h3>❤️ Soins</h3>
+    <div id="dashboardSurveillance"></div>
+  </div>
 
-<div class="card dashboard-card">
+  <div class="card dashboard-card" onclick="showSection('entretien')">
+    <h3>✅ À faire</h3>
+    <div id="dashboardTasks"></div>
+  </div>
 
-<h3>🦅 À voler</h3>
-
-<div id="dashboardToFly"></div>
-
-</div>
-
-<div class="card dashboard-card">
-
-<h3>💊 Compléments</h3>
-
-<div id="dashboardComplements"></div>
-
-</div>
-
-<div class="card dashboard-card">
-
-<h3>❤️ Soins</h3>
-
-<div id="dashboardSurveillance"></div>
-
-</div>
-
-<div class="card dashboard-card">
-
-<h3>✅ À faire</h3>
-
-<div id="dashboardTasks"></div>
+  <div class="card dashboard-card" onclick="showSection('stock')">
+    <h3>⚠️ Alertes</h3>
+    <div id="dashboardAlerts"></div>
+  </div>
 
 </div>
-
-<div class="card dashboard-card">
-
-<h3>⚠️ Alertes</h3>
-
-<div id="dashboardAlerts"></div>
-
-</div>
-
-</div>
-
 </section>
         <section id="section-oiseaux" class="section hidden">
           <div class="card oiseaux">
