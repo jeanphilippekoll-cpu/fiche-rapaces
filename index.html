@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fiche Rapaces</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f4ead7">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.png">
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+
+  <style>
+    :root{
+      --bg:#f7f1e3;
+      --bg2:#efe6d1;
+      --panel:#fffaf0;
+      --panel2:#f8f1e2;
+      --line:rgba(96, 76, 46, 0.12);
+      --text:#3d3123;
+      --muted:#7b6b57;
+      --accent:#8aa36b;
+      --accent2:#e7dcc6;
+      --danger:#b75b52;
+      --info:#7aa7a6;
+      --warn:#c58b6d;
+      --card-shadow:0 12px 30px rgba(75,57,30,0.08);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(138,163,107,0.18), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%);
+      color:var(--text);
+    }
+
+    .header-doc{
+  border-bottom:2px solid #000;
+  padding-bottom:10px;
+  margin-bottom:15px;
+}
+
+.header-doc h2{
+  margin:0;
+  font-size:18px;
+}
+
+.header-doc p{
+  margin:2px 0;
+  font-size:13px;
+}
+
+   .app{
+     width:100%;
+     max-width:none;
+     margin:0;
+     padding:26px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:18px;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+
+    .page-title{
+      margin:0;
+      font-size:42px;
+      letter-spacing:-0.03em;
+    }
+
+    .page-subtitle{
+      margin:8px 0 0 0;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    #status{
+      color:var(--muted);
+      font-size:14px;
+      margin-top:6px;
+    }
+
+    .nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin:18px 0 28px;
+    }
+
+    .nav button,.btn{
+      border:none;
+      border-radius:12px;
+      padding:12px 16px;
+      cursor:pointer;
+      background:var(--accent2);
+      color:var(--text);
+      font-weight:700;
+      transition:.2s ease;
+    }
+
+    .nav button:hover,.btn:hover{
+      transform:translateY(-1px);
+    }
+
+    .nav button.active{
+      background:var(--accent);
+      color:#fff;
+    }
+
+    .secondary-btn{
+      background:#d8ccb4;
+      color:var(--text);
+    }
+
+    .info-btn{
+      background:var(--info);
+      color:#fff;
+    }
+
+    .warn-btn{
+      background:var(--warn);
+      color:#fff;
+    }
+
+    .btn-danger{
+      background:var(--danger);
+      color:#fff;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+    }
+
+    .section{margin-top:8px}
+    .hidden{display:none !important}
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,248,235,0.88));
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:20px;
+      margin-bottom:18px;
+      box-shadow:var(--card-shadow);
+      backdrop-filter:blur(4px);
+    }
+
+    .card h2{margin-top:0;font-size:24px}
+    .card h3{margin-top:0}
+
+    input,select,textarea{
+      width:100%;
+      padding:12px 14px;
+      margin-top:6px;
+      margin-bottom:12px;
+      border-radius:12px;
+      border:1px solid rgba(96,76,46,0.14);
+      background:#fffdf8;
+      color:var(--text);
+      outline:none;
+    }
+
+    textarea{min-height:110px;resize:vertical}
+
+    label{
+      display:block;
+      margin-top:8px;
+      margin-bottom:4px;
+      font-weight:700;
+    }
+
+    .actions,.small-actions,.feed-toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .item{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:16px;
+      margin-top:12px;
+    }
+
+    .item p{margin:6px 0}
+
+    .stats-number{
+      font-size:36px;
+      font-weight:800;
+      margin:6px 0 0 0;
+    }
+
+    .stat-label{
+      color:var(--muted);
+      margin:0;
+    }
+
+    .bird-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:18px;
+    }
+
+    .bird-card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.75), rgba(253,247,236,0.95));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      box-shadow:var(--card-shadow);
+    }
+
+    .bird-card:nth-child(4n+1){border-top:6px solid #8aa36b;}
+    .bird-card:nth-child(4n+2){border-top:6px solid #c58b6d;}
+    .bird-card:nth-child(4n+3){border-top:6px solid #7aa7a6;}
+    .bird-card:nth-child(4n+4){border-top:6px solid #b592c8;}
+
+    .bird-card-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:14px;
+    }
+
+    .bird-card-head h3{
+      margin:0;
+      font-size:24px;
+    }
+
+    .bird-species{
+      margin:6px 0 0 0;
+      color:var(--muted);
+    }
+
+    .weight-pill{
+      background:rgba(138,163,107,0.18);
+      color:#50613d;
+      border:1px solid rgba(138,163,107,0.26);
+      border-radius:999px;
+      padding:8px 12px;
+      white-space:nowrap;
+      font-weight:700;
+    }
+
+    .bird-photo{
+      width:100%;
+      height:240px;
+      object-fit:cover;
+      border-radius:16px;
+      display:block;
+      margin-bottom:14px;
+      background:#efe6d1;
+    }
+
+    .bird-photo-placeholder{
+      width:100%;
+      height:240px;
+      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      background:#efe6d1;
+      color:var(--muted);
+      border:1px dashed rgba(96,76,46,0.16);
+    }
+
+    .bird-meta{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-bottom:14px;
+    }
+
+    .bird-meta div{
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+    }
+
+    .bird-meta span{
+      display:block;
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:4px;
+    }
+
+    .card-section{
+      margin-top:14px;
+      background:#fff8ec;
+      border:1px solid var(--line);
+      border-radius:14px;
+      padding:14px;
+    }
+
+    .card-section h4{
+      margin:0 0 10px 0;
+    }
+
+    .stack-list{
+      display:grid;
+      gap:8px;
+    }
+
+    .doc-link{
+      display:block;
+      padding:10px 12px;
+      border-radius:10px;
+      background:#fffdf8;
+      border:1px solid var(--line);
+      color:#5b7aa2;
+      text-decoration:none;
+    }
+
+    .doc-link:hover{text-decoration:underline;}
+
+    .muted-line{color:var(--muted);}
+
+    .feed-table-wrap{
+      overflow-x:auto;
+      margin-top:12px;
+    }
+
+    .feed-table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:760px;
+    }
+
+    .simple-table{min-width:0;}
+
+    .feed-table th,
+    .feed-table td{
+      border:1px solid var(--line);
+      padding:12px;
+      text-align:left;
+      vertical-align:middle;
+      background:#fffdf8;
+    }
+
+    .feed-table th{
+      background:#f2e8d4;
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+      gap:16px;
+    }
+
+    .summary-card{
+      background:var(--panel);
+      border:1px solid var(--line);
+      border-radius:16px;
+      padding:16px;
+    }
+
+    .summary-total{
+      font-size:28px;
+      font-weight:800;
+      margin:8px 0 12px 0;
+    }
+
+    .stock-info{
+      color:var(--muted);
+      margin-top:-4px;
+      margin-bottom:12px;
+      font-size:14px;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+      gap:14px;
+    }
+
+    .list-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:14px;
+    }
+
+    .terrain-poussin{background:#f3d9a4 !important;color:#5a3d13 !important;}
+    .terrain-souris{background:#d8e6d0 !important;color:#35533a !important;}
+    .terrain-cailleteau{background:#f0cfc8 !important;color:#6d3a33 !important;}
+    .terrain-ration{background:#d8ccb4 !important;color:#3d3123 !important;}
+    .terrain-card{border-left:8px solid #8aa36b;}
+
+    .pin-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(247,241,227,0.96);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:20px;
+    }
+
+    .pin-card{
+      width:100%;
+      max-width:420px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,248,235,0.96));
+      border:1px solid rgba(96,76,46,0.12);
+      border-radius:20px;
+      box-shadow:0 12px 30px rgba(75,57,30,0.08);
+      padding:24px;
+    }
+
+    .pin-card h2{
+      margin-top:0;
+      margin-bottom:10px;
+    }
+
+    .pin-error{
+      color:#b75b52;
+      font-weight:700;
+      min-height:22px;
+    }
+
+    .locked{overflow:hidden;}
+
+    @media (max-width: 700px){
+      .app{padding:16px}
+      .page-title{font-size:32px}
+      .bird-photo,.bird-photo-placeholder{height:210px}
+      .bird-card-head{flex-direction:column}
+      .weight-pill{align-self:flex-start}
+      .bird-meta{grid-template-columns:1fr}
+      .nav button,.btn{width:100%}
+    }
+  /* ===== FINITION LISIBILITÉ TABLETTE / IPHONE ===== */
+
+.feed-table th,
+.feed-table td {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.feed-table tbody tr:nth-child(odd) td {
+  background: #fffdf8;
+}
+
+.feed-table tbody tr:nth-child(even) td {
+  background: #f8f1e5;
+}
+
+.feed-table tbody tr:hover td {
+  background: #efe4cf;
+}
+
+.bird-card {
+  border-width: 1px;
+  box-shadow: 0 10px 24px rgba(75,57,30,0.08);
+}
+
+.bird-card h3 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.card-section {
+  background: #fffaf2;
+}
+
+.item {
+  background: #fffaf2;
+}
+
+.summary-card {
+  background: linear-gradient(180deg, #fffaf2 0%, #f8f0e2 100%);
+}
+
+.doc-link {
+  background: #fff;
+  border: 1px solid rgba(96, 76, 46, 0.14);
+  font-weight: 700;
+}
+
+.doc-link:hover {
+  background: #f5ecdc;
+}
+
+.weight-pill {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.small-actions .btn,
+.actions .btn,
+.feed-toolbar .btn {
+  min-height: 44px;
+}
+
+.feed-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(odd) td,
+#listeNourrissage .feed-table tbody tr:nth-child(odd) td,
+#listeVeterinaire .feed-table tbody tr:nth-child(odd) td {
+  background: #fffdf8;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(even) td,
+#listeNourrissage .feed-table tbody tr:nth-child(even) td,
+#listeVeterinaire .feed-table tbody tr:nth-child(even) td {
+  background: #f7efdf;
+}
+
+/* couleurs plus visibles pour les boutons terrain */
+.terrain-poussin {
+  background: #e6c781 !important;
+  color: #4f3510 !important;
+}
+
+.terrain-souris {
+  background: #cfe0c7 !important;
+  color: #28472d !important;
+}
+
+.terrain-cailleteau {
+  background: #eabeb5 !important;
+  color: #65322d !important;
+}
+
+.terrain-ration {
+  background: #d8ccb4 !important;
+  color: #3d3123 !important;
+}
+
+.info-btn {
+  background: #6f9fa0 !important;
+  color: #fff !important;
+}
+
+.warn-btn {
+  background: #bf835f !important;
+  color: #fff !important;
+}
+
+.secondary-btn {
+  background: #d8ccb4 !important;
+  color: #3d3123 !important;
+}
+
+.btn-danger {
+  background: #b75b52 !important;
+  color: #fff !important;
+}
+
+/* meilleure lisibilité mobile */
+@media (max-width: 900px) {
+  .app {
+    padding: 14px;
+  }
+
+  .page-title {
+    font-size: 28px;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .bird-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .bird-photo,
+  .bird-photo-placeholder {
+    height: 190px;
+  }
+
+  .feed-table {
+    min-width: 640px;
+  }
+
+  .feed-table th,
+  .feed-table td {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* évite le zoom iPhone */
+    min-height: 46px;
+  }
+
+  textarea {
+    min-height: 100px;
+  }
+
+  .btn,
+  .nav button {
+    font-size: 15px;
+    padding: 12px 14px;
+    min-height: 46px;
+  }
+
+  .bird-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid,
+  .grid,
+  .form-grid,
+  .list-grid,
+  .bird-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    margin-bottom: 14px;
+  }
+
+  .nav {
+    gap: 8px;
+    margin: 14px 0 20px;
+  }
+
+  .nav button,
+  .btn {
+    width: 100%;
+  }
+
+  .feed-table {
+    min-width: 560px;
+  }
+
+  .stats-number {
+    font-size: 30px;
+  }
+
+  .bird-card h3 {
+    font-size: 21px;
+  }
+
+  .card h2 {
+    font-size: 21px;
+  }
+}
+/* ===== COULEURS PAR SECTION ===== */
+
+/* 🟢 INVENTAIRE */
+#inventaireZone .feed-table th {
+  background: #dcefdc;
+  color: #2f5c2f;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(even) td {
+  background: #f4fbf4;
+}
+
+#inventaireZone .feed-table tbody tr:nth-child(odd) td {
+  background: #ffffff;
+}
+
+/* 🔵 VETERINAIRE */
+#listeVeterinaire .feed-table th {
+  background: #dce7f2;
+  color: #2d4c6b;
+}
+
+#listeVeterinaire .feed-table tbody tr:nth-child(even) td {
+  background: #f2f7fc;
+}
+
+#listeVeterinaire .feed-table tbody tr:nth-child(odd) td {
+  background: #ffffff;
+}
+
+/* 🟡 NOURRISSAGE */
+#listeNourrissage .feed-table th {
+  background: #f2e7cc;
+  color: #6b4e1e;
+}
+
+#listeNourrissage .feed-table tbody tr:nth-child(even) td {
+  background: #fbf6eb;
+}
+
+#listeNourrissage .feed-table tbody tr:nth-child(odd) td {
+  background: #ffffff;
+}
+
+/* SURVOL UNIFORME */
+.feed-table tbody tr:hover td {
+  background: #e9dcc5 !important;
+}
+
+/* TITRES SECTIONS PLUS VISIBLES */
+.card h2 {
+  border-left: 6px solid #c8b28a;
+  padding-left: 10px;
+}
+
+/* VARIANTE PAR SECTION */
+#section-inventaire h2 {
+  border-left-color: #6aa56a;
+}
+
+#section-veterinaire h2 {
+  border-left-color: #6f9fa0;
+}
+
+#section-nourrissage h2 {
+  border-left-color: #d4a95c;
+}
+/* ===== COULEUR CARDS ACCUEIL ===== */
+
+.card.oiseaux {
+  background: #e8f5e9;
+  border-left: 6px solid #4caf50;
+}
+
+.card.pesees {
+  background: #e3f2fd;
+  border-left: 6px solid #2196f3;
+}
+
+.card.documents {
+  background: #fff3e0;
+  border-left: 6px solid #ff9800;
+}
+
+.card.nourrissage {
+  background: #fbe9e7;
+  border-left: 6px solid #f44336;
+}
+/* ===== NAVIGATION PLUS LISIBLE ET PLUS PRO ===== */
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 18px 0 28px;
+}
+
+.nav button {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 12px;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  transition: 0.2s ease;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.08);
+  border-left: 6px solid transparent;
+  text-align: center;
+}
+
+.nav button:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.98);
+}
+
+/* couleur de base si jamais */
+.nav button {
+  background: #efe6d1;
+  color: #3d3123;
+}
+
+/* Accueil */
+#btn-accueil {
+  background: #f5efe2;
+  border-left-color: #8c7a5b;
+}
+
+/* Oiseaux */
+#btn-oiseaux {
+  background: #e5f3e4;
+  border-left-color: #5c9b5c;
+}
+
+/* Pesée */
+#btn-pesee {
+  background: #e3eef9;
+  border-left-color: #5b8fc7;
+}
+
+/* Documents */
+#btn-documents {
+  background: #fff0dc;
+  border-left-color: #d08a2f;
+}
+
+/* Nourrissage */
+#btn-nourrissage {
+  background: #fbe9dd;
+  border-left-color: #c77736;
+}
+
+/* Terrain */
+#btn-terrain {
+  background: #f4e7cf;
+  border-left-color: #b18b3d;
+}
+
+/* Suivi veto */
+#btn-veterinaire {
+  background: #e3f0ef;
+  border-left-color: #5f9a99;
+}
+
+/* Inventaire */
+#btn-inventaire {
+  background: #e8f4e8;
+  border-left-color: #6aa56a;
+}
+
+/* Vacances */
+#btn-vacances {
+  background: #f8e5ef;
+  border-left-color: #b06793;
+}
+
+/* Entretien */
+#btn-entretien {
+  background: #ece7f6;
+  border-left-color: #7f69b3;
+}
+
+/* Stock */
+#btn-stock {
+  background: #f7eadf;
+  border-left-color: #b88257;
+}
+
+/* bouton actif */
+.nav button.active {
+  color: #ffffff !important;
+}
+
+/* mobile / tablette */
+@media (max-width: 900px) {
+  .nav {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .nav button {
+    min-height: 52px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav {
+    grid-template-columns: 1fr;
+  }
+
+  .nav button {
+    width: 100%;
+  }
+}
+/* ===== TITRES PAR SECTION ===== */
+
+#section-accueil h2 {
+  color: #6b5a45;
+}
+
+#section-oiseaux h2 {
+  color: #4f8a4f;
+}
+
+#section-pesee h2 {
+  color: #4c7fb3;
+}
+
+#section-documents h2 {
+  color: #c07c28;
+}
+
+#section-nourrissage h2 {
+  color: #b8642c;
+}
+
+#section-terrain h2 {
+  color: #9c7a2f;
+}
+
+#section-veterinaire h2 {
+  color: #4e8f8e;
+}
+
+#section-inventaire h2 {
+  color: #5f995f;
+}
+
+#section-vacances h2 {
+  color: #a45c83;
+}
+
+#section-entretien h2 {
+  color: #6d5ca8;
+}
+
+#section-stock h2 {
+  color: #a36f48;
+}
+/* ===== TITRES PAR SECTION ===== */
+
+#section-accueil h2 {
+  color: #6b5a45;
+}
+
+#section-oiseaux h2 {
+  color: #4f8a4f;
+}
+
+#section-pesee h2 {
+  color: #4c7fb3;
+}
+
+#section-documents h2 {
+  color: #c07c28;
+}
+
+#section-nourrissage h2 {
+  color: #b8642c;
+}
+
+#section-terrain h2 {
+  color: #9c7a2f;
+}
+
+#section-veterinaire h2 {
+  color: #4e8f8e;
+}
+
+#section-inventaire h2 {
+  color: #5f995f;
+}
+
+#section-vacances h2 {
+  color: #a45c83;
+}
+
+#section-entretien h2 {
+  color: #6d5ca8;
+}
+
+#section-stock h2 {
+  color: #a36f48;
+}
+.card {
+  border-radius: 16px;
+  padding: 16px;
+  background: #fffdf7;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+  margin-bottom: 18px;
+  border-left: 5px solid #e0d2b8;
+}
+#section-oiseaux .card {
+  border-left-color: #6aa56a;
+}
+
+#section-pesee .card {
+  border-left-color: #5b8fc7;
+}
+
+#section-documents .card {
+  border-left-color: #d08a2f;
+}
+
+#section-nourrissage .card {
+  border-left-color: #c77736;
+}
+
+#section-veterinaire .card {
+  border-left-color: #5f9a99;
+}
+
+#section-vacances .card {
+  border-left-color: #b06793;
+}
+
+#section-entretien .card {
+  border-left-color: #7f69b3;
+}
+
+#section-stock .card {
+  border-left-color: #b88257;
+}
+h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 250px;
+  background: #f4ead7;
+  border-right: 1px solid rgba(96,76,46,0.12);
+  padding: 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.logo {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.menu-group {
+  margin-bottom: 20px;
+}
+
+.menu-title {
+  font-size: 13px;
+  color: #7b6b57;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.sidebar button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.sidebar button:hover {
+  background: #e7dcc6;
+}
+
+.sidebar button.active {
+  background: #8aa36b;
+  color: #fff;
+}
+
+/* CONTENU */
+.main-content {
+  flex: 1;
+  padding: 20px;
+}
+
+/* MOBILE */
+@media (max-width: 900px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .menu-group {
+    width: 100%;
+  }
+
+  .sidebar button {
+    width: 48%;
+  }
+  .sidebar button.active {
+  background: #8aa36b !important;
+  color: #ffffff !important;
+  border-left: 6px solid #5f7a45 !important;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.12);
+}
+
+.sidebar button.active:hover {
+  background: #7b9360 !important;
+  color: #ffffff !important;
+}
+.sidebar button {
+  color: #2b241b;
+  font-weight: 700;
+}
+/* ===== BOUTON ACTIF SIDEBAR : FORCÉ ET LISIBLE ===== */
+.sidebar button.active,
+.sidebar button.active#btn-accueil,
+.sidebar button.active#btn-oiseaux,
+.sidebar button.active#btn-pesee,
+.sidebar button.active#btn-documents,
+.sidebar button.active#btn-nourrissage,
+.sidebar button.active#btn-terrain,
+.sidebar button.active#btn-veterinaire,
+.sidebar button.active#btn-inventaire,
+.sidebar button.active#btn-stock,
+.sidebar button.active#btn-vacances,
+.sidebar button.active#btn-entretien {
+  background: #6f8f52 !important;
+  color: #ffffff !important;
+  border-left: 6px solid #4f6739 !important;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.14) !important;
+  outline: none !important;
+}
+
+.sidebar button.active:hover,
+.sidebar button.active#btn-accueil:hover,
+.sidebar button.active#btn-oiseaux:hover,
+.sidebar button.active#btn-pesee:hover,
+.sidebar button.active#btn-documents:hover,
+.sidebar button.active#btn-nourrissage:hover,
+.sidebar button.active#btn-terrain:hover,
+.sidebar button.active#btn-veterinaire:hover,
+.sidebar button.active#btn-inventaire:hover,
+.sidebar button.active#btn-stock:hover,
+.sidebar button.active#btn-vacances:hover,
+.sidebar button.active#btn-entretien:hover {
+  background: #6f8f52 !important;
+  color: #ffffff !important;
+}
+
+.sidebar button {
+  color: #2b241b !important;
+  font-weight: 700;
+}
+.sidebar button.active {
+  background: #6f8f52 !important;
+  color: #ffffff !important;
+  border-left: 6px solid #4f6739 !important;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.14) !important;
+}
+}
+bird-card .bird-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.bird-card .bird-badges button.badge {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-radius: 12px;
+  background: #d8ccb4;
+  color: #3d3123;
+  padding: 11px 14px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(75,57,30,0.10);
+}
+
+.bird-card .bird-badges button.badge:hover {
+  transform: translateY(-1px);
+  background: #cfbfa3;
+}
+
+.bird-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.bird-badge-btn {
+  border: none;
+  border-radius: 12px;
+  background: #dcc7ab;
+  color: var(--brun);
+
+  padding: 11px 14px;
+
+  font-size: 13px;
+  font-weight: normal;
+
+  cursor: pointer;
+  transition: .2s;
+}
+
+.bird-badge-btn:hover {
+  background: #cfb694;
+}
+
+.ok-weight td {
+  background: #f4fbf4 !important;
+}
+
+.warn-weight td {
+  background: #fff4df !important;
+}
+
+.alert-weight td {
+  background: #fde8e8 !important;
+}
+
+.dashboard-card {
+  border-left-color: #c8b28a;
+}
+
+.dashboard-weigh-card {
+  border-left-color: #d99a2b !important;
+}
+
+.dashboard-fly-card {
+  border-left-color: #6aa56a !important;
+}
+
+.dashboard-alert-card {
+  border-left-color: #b75b52 !important;
+}
+
+.dashboard-list {
+  display: grid;
+  gap: 8px;
+}
+
+.dashboard-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: #fffaf2;
+  border: 1px solid rgba(96,76,46,0.12);
+  border-radius: 12px;
+}
+
+.dashboard-row strong {
+  display: block;
+}
+
+.dashboard-row small {
+  display: block;
+  margin-top: 3px;
+  color: #7b6b57;
+}
+
+.dashboard-badge {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dashboard-badge.ok {
+  background: #e4f2df;
+  color: #3f6b35;
+}
+
+.dashboard-badge.info {
+  background: #e3f0ef;
+  color: #437877;
+}
+
+.dashboard-badge.warn {
+  background: #fff0dc;
+  color: #9b641d;
+}
+
+.dashboard-badge.danger {
+  background: #fde8e8;
+  color: #9a3932;
+}
+
+.dashboard-empty {
+  color: #7b6b57;
+  font-style: italic;
+  padding: 8px 0;
+}
+  </style>
+</head>
+<body>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <h2 class="logo">🦅 Rapaces</h2>
+
+      <div class="menu-group">
+        <p class="menu-title">Tableau de bord</p>
+        <button id="btn-accueil" class="active" onclick="showSection('accueil')">Accueil</button>
+      </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Oiseaux</p>
+        <button id="btn-oiseaux" onclick="showSection('oiseaux')">Oiseaux</button>
+        <button id="btn-pesee" onclick="showSection('pesee')">Pesée oiseaux</button>
+        <button id="btn-inventaire" onclick="showSection('inventaire')">Inventaire oiseaux</button>
+        <button id="btn-archives" onclick="showSection('archives')">Archives oiseaux</button>
+      </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Soins quotidiens</p>
+        <button id="btn-nourrissage" onclick="showSection('nourrissage')">Nourrissage</button>
+        <button id="btn-terrain" onclick="showSection('terrain')">Terrain</button>
+        <button id="btn-stock" onclick="showSection('stock')">Stock</button>
+        <button id="btn-entretien" onclick="showSection('entretien')">Entretien</button>
+      </div>
+
+      <div class="menu-group">
+        <p class="menu-title">Administratif</p>
+        <button id="btn-documents" onclick="showSection('documents')">Documents</button>
+        <button id="btn-veterinaire" onclick="showSection('veterinaire')">Suivi vétérinaire</button>
+        <button id="btn-vacances" onclick="showSection('vacances')">Vacances</button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+
+      <div id="pinOverlay" class="pin-overlay">
+        <div class="pin-card">
+          <h2>Accès protégé</h2>
+          <p>Entre le code PIN pour ouvrir l'application.</p>
+          <label for="pinInput">Code PIN</label>
+          <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+          <div class="actions">
+            <button class="btn" onclick="checkPin()">Ouvrir</button>
+          </div>
+          <p id="pinError" class="pin-error"></p>
+        </div>
+      </div>
+
+      <div id="appContent" class="app">
+        <header class="topbar">
+          <div>
+            <h1 class="page-title">Fiche Rapaces</h1>
+            <p class="page-subtitle">Gestion des oiseaux, pesées, nourrissage, terrain, vétérinaire, documents et stock</p>
+            <div id="status">Chargement…</div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="saveData()">Sauvegarder</button>
+          </div>
+        </header>
+
+       <section id="section-accueil" class="section">
+
+  <div class="card">
+    <h2>Tableau de bord intelligent</h2>
+    <p class="muted-line">
+      Résumé automatique de la fauconnerie aujourd’hui :
+      <strong id="dashboardDate">chargement…</strong>
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="card oiseaux">
+      <h3>🦅 Oiseaux</h3>
+      <p id="statOiseaux" class="stats-number">0</p>
+      <p class="stat-label">Présents / enregistrés</p>
+    </div>
+
+    <div class="card pesees">
+      <h3>⚖️ Pesées</h3>
+      <p id="statPesees" class="stats-number">0</p>
+      <p class="stat-label">Pesées enregistrées</p>
+    </div>
+
+    <div class="card documents">
+      <h3>📄 Documents</h3>
+      <p id="statDocuments" class="stats-number">0</p>
+      <p class="stat-label">Documents stockés</p>
+    </div>
+
+    <div class="card nourrissage">
+      <h3>🍗 Nourrissages</h3>
+      <p id="statNourrissages" class="stats-number">0</p>
+      <p class="stat-label">Repas enregistrés</p>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card dashboard-card dashboard-weigh-card">
+      <h2>⚖️ À peser aujourd’hui</h2>
+      <div id="dashboardToWeigh" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="card dashboard-card dashboard-fly-card">
+      <h2>🦅 Prêts à voler</h2>
+      <div id="dashboardToFly" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="card dashboard-card">
+      <h2>💊 Compléments aujourd’hui</h2>
+      <div id="dashboardComplements" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="card dashboard-card">
+      <h2>❤️ Surveillance</h2>
+      <div id="dashboardSurveillance" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="card dashboard-card">
+      <h2>✅ À faire</h2>
+      <div id="dashboardTasks" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+
+    <div class="card dashboard-card dashboard-alert-card">
+      <h2>⚠️ Alertes</h2>
+      <div id="dashboardAlerts" class="dashboard-list">
+        <p class="muted-line">Chargement…</p>
+      </div>
+    </div>
+  </div>
+
+</section>
+        <section id="section-oiseaux" class="section hidden">
+          <div class="card oiseaux">
+            <h2 id="oiseauFormTitle">Ajouter un oiseau</h2>
+            <input id="oiseauEditId" type="hidden">
+
+            <div class="form-grid">
+              <div>
+                <label for="oiseauNom">Nom</label>
+                <input id="oiseauNom" placeholder="Nom">
+              </div>
+
+              <div>
+               <label for="oiseauOrdre">Ordre / position</label>
+               <input id="oiseauOrdre" type="number" min="1" placeholder="Ex: 1">
+              </div>
+
+              <div>
+               <label for="oiseauBague">Numéro de bague</label>
+               <input id="oiseauBague" placeholder="Ex: BE12345">
+              </div>
+
+              <div>
+               <label for="oiseauCites">N° CITES</label>
+               <input id="oiseauCites" placeholder="Numéro CITES">
+               <input id="oiseauCarteVerte" placeholder="N° carte verte">
+              </div>
+
+              <div>
+                <label for="oiseauEspece">Espèce</label>
+                <input id="oiseauEspece" placeholder="Espèce">
+              </div>
+
+              <div>
+                <label for="oiseauSexe">Sexe</label>
+                <input id="oiseauSexe" placeholder="Sexe">
+              </div>
+
+              <div>
+                <label for="oiseauAge">Âge</label>
+                <input id="oiseauAge" placeholder="Âge">
+              </div>
+
+              <div>
+                <label for="oiseauDateEntree">Date d'entrée</label>
+                <input id="oiseauDateEntree" type="date">
+              </div>
+
+              <div>
+                <label for="oiseauRegistreEntree">N° registre d'entrée</label>
+                <input id="oiseauRegistreEntree" placeholder="N° entrée">
+              </div>
+
+              <div>
+                <label for="oiseauStatut">Statut</label>
+                <select id="oiseauStatut">
+                  <option value="En place">En place</option>
+                  <option value="Vendu">Vendu</option>
+                  <option value="Décédé">Décédé</option>
+                  <option value="Sorti">Sorti</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauDateSortie">Date de sortie</label>
+                <input id="oiseauDateSortie" type="date">
+              </div>
+
+              <div>
+                <label for="oiseauRegistreSortie">N° registre de sortie</label>
+                <input id="oiseauRegistreSortie" placeholder="N° sortie">
+              </div>
+
+              <div>
+                <label for="oiseauMotifSortie">Motif / remarque sortie</label>
+                <input id="oiseauMotifSortie" placeholder="Vente, décès, transfert...">
+              </div>
+
+              <div>
+                <label for="oiseauAnnexe">Annexe</label>
+                <select id="oiseauAnnexe">
+                  <option value="">Aucune</option>
+                  <option value="Annexe A">Annexe A</option>
+                  <option value="Annexe B">Annexe B</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauPoids">Poids</label>
+                <input id="oiseauPoids" placeholder="Poids (g)">
+              </div>
+
+              <div>
+  <label for="oiseauPoidsVol">Poids de vol (g)</label>
+  <input id="oiseauPoidsVol" type="number" placeholder="Ex : 620">
+</div>
+
+<div>
+  <label for="oiseauTolerance">Tolérance (g)</label>
+  <input id="oiseauTolerance" type="number" value="10" placeholder="Ex : 10">
+</div>
+
+              <div>
+                <label for="oiseauHabitudeFood">Nourriture habituelle 1</label>
+                <select id="oiseauHabitudeFood">
+                  <option value="Poussin" selected>Poussin</option>
+                  <option value="Caille">Caille</option>
+                  <option value="Pigeon">Pigeon</option>
+                  <option value="Lapin">Lapin</option>
+                  <option value="Poisson">Poisson</option>
+                  <option value="Souris">Souris</option>
+                  <option value="Rat">Rat</option>
+                  <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeQty">Quantité habituelle 1</label>
+                <input id="oiseauHabitudeQty" type="number" min="0" step="1" placeholder="Quantité">
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeFood2">Nourriture habituelle 2</label>
+                <select id="oiseauHabitudeFood2">
+                  <option value="">Choisir</option>
+                  <option value="Poussin">Poussin</option>
+                  <option value="Caille">Caille</option>
+                  <option value="Pigeon">Pigeon</option>
+                  <option value="Lapin">Lapin</option>
+                  <option value="Poisson">Poisson</option>
+                  <option value="Souris">Souris</option>
+                  <option value="Rat">Rat</option>
+                  <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="oiseauHabitudeQty2">Quantité habituelle 2</label>
+                <input id="oiseauHabitudeQty2" type="number" min="0" step="1" placeholder="Quantité">
+              </div>
+
+              <div>
+                <label for="oiseauPhotoFile">Photo</label>
+                <input id="oiseauPhotoFile" type="file" accept="image/*">
+              </div>
+
+              <div>
+                <label for="oiseauDocFiles">Documents oiseau</label>
+                <input id="oiseauDocFiles" type="file" accept=".pdf,image/*" multiple>
+              </div>
+            </div>
+
+            <label for="oiseauNotes">Notes</label>
+            <textarea id="oiseauNotes" placeholder="Notes"></textarea>
+
+            <div class="actions">
+              <button id="oiseauSubmitBtn" class="btn" onclick="ajouterOiseau()">Ajouter l’oiseau</button>
+              <button id="cancelEditBirdBtn" class="btn secondary-btn hidden" onclick="cancelEditBird()">Annuler modification</button>
+            </div>
+          </div>
+
+          <div class="card">
+  <h2>Fiches oiseaux</h2>
+
+  <div class="form-grid" style="margin-bottom:12px;">
+    <div>
+      <label for="searchOiseaux">Recherche rapide</label>
+      <input id="searchOiseaux" placeholder="Nom, espèce, bague, CITES..." oninput="renderOiseaux()">
+    </div>
+  </div>
+
+  <div id="listeOiseaux"></div>
+</div>
+        </section>
+
+        <section id="section-archives" class="section hidden">
+  <div class="card">
+    <h2>Archives oiseaux sortis</h2>
+
+    <div class="form-grid" style="margin-bottom:12px;">
+      <div>
+        <label for="searchArchives">Recherche archives</label>
+        <input id="searchArchives" placeholder="Nom, espèce, bague, CITES..." oninput="renderArchivesOiseaux()">
+      </div>
+    </div>
+
+    <div id="listeArchivesOiseaux"></div>
+  </div>
+</section>
+
+        <section id="section-pesee" class="section hidden">
+          <div class="card">
+            <h2>Nouvelle pesée</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="pesDate">Date</label>
+                <input id="pesDate" type="date">
+              </div>
+
+              <div>
+                <label for="pesNom">Oiseau</label>
+                <select id="pesNom"></select>
+              </div>
+
+              <div>
+                <label for="pesEspece">Espèce</label>
+                <input id="pesEspece" placeholder="Espèce">
+              </div>
+
+              <div>
+                <label for="pesPoids">Poids</label>
+                <input id="pesPoids" placeholder="Poids">
+              </div>
+
+              <div>
+                <label for="pesNourriture">Nourriture</label>
+                <input id="pesNourriture" placeholder="Nourriture">
+              </div>
+
+              <div>
+                <label for="pesEtat">État</label>
+                <input id="pesEtat" placeholder="État">
+              </div>
+
+              <div>
+                <label for="pesLieu">Lieu</label>
+                <input id="pesLieu" placeholder="Lieu">
+              </div>
+            </div>
+
+            <label for="pesObs">Observations</label>
+            <textarea id="pesObs" placeholder="Observations"></textarea>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterPesee()">Ajouter pesée</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Informations</h2>
+            <div id="listePesees"></div>
+          </div>
+        </section>
+
+        <section id="section-documents" class="section hidden">
+          <div class="card">
+            <h2>Documents</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="docTitre">Titre</label>
+                <input id="docTitre" placeholder="Titre">
+              </div>
+
+              <div>
+                <label for="docType">Type</label>
+                <input id="docType" placeholder="Type">
+              </div>
+            </div>
+
+            <label for="docDescription">Description</label>
+            <textarea id="docDescription" placeholder="Description"></textarea>
+
+            <div>
+              <label for="docFile">Fichier</label>
+              <input id="docFile" type="file" accept=".pdf,image/*">
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterDocument()">Ajouter document</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Liste des documents</h2>
+            <div id="listeDocuments"></div>
+          </div>
+        </section>
+
+        <section id="section-nourrissage" class="section hidden">
+          <div class="card">
+            <h2>Nourrissage du jour</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="feedDate">Date</label>
+                <input id="feedDate" type="date">
+              </div>
+            </div>
+
+            <label for="feedNote">Remarques générales</label>
+            <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
+
+            <div id="feedTableZone"></div>
+            <div id="foodConsumptionHistoryZone"></div>
+
+           <div class="actions">
+            <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
+            <button class="btn secondary-btn" onclick="imprimerFicheNourrissage()">Imprimer fiche nourrissage</button>
+           </div>
+
+          <div class="card">
+            <h2>Totaux nourrissage</h2>
+            <div id="feedSummaryZone"></div>
+          </div>
+
+          <div class="card">
+            <h2>Historique des nourrissages</h2>
+            <div id="listeNourrissage"></div>
+          </div>
+        </section>
+
+        <section id="section-terrain" class="section hidden">
+          <div class="card">
+            <div class="form-grid" style="margin-bottom:12px;">
+              <div>
+                <label for="terrainSearch">Recherche rapide</label>
+                <input id="terrainSearch" placeholder="Nom oiseau..." oninput="renderTerrain()">
+              </div>
+            </div>
+            <h2>Mode terrain (nourrissage rapide)</h2>
+            <div id="terrainZone"></div>
+          </div>
+        </section>
+
+        <section id="section-veterinaire" class="section hidden">
+          <div class="card">
+            <h2>Nouveau suivi vétérinaire</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="vetBird">Oiseau</label>
+                <select id="vetBird"></select>
+              </div>
+
+              <div>
+                <label for="vetDate">Date consultation</label>
+                <input id="vetDate" type="date">
+              </div>
+
+              <div>
+                <label for="vetNom">Vétérinaire</label>
+                <input id="vetNom" placeholder="Nom du vétérinaire">
+              </div>
+
+              <div>
+                <label for="vetMotif">Motif</label>
+                <input id="vetMotif" placeholder="Motif">
+              </div>
+
+              <div>
+                <label for="vetDiagnostic">Diagnostic</label>
+                <input id="vetDiagnostic" placeholder="Diagnostic">
+              </div>
+
+              <div>
+                <label for="vetTraitement">Traitement</label>
+                <input id="vetTraitement" placeholder="Traitement">
+              </div>
+            </div>
+
+            <label for="vetProtocole">Protocole</label>
+            <textarea id="vetProtocole" placeholder="Protocole"></textarea>
+
+            <label for="vetObservations">Observations</label>
+            <textarea id="vetObservations" placeholder="Observations"></textarea>
+
+            <div>
+              <label for="vetFiles">Fichiers vétérinaires</label>
+              <input id="vetFiles" type="file" accept=".pdf,image/*" multiple>
+            </div>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterSuiviVeterinaire()">Ajouter le suivi vétérinaire</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Historique vétérinaire</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="vetFilterBird">Filtrer par oiseau</label>
+                <select id="vetFilterBird" onchange="renderVeterinaire()"></select>
+              </div>
+            </div>
+
+            <div id="listeVeterinaire"></div>
+          </div>
+        </section>
+
+        <section id="section-inventaire" class="section hidden">
+          <div class="card"
+            <h2>Inventaire oiseaux présents sur site</h2>
+
+            <div class="actions">
+              <button class="btn info-btn" onclick="ouvrirInventaire()">Ouvrir inventaire</button>
+              <button class="btn warn-btn" onclick="imprimerInventaire()">Imprimer</button>
+              <button class="btn secondary-btn" onclick="partagerInventaire()">Partager</button>
+              <button class="btn" onclick="exportControle()">Exporter dossier contrôle</button>
+            </div>
+
+            <div id="inventaireZone"></div>
+          </div>
+        </section>
+
+        <section id="section-stock" class="section hidden">
+          <div class="card">
+            <h2>Stock nourriture</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="stockBoitePoussinsMoyenne225">Boîtes poussin moyenne (225)</label>
+                <input id="stockBoitePoussinsMoyenne225" type="number" min="0" placeholder="Nombre de boîtes">
+                <div class="stock-info">Tu encodes ici le nombre de boîtes. Le total de poussins est calculé automatiquement.</div>
+              </div>
+
+              <div>
+                <label for="stockPoussin">Poussins disponibles (calculé)</label>
+                <input id="stockPoussin" type="number" readonly>
+              </div>
+
+              <div>
+                <label for="stockCaille">Caille</label>
+                <input id="stockCaille" type="number" min="0" placeholder="Caille">
+              </div>
+
+              <div>
+                <label for="stockPigeon">Pigeon</label>
+                <input id="stockPigeon" type="number" min="0" placeholder="Pigeon">
+              </div>
+
+              <div>
+                <label for="stockLapin">Lapin</label>
+                <input id="stockLapin" type="number" min="0" placeholder="Lapin">
+              </div>
+
+              <div>
+                <label for="stockPoisson">Poisson</label>
+                <input id="stockPoisson" type="number" min="0" placeholder="Poisson">
+              </div>
+
+              <div>
+                <label for="stockSouris">Souris</label>
+                <input id="stockSouris" type="number" min="0" placeholder="Souris">
+              </div>
+
+              <div>
+                <label for="stockRat">Rat</label>
+                <input id="stockRat" type="number" min="0" placeholder="Rat">
+              </div>
+
+              <div>
+                <label for="stockCailleteau30gr">Cailleteau 30gr</label>
+                <input id="stockCailleteau30gr" type="number" min="0" placeholder="Cailleteau 30gr">
+              </div>
+            </div>
+            <h3>Prix nourriture (€ / pièce)</h3>
+
+<div class="form-grid">
+  <input type="number" step="0.01" id="prixPoussin" placeholder="Prix poussin">
+  <input type="number" step="0.01" id="prixCaille" placeholder="Prix caille">
+  <input type="number" step="0.01" id="prixPigeon" placeholder="Prix pigeon">
+  <input type="number" step="0.01" id="prixLapin" placeholder="Prix lapin">
+  <input type="number" step="0.01" id="prixPoisson" placeholder="Prix poisson">
+  <input type="number" step="0.01" id="prixSouris" placeholder="Prix souris">
+  <input type="number" step="0.01" id="prixRat" placeholder="Prix rat">
+  <input type="number" step="0.01" id="prixCailleteau" placeholder="Prix cailleteau 30gr">
+</div>
+
+<button class="btn" onclick="enregistrerPrixNourriture()">Enregistrer les prix</button>
+<div id="coutNourritureZone"></div>
+<div id="coutParOiseauZone"></div>
+<div id="historiqueCoutMensuelZone"></div>
+<div id="historiqueCoutMensuelParOiseauZone"></div>
+
+            <div class="actions">
+              <button class="btn" onclick="enregistrerStock()">Enregistrer stock</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-vacances" class="section hidden">
+          <div class="card">
+            <h2>Nourrissage vacances</h2>
+
+            <div class="actions" style="margin-bottom:12px;">
+              <button class="btn" onclick="remplirVacances()">Remplir automatiquement</button>
+              <button class="btn secondary-btn" onclick="imprimerVacances()">Imprimer</button>
+            </div>
+
+            <div id="tableVacances"></div>
+          </div>
+        </section>
+
+        <section id="section-entretien" class="section hidden">
+          <div class="card">
+            <h2>Nouvel entretien</h2>
+
+            <div class="form-grid">
+              <div>
+                <label for="entretienDate">Date</label>
+                <input id="entretienDate" type="date">
+              </div>
+
+              <div>
+                <label for="entretienType">Type d'entretien</label>
+                <select id="entretienType">
+                  <option value="">Choisir</option>
+                  <option value="Changement eau">Changement eau</option>
+                  <option value="Nettoyage bac eau">Nettoyage bac eau</option>
+                  <option value="Nettoyage espace oiseaux">Nettoyage espace oiseaux</option>
+                  <option value="Désinfection">Désinfection</option>
+                  <option value="Autre">Autre</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="entretienZone">Zone</label>
+                <input id="entretienZone" placeholder="Zone concernée">
+              </div>
+            </div>
+
+            <label for="entretienDetails">Détails / remarques</label>
+            <textarea id="entretienDetails" placeholder="Détails"></textarea>
+
+            <div class="actions">
+              <button class="btn" onclick="ajouterEntretien()">Ajouter entretien</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>Historique entretien</h2>
+            <div id="listeEntretien"></div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+<script type="module" src="./app.js"></script>
+
+<script>
+  function forceDashboardAccueil() {
+    const setText = (id, html) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = html;
+    };
+
+    const dateEl = document.getElementById("dashboardDate");
+    if (dateEl) dateEl.textContent = "dashboard actif";
+
+    setText("dashboardToWeigh", "<p class='muted-line'>⚖️ Pesées à vérifier aujourd’hui.</p>");
+    setText("dashboardToFly", "<p class='muted-line'>🦅 Poids de vol à vérifier.</p>");
+    setText("dashboardComplements", "<p class='muted-line'>💊 Aucun complément prévu aujourd’hui.</p>");
+    setText("dashboardSurveillance", "<p class='muted-line'>❤️ Aucun soin actif renseigné.</p>");
+    setText("dashboardTasks", "<p class='muted-line'>✅ Contrôle eau, fientes, comportement et stock.</p>");
+    setText("dashboardAlerts", "<p class='muted-line'>⚠️ Aucune alerte active.</p>");
+  }
+
+  setTimeout(forceDashboardAccueil, 500);
+  setTimeout(forceDashboardAccueil, 1500);
+  setTimeout(forceDashboardAccueil, 3000);
+</script>
+
+</body>
+</html>
