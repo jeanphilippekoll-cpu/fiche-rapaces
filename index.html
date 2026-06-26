@@ -1360,92 +1360,123 @@ bird-card .bird-badges {
           </div>
         </header>
 
- <section id="section-accueil" class="section">
+<section id="section-accueil" class="section active">
 
-  <div class="dashboard-hero card">
-    <div>
-      <p class="muted-line">Centre de contrôle Phil Ô Plumes</p>
-      <h2>Bonjour Jean-Philippe 👋</h2>
-      <p>
-        Aujourd’hui :
-        <strong id="dashboardDate">chargement…</strong>
-      </p>
-    </div>
+<div class="dashboard-hero">
 
-    <div class="dashboard-hero-badge">
-      🦅 Fauconnerie active
-    </div>
-  </div>
+<div>
 
-  <div class="grid">
-    <div class="card oiseaux">
-      <h3>🦅 Oiseaux</h3>
-      <p id="statOiseaux" class="stats-number">0</p>
-      <p class="stat-label">Présents</p>
-    </div>
+<p>Centre de contrôle Phil Ô Plumes</p>
 
-    <div class="card pesees">
-      <h3>⚖️ Pesées</h3>
-      <p id="statPesees" class="stats-number">0</p>
-      <p class="stat-label">Enregistrées</p>
-    </div>
+<h2>Bonjour Jean-Philippe 👋</h2>
 
-    <div class="card documents">
-      <h3>📄 Documents</h3>
-      <p id="statDocuments" class="stats-number">0</p>
-      <p class="stat-label">Stockés</p>
-    </div>
+<p id="dashboardDate">Chargement...</p>
 
-    <div class="card nourrissage">
-      <h3>🍗 Nourrissages</h3>
-      <p id="statNourrissages" class="stats-number">0</p>
-      <p class="stat-label">Repas</p>
-    </div>
-  </div>
+</div>
 
-  <div class="grid">
-    <div class="card dashboard-card dashboard-weigh-card">
-      <h2>⚖️ À peser</h2>
-      <div id="dashboardToWeigh" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
+<div class="dashboard-hero-badge">
 
-    <div class="card dashboard-card dashboard-fly-card">
-      <h2>🦅 À voler</h2>
-      <div id="dashboardToFly" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
+🦅 Tableau de bord
 
-    <div class="card dashboard-card">
-      <h2>💊 Compléments</h2>
-      <div id="dashboardComplements" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
+</div>
 
-    <div class="card dashboard-card">
-      <h2>❤️ Soins / surveillance</h2>
-      <div id="dashboardSurveillance" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
+</div>
 
-    <div class="card dashboard-card">
-      <h2>✅ À faire</h2>
-      <div id="dashboardTasks" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
+<div class="stats-grid">
 
-    <div class="card dashboard-card dashboard-alert-card">
-      <h2>⚠️ Alertes</h2>
-      <div id="dashboardAlerts" class="dashboard-list">
-        <p class="muted-line">Chargement…</p>
-      </div>
-    </div>
-  </div>
+<div class="card dashboard-card border-green">
+
+<h3>🦅 Oiseaux</h3>
+
+<div class="stats-number" id="stat-oiseaux">0</div>
+
+<p>Présents</p>
+
+</div>
+
+<div class="card dashboard-card border-blue">
+
+<h3>⚖️ Pesées</h3>
+
+<div class="stats-number" id="stat-pesees">0</div>
+
+<p>Enregistrées</p>
+
+</div>
+
+<div class="card dashboard-card border-orange">
+
+<h3>📄 Documents</h3>
+
+<div class="stats-number" id="stat-documents">0</div>
+
+<p>Stockés</p>
+
+</div>
+
+<div class="card dashboard-card border-red">
+
+<h3>🍗 Nourrissages</h3>
+
+<div class="stats-number" id="stat-nourrissages">0</div>
+
+<p>Repas</p>
+
+</div>
+
+</div>
+
+<div class="dashboard-grid">
+
+<div class="card dashboard-card">
+
+<h3>⚖️ À peser</h3>
+
+<div id="dashboardToWeigh"></div>
+
+</div>
+
+<div class="card dashboard-card">
+
+<h3>🦅 À voler</h3>
+
+<div id="dashboardToFly"></div>
+
+</div>
+
+<div class="card dashboard-card">
+
+<h3>💊 Compléments</h3>
+
+<div id="dashboardComplements"></div>
+
+</div>
+
+<div class="card dashboard-card">
+
+<h3>❤️ Soins</h3>
+
+<div id="dashboardSurveillance"></div>
+
+</div>
+
+<div class="card dashboard-card">
+
+<h3>✅ À faire</h3>
+
+<div id="dashboardTasks"></div>
+
+</div>
+
+<div class="card dashboard-card">
+
+<h3>⚠️ Alertes</h3>
+
+<div id="dashboardAlerts"></div>
+
+</div>
+
+</div>
 
 </section>
         <section id="section-oiseaux" class="section hidden">
