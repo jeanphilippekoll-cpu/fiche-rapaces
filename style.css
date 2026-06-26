@@ -426,3 +426,9 @@ font-weight:700;
     background:#6f8f52;
     color:#fff;
 }
+
+.bird-tab.active{
+  background:#6f8f52 !important;
+  color:#ffffff !important;
+  border-left:6px solid #4f6739 !important;
+}

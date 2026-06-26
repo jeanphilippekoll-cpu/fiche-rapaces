@@ -4347,13 +4347,15 @@ function exportControle() {
 }
 
 function showBirdTab(tabName, button) {
-  document.querySelectorAll(".bird-tab").forEach(btn => {
+  document.querySelectorAll(".bird-tab").forEach((btn) => {
     btn.classList.remove("active");
   });
 
   if (button) {
     button.classList.add("active");
   }
+
+  console.log("Onglet fiche oiseau :", tabName);
 }
 
 
