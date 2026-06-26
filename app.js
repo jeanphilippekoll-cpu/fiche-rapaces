@@ -4346,7 +4346,19 @@ function exportControle() {
   win.document.close();
 }
 
+function showBirdTab(tabName, button) {
+  document.querySelectorAll(".bird-tab").forEach(btn => {
+    btn.classList.remove("active");
+  });
+
+  if (button) {
+    button.classList.add("active");
+  }
+}
+
+
 window.showSection = showSection;
+window.showBirdTab = showBirdTab;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
 window.modifierOiseau = modifierOiseau;
