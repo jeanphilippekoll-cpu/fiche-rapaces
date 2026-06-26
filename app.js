@@ -512,17 +512,17 @@ function showSection(section) {
 }
 
 function refreshStats() {
-  const setText = (ids, value) => {
-    ids.forEach(id => {
+  const setCounter = (ids, value) => {
+    ids.forEach((id) => {
       const el = document.getElementById(id);
       if (el) el.textContent = value;
     });
   };
 
-  setText(["statOiseaux", "stat-oiseaux"], getActiveBirds().length);
-  setText(["statPesees", "stat-pesees"], appData.pesees.length);
-  setText(["statDocuments", "stat-documents"], appData.documents.length);
-  setText(["statNourrissages", "stat-nourrissages"], appData.nourrissage.length);
+  setCounter(["statOiseaux", "statoiseaux", "stat-oiseaux"], getActiveBirds().length);
+  setCounter(["statPesees", "statpesees", "stat-pesees"], appData.pesees.length);
+  setCounter(["statDocuments", "statdocuments", "stat-documents"], appData.documents.length);
+  setCounter(["statNourrissages", "statnourrissages", "stat-nourrissages"], appData.nourrissage.length);
 }
 
 
