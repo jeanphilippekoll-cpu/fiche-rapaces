@@ -523,6 +523,209 @@ function refreshStats() {
   if (statNourrissages) statNourrissages.textContent = appData.nourrissage.length;
 }
 
+
+function dashboardRow(title, detail, badge, type = "info") {
+  return `
+    <div class="dashboard-row">
+      <div>
+        <strong>${safe(title)}</strong>
+        <small>${safe(detail)}</small>
+      </div>
+      <span class="dashboard-badge ${safeAttr(type)}">${safe(badge)}</span>
+    </div>
+  `;
+}
+
+function getLatestBirdWeight(bird) {
+  const historique = safeArray(bird.historiquePoids)
+    .filter((p) => p.date && p.poids)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  if (historique.length) return toNumber(historique[0].poids);
+  return toNumber(bird.poidsActuel);
+}
+
+function getComplementDoseMl(bird) {
+  const poids = getLatestBirdWeight(bird) || toNumber(bird.poidsActuel);
+  if (!poids) return "dose à définir";
+  if (poids < 200) return "0,5 ml";
+  if (poids < 500) return "1 ml";
+  if (poids < 900) return "1,5 ml";
+  return "2 ml";
+}
+
+function getDashboardComplementPlan(dayIndex, bird) {
+  const notes = `${bird.notes || ""} ${bird.age || ""}`.toLowerCase();
+
+  if (notes.includes("convalescence") || notes.includes("bless")) {
+    if ([1, 3, 5].includes(dayIndex)) return "Aminovital";
+    return "";
+  }
+
+  if (notes.includes("jeune")) {
+    if ([2, 4].includes(dayIndex)) return "Feather Energy";
+    return "";
+  }
+
+  if (dayIndex === 1) return "Aminovital";
+  if (dayIndex === 3) return "Feather Energy";
+  if (dayIndex === 5) return "Aminovital";
+
+  return "";
+}
+
+function renderDashboardIntelligent() {
+  const dateEl = document.getElementById("dashboardDate");
+  const complementsEl = document.getElementById("dashboardComplements");
+  const surveillanceEl = document.getElementById("dashboardSurveillance");
+  const tasksEl = document.getElementById("dashboardTasks");
+  const alertsEl = document.getElementById("dashboardAlerts");
+  const toWeighEl = document.getElementById("dashboardToWeigh");
+  const toFlyEl = document.getElementById("dashboardToFly");
+
+  const now = new Date();
+  const today = todayStr();
+  const dayIndex = now.getDay();
+  const birds = getSortedBirds(getActiveBirds());
+
+  if (dateEl) {
+    dateEl.textContent = now.toLocaleDateString("fr-BE", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long"
+    });
+  }
+
+  if (toWeighEl) {
+    const rows = birds
+      .filter((bird) => {
+        const last = safeArray(bird.historiquePoids)
+          .filter((p) => p.date)
+          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
+
+        return bird.poidsVol && (!last || last.date !== today);
+      })
+      .map((bird) => {
+        const last = safeArray(bird.historiquePoids)
+          .filter((p) => p.date)
+          .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
+
+        return dashboardRow(
+          bird.nom || "Oiseau",
+          last ? `Dernière pesée : ${formatDateFR(last.date)}` : "Aucune pesée enregistrée",
+          "À peser",
+          "warn"
+        );
+      });
+
+    toWeighEl.innerHTML = rows.length
+      ? rows.join("")
+      : `<div class="dashboard-empty">Tous les oiseaux suivis ont été pesés aujourd’hui.</div>`;
+  }
+
+  if (toFlyEl) {
+    const rows = birds
+      .filter((bird) => {
+        const target = toNumber(bird.poidsVol);
+        const tolerance = toNumber(bird.toleranceVol) || 10;
+        const latest = getLatestBirdWeight(bird);
+
+        return target && latest && latest >= target - tolerance && latest <= target + tolerance;
+      })
+      .map((bird) => {
+        const target = toNumber(bird.poidsVol);
+        const latest = getLatestBirdWeight(bird);
+        const diff = Math.round(latest - target);
+
+        return dashboardRow(
+          bird.nom || "Oiseau",
+          `Poids ${latest} g / cible ${target} g (${diff > 0 ? "+" : ""}${diff} g)`,
+          "OK vol",
+          "ok"
+        );
+      });
+
+    toFlyEl.innerHTML = rows.length
+      ? rows.join("")
+      : `<div class="dashboard-empty">Aucun oiseau dans sa plage de vol actuellement.</div>`;
+  }
+
+  if (complementsEl) {
+    const rows = birds
+      .map((bird) => ({ bird, product: getDashboardComplementPlan(dayIndex, bird) }))
+      .filter((item) => item.product)
+      .map((item) => dashboardRow(
+        item.bird.nom || "Oiseau",
+        `${item.product} • ${getComplementDoseMl(item.bird)} sur la ration`,
+        "À donner",
+        "warn"
+      ));
+
+    complementsEl.innerHTML = rows.length
+      ? rows.join("")
+      : `<div class="dashboard-empty">Aucun complément prévu aujourd’hui.</div>`;
+  }
+
+  if (surveillanceEl) {
+    const rows = birds
+      .filter((bird) => {
+        const text = `${bird.nom || ""} ${bird.notes || ""} ${bird.age || ""}`.toLowerCase();
+        return text.includes("conval") || text.includes("bless") || text.includes("soin") || text.includes("jeune");
+      })
+      .map((bird) => dashboardRow(
+        bird.nom || "Oiseau",
+        "Surveillance particulière",
+        "À suivre",
+        "info"
+      ));
+
+    surveillanceEl.innerHTML = rows.length
+      ? rows.join("")
+      : `<div class="dashboard-empty">Aucun oiseau en surveillance particulière.</div>`;
+  }
+
+  if (tasksEl) {
+    tasksEl.innerHTML = [
+      dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok"),
+      dashboardRow("Pesées", "Peser les oiseaux de travail ou ceux en suivi", "À vérifier", "info"),
+      dashboardRow("Stock nourriture", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn")
+    ].join("");
+  }
+
+  if (alertsEl) {
+    const alerts = [];
+
+    birds.forEach((bird) => {
+      const target = toNumber(bird.poidsVol);
+      const tolerance = toNumber(bird.toleranceVol) || 10;
+      const latest = getLatestBirdWeight(bird);
+
+      if (target && latest) {
+        const diff = Math.round(latest - target);
+
+        if (Math.abs(diff) > tolerance) {
+          alerts.push(dashboardRow(
+            bird.nom || "Oiseau",
+            `Poids ${latest} g / cible ${target} g (${diff > 0 ? "+" : ""}${diff} g)`,
+            "Poids",
+            Math.abs(diff) > tolerance * 2 ? "danger" : "warn"
+          ));
+        }
+      }
+    });
+
+    const poussinStock = toNumber(appData?.stock?.poussin);
+
+    if (poussinStock > 0 && poussinStock < 100) {
+      alerts.push(dashboardRow("Stock poussins", `${poussinStock} poussins restants`, "Faible", "warn"));
+    }
+
+    alertsEl.innerHTML = alerts.length
+      ? alerts.join("")
+      : `<div class="dashboard-empty">Aucune alerte active.</div>`;
+  }
+}
+
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
     .map((o) => `<option value="${safeAttr(o.nom)}">${safe(o.nom)}</option>`)
@@ -2939,6 +3142,7 @@ function renderFeedStatsHistory() {
 function renderAll() {
   syncBoitesFromPoussins();
   refreshStats();
+  renderDashboardIntelligent();
   refreshBirdSelects();
   renderOiseaux();
   renderArchivesOiseaux();
