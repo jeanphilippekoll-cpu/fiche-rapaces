@@ -657,45 +657,97 @@ function renderDashboardIntelligent() {
   birds.forEach(b => {
     const poids = getLatestBirdWeight(b);
     const poidsVol = toNumber(b.poidsVol);
+
     if (poidsVol > 0 && poids > 0 && poids > poidsVol + 40) {
-      alerts.push(dashboardRow(b.nom, `${poids} g / point de vol ${poidsVol} g`, "Trop haut", "danger"));
+      alerts.push(
+        dashboardRow(
+          b.nom,
+          `${poids} g / point de vol ${poidsVol} g`,
+          "Trop haut",
+          "danger",
+          b.nom
+        )
+      );
     }
 
     const name = (b.nom || "").trim().toLowerCase();
+
     if (!fedToday.has(name)) {
-      alerts.push(dashboardRow(b.nom, "Aucun nourrissage enregistré aujourd’hui", "Nourrir", "warn"));
+      alerts.push(
+        dashboardRow(
+          b.nom,
+          "Aucun nourrissage enregistré aujourd’hui",
+          "Nourrir",
+          "warn",
+          b.nom
+        )
+      );
     }
   });
 
   const stock = appData.stock || {};
+
   if (toNumber(stock.poussin) > 0 && toNumber(stock.poussin) < 30) {
     alerts.push(dashboardRow("Stock poussins", `${stock.poussin} restants`, "Faible", "warn"));
   }
+
   if (toNumber(stock.caille) > 0 && toNumber(stock.caille) < 10) {
     alerts.push(dashboardRow("Stock cailles", `${stock.caille} restantes`, "Faible", "warn"));
   }
 
   if (toWeighEl) {
     toWeighEl.innerHTML = toWeigh.length
-      ? toWeigh.map(b => dashboardRow(b.nom, `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`, "À peser", "warn")).join("")
+      ? toWeigh.map(b =>
+          dashboardRow(
+            b.nom,
+            `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
+            "À peser",
+            "warn",
+            b.nom
+          )
+        ).join("")
       : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
   }
 
   if (toFlyEl) {
     toFlyEl.innerHTML = toFly.length
-      ? toFly.map(b => dashboardRow(b.nom, `${getLatestBirdWeight(b)} g / point de vol ${toNumber(b.poidsVol)} g`, "Prêt", "ok")).join("")
+      ? toFly.map(b =>
+          dashboardRow(
+            b.nom,
+            `${getLatestBirdWeight(b)} g / point de vol ${toNumber(b.poidsVol)} g`,
+            "Prêt",
+            "ok",
+            b.nom
+          )
+        ).join("")
       : `<p class="muted-line">Aucun oiseau dans sa plage de vol.</p>`;
   }
 
   if (complementsEl) {
     complementsEl.innerHTML = complements.length
-      ? complements.map(x => dashboardRow(x.bird.nom, `${x.plan} - ${getComplementDoseMl(x.bird)}`, "Aujourd’hui", "info")).join("")
+      ? complements.map(x =>
+          dashboardRow(
+            x.bird.nom,
+            `${x.plan} - ${getComplementDoseMl(x.bird)}`,
+            "Aujourd’hui",
+            "info",
+            x.bird.nom
+          )
+        ).join("")
       : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
   }
 
   if (surveillanceEl) {
     surveillanceEl.innerHTML = soins.length
-      ? soins.map(b => dashboardRow(b.nom, b.notes || "Surveillance indiquée", "Soins", "danger")).join("")
+      ? soins.map(b =>
+          dashboardRow(
+            b.nom,
+            b.notes || "Surveillance indiquée",
+            "Soins",
+            "danger",
+            b.nom
+          )
+        ).join("")
       : `<p class="muted-line">Aucun oiseau en soin renseigné.</p>`;
   }
 
