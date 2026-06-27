@@ -3384,6 +3384,27 @@ function renderFeedStatsHistory() {
   `;
 }
 
+function renderReproduction() {
+  const zone = document.getElementById("reproductionZone");
+  if (!zone) return;
+
+  zone.innerHTML = `
+    <div class="summary-grid">
+      <div class="summary-card">
+        <h3>Couples reproducteurs</h3>
+        <p class="summary-total">${safeArray(appData.reproduction).length}</p>
+        <p class="muted-line">Les couples seront reliés aux oiseaux déjà encodés.</p>
+      </div>
+
+      <div class="summary-card">
+        <h3>Prochaine étape</h3>
+        <p>Création des couples mâle / femelle.</p>
+        <p class="muted-line">Père et mère seront repris depuis les fiches oiseaux existantes.</p>
+      </div>
+    </div>
+  `;
+}
+
 function renderAll() {
   syncBoitesFromPoussins();
   refreshStats();
@@ -3397,6 +3418,7 @@ function renderAll() {
   renderVeterinaire();
   renderInventaire();
   renderEntretien();
+  renderReproduction();
   fillStockForm();
   fillPrixNourritureForm();
   renderCoutNourriture();
