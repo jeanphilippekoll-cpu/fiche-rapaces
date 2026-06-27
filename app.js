@@ -4148,7 +4148,203 @@ async function supprimerOeuf(coupleId, saisonId, ponteId, oeufId) {
 }
 
 function ouvrirJeune(coupleId, saisonId, ponteId, jeuneId) {
-  alert("Fiche jeune à l’étape suivante.");
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  const jeune = safeArray(ponte?.jeunes).find(j => j.id === jeuneId);
+
+  if (!jeune) return;
+
+  const zone = document.getElementById("reproductionZone");
+  if (!zone) return;
+
+  zone.innerHTML = `
+    <div class="card-section">
+      <button class="btn secondary-btn" onclick="ouvrirDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
+        ⬅ Retour à la ponte
+      </button>
+
+      <h2>🐣 Jeune ${jeune.numero}</h2>
+      <p class="muted-line">${safe(couple.espece)} — Ponte ${safe(ponte.numero)}</p>
+
+      <div class="form-grid">
+        <div>
+          <label>Couleur / repère</label>
+          <input id="jeuneCouleur" value="${safeAttr(jeune.couleur || "")}">
+        </div>
+
+        <div>
+          <label>N° bague</label>
+          <input id="jeuneBague" value="${safeAttr(jeune.bague || "")}">
+        </div>
+
+        <div>
+          <label>Sexe</label>
+          <select id="jeuneSexe">
+            ${["Inconnu", "M", "F", "ADN en attente"].map(s => `
+              <option value="${safeAttr(s)}" ${jeune.sexe === s ? "selected" : ""}>${safe(s)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Date naissance</label>
+          <input id="jeuneDateNaissance" type="date" value="${safeAttr(jeune.dateNaissance || "")}">
+        </div>
+
+        <div>
+          <label>Date baguage</label>
+          <input id="jeuneDateBaguage" type="date" value="${safeAttr(jeune.dateBaguage || "")}">
+        </div>
+
+        <div>
+          <label>Date sexage</label>
+          <input id="jeuneDateSexage" type="date" value="${safeAttr(jeune.dateSexage || "")}">
+        </div>
+
+        <div>
+          <label>Mode élevage</label>
+          <select id="jeuneModeNaissance">
+            ${["Sous mère", "Couveuse", "Éleveuse"].map(s => `
+              <option value="${safeAttr(s)}" ${jeune.modeNaissance === s ? "selected" : ""}>${safe(s)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Destination</label>
+          <select id="jeuneDestination">
+            ${["", "Gardé", "Vendu", "Échangé", "Cédé", "Décédé"].map(s => `
+              <option value="${safeAttr(s)}" ${jeune.destination === s ? "selected" : ""}>${safe(s || "À définir")}</option>
+            `).join("")}
+          </select>
+        </div>
+      </div>
+
+      <label>Notes</label>
+      <textarea id="jeuneNotes">${safe(jeune.notes || "")}</textarea>
+
+      <div class="actions">
+        <button class="btn info-btn" onclick="sauverJeune('${coupleId}','${saisonId}','${ponteId}','${jeuneId}')">
+          Enregistrer le jeune
+        </button>
+
+        <button class="btn secondary-btn" onclick="creerOiseauDepuisJeune('${coupleId}','${saisonId}','${ponteId}','${jeuneId}')">
+  ➜ Créer fiche oiseau
+</button>
+
+        <button class="btn btn-danger" onclick="supprimerJeune('${coupleId}','${saisonId}','${ponteId}','${jeuneId}')">
+          Supprimer le jeune
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function creerOiseauDepuisJeune(coupleId, saisonId, ponteId, jeuneId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  const jeune = safeArray(ponte?.jeunes).find(j => j.id === jeuneId);
+
+  if (!couple || !jeune) return;
+
+  if (jeune.oiseauId) {
+    alert("Une fiche oiseau existe déjà pour ce jeune.");
+    return;
+  }
+
+  const nouvelOiseau = {
+    id: makeId(),
+    nom: jeune.couleur ? `Jeune ${jeune.couleur}` : `Jeune ${jeune.numero}`,
+    ordre: 0,
+    bague: jeune.bague || "",
+    cites: "",
+    carteVerte: "",
+    espece: couple.espece || "",
+    sexe: jeune.sexe || "Inconnu",
+    age: jeune.dateNaissance || "",
+    annexe: "",
+    dateEntree: jeune.dateNaissance || todayStr(),
+    registreEntree: "",
+    statut: "Né chez Phil Ô Plumes",
+    dateSortie: "",
+    registreSortie: "",
+    motifSortie: "",
+    poidsActuel: "",
+    poidsVol: 0,
+    toleranceVol: 0,
+    notes: `Né chez Phil Ô Plumes
+Père : ${couple.maleNom || "-"} (${couple.maleBague || "-"})
+Mère : ${couple.femelleNom || "-"} (${couple.femelleBague || "-"})
+Saison : ${saison?.annee || "-"}
+Ponte : ${ponte?.numero || "-"}
+Couleur/repère : ${jeune.couleur || "-"}`,
+    nourritureHabituelle: "Poussin",
+    quantiteHabituelle: 0,
+    nourritureHabituelle2: "",
+    quantiteHabituelle2: "",
+    photoUrl: "",
+    documents: [],
+    historiquePoids: [],
+    reproduction: {
+      pereId: couple.maleId || "",
+      pereNom: couple.maleNom || "",
+      pereBague: couple.maleBague || "",
+      mereId: couple.femelleId || "",
+      mereNom: couple.femelleNom || "",
+      mereBague: couple.femelleBague || "",
+      coupleId,
+      saisonId,
+      ponteId,
+      jeuneId
+    }
+  };
+
+  appData.oiseaux.unshift(nouvelOiseau);
+  jeune.oiseauId = nouvelOiseau.id;
+
+  await saveData();
+  renderAll();
+  showSection("oiseaux");
+  alert("Fiche oiseau créée.");
+}
+
+async function sauverJeune(coupleId, saisonId, ponteId, jeuneId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  const jeune = safeArray(ponte?.jeunes).find(j => j.id === jeuneId);
+
+  if (!jeune) return;
+
+  jeune.couleur = document.getElementById("jeuneCouleur")?.value || "";
+  jeune.bague = document.getElementById("jeuneBague")?.value || "";
+  jeune.sexe = document.getElementById("jeuneSexe")?.value || "Inconnu";
+  jeune.dateNaissance = document.getElementById("jeuneDateNaissance")?.value || "";
+  jeune.dateBaguage = document.getElementById("jeuneDateBaguage")?.value || "";
+  jeune.dateSexage = document.getElementById("jeuneDateSexage")?.value || "";
+  jeune.modeNaissance = document.getElementById("jeuneModeNaissance")?.value || "";
+  jeune.destination = document.getElementById("jeuneDestination")?.value || "";
+  jeune.notes = document.getElementById("jeuneNotes")?.value || "";
+
+  await saveData();
+  ouvrirDetailPonte(coupleId, saisonId, ponteId);
+}
+
+async function supprimerJeune(coupleId, saisonId, ponteId, jeuneId) {
+  if (!confirm("Supprimer ce jeune ?")) return;
+
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+
+  if (!ponte) return;
+
+  ponte.jeunes = safeArray(ponte.jeunes).filter(j => j.id !== jeuneId);
+
+  await saveData();
+  ouvrirDetailPonte(coupleId, saisonId);
 }
 
 function renderAll() {
@@ -5409,6 +5605,9 @@ window.ouvrirOeuf=ouvrirOeuf;
 window.sauverOeuf = sauverOeuf;
 window.supprimerOeuf = supprimerOeuf;
 window.ouvrirJeune = ouvrirJeune;
+window.sauverJeune = sauverJeune;
+window.supprimerJeune = supprimerJeune;
+window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
