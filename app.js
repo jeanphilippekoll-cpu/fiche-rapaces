@@ -3924,6 +3924,32 @@ ${
 
 }
 
+<hr>
+
+<h3>🐣 Jeunes</h3>
+
+${
+  ponte.jeunes && ponte.jeunes.length
+    ? ponte.jeunes.map(j => `
+      <div class="bird-card">
+        <h4>🐣 Jeune ${j.numero}</h4>
+        <p>
+          <b>Couleur :</b> ${j.couleur || "-"}<br>
+          <b>Bague :</b> ${j.bague || "-"}<br>
+          <b>Sexe :</b> ${j.sexe || "-"}<br>
+          <b>Naissance :</b> ${formatDateFR(j.dateNaissance || "") || "-"}
+        </p>
+
+        <button
+          class="small-btn"
+          onclick="ouvrirJeune('${coupleId}','${saisonId}','${ponteId}','${j.id}')">
+          Modifier
+        </button>
+      </div>
+    `).join("")
+    : "<p>Aucun jeune enregistré.</p>"
+}
+
       <div class="actions">
         <button class="btn info-btn" onclick="sauverDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
           Enregistrer la ponte
@@ -4081,6 +4107,26 @@ async function sauverOeuf(coupleId, saisonId, ponteId, oeufId) {
   oeuf.dateEclosion = document.getElementById("oeufDateEclosion")?.value || "";
   oeuf.notes = document.getElementById("oeufNotes")?.value || "";
 
+  if (oeuf.statut === "Éclos") {
+  if (!ponte.jeunes) ponte.jeunes = [];
+
+  const jeuneExiste = ponte.jeunes.find(j => j.oeufId === oeuf.id);
+
+  if (!jeuneExiste) {
+    ponte.jeunes.push({
+      id: makeId(),
+      oeufId: oeuf.id,
+      numero: ponte.jeunes.length + 1,
+      couleur: "",
+      bague: "",
+      sexe: "",
+      dateNaissance: oeuf.dateEclosion || "",
+      modeNaissance: oeuf.emplacement || "",
+      destination: "",
+      notes: ""
+    });
+  }
+}
   await saveData();
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
@@ -4099,6 +4145,10 @@ async function supprimerOeuf(coupleId, saisonId, ponteId, oeufId) {
 
   await saveData();
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
+}
+
+function ouvrirJeune(coupleId, saisonId, ponteId, jeuneId) {
+  alert("Fiche jeune à l’étape suivante.");
 }
 
 function renderAll() {
@@ -5358,6 +5408,7 @@ window.ajouterOeufPonte = ajouterOeufPonte;
 window.ouvrirOeuf=ouvrirOeuf;
 window.sauverOeuf = sauverOeuf;
 window.supprimerOeuf = supprimerOeuf;
+window.ouvrirJeune = ouvrirJeune;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
