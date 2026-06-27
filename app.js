@@ -738,7 +738,14 @@ function renderDashboardIntelligent() {
   const complementsEl = document.getElementById("dashboardComplements");
   const surveillanceEl = document.getElementById("dashboardSurveillance");
   const tasksEl = document.getElementById("dashboardTasks");
+
+  const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
+
   const reproAlerts = [];
+
+  const today = todayStr();
+  const now = new Date();
+  const birds = getSortedBirds(getActiveBirds());
 
 safeArray(appData.reproduction).forEach(couple => {
   safeArray(couple.saisons).forEach(saison => {
@@ -785,11 +792,6 @@ safeArray(appData.reproduction).forEach(couple => {
     });
   });
 });
-  const alertsEl = document.getElementById("dashboardAlerts");
-
-  const today = todayStr();
-  const now = new Date();
-  const birds = getSortedBirds(getActiveBirds());
 
   if (dateEl) {
     dateEl.textContent = now.toLocaleDateString("fr-BE", {
