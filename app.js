@@ -5014,6 +5014,7 @@ window.ouvrirSaisonReproduction=ouvrirSaisonReproduction;
 window.ouvrirPonte=ouvrirPonte;
 window.ouvrirFichePonte = ouvrirFichePonte;
 window.nouvellePonte = nouvellePonte;
+window.renderReproduction = renderReproduction;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
