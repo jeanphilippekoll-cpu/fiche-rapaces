@@ -5562,6 +5562,7 @@ window.ajouterCoupleReproduction = ajouterCoupleReproduction;
 window.ouvrirSaisonReproduction=ouvrirSaisonReproduction;
 window.ouvrirPonte=ouvrirPonte;
 window.ouvrirFichePonte = ouvrirFichePonte;
+window.ouvrirDetailPonte = ouvrirDetailPonte;
 window.nouvellePonte = nouvellePonte;
 window.renderReproduction = renderReproduction;
 window.sauverDetailPonte = sauverDetailPonte;
@@ -5574,6 +5575,7 @@ window.ouvrirJeune = ouvrirJeune;
 window.sauverJeune = sauverJeune;
 window.supprimerJeune = supprimerJeune;
 window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
