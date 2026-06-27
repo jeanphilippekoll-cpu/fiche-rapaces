@@ -3388,21 +3388,161 @@ function renderReproduction() {
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
 
+  const oiseaux = getSortedBirds(getActiveBirds());
+
+  const optionsOiseaux = oiseaux
+    .map((o) => `
+      <option value="${safeAttr(o.id)}">
+        ${safe(o.nom)} — ${safe(o.espece || "Espèce non indiquée")} — ${safe(o.sexe || "Sexe ?")}
+      </option>
+    `)
+    .join("");
+
+  const couples = safeArray(appData.reproduction);
+
   zone.innerHTML = `
     <div class="summary-grid">
       <div class="summary-card">
         <h3>Couples reproducteurs</h3>
-        <p class="summary-total">${safeArray(appData.reproduction).length}</p>
-        <p class="muted-line">Les couples seront reliés aux oiseaux déjà encodés.</p>
+        <p class="summary-total">${couples.length}</p>
+        <p class="muted-line">Couples reliés aux oiseaux déjà encodés.</p>
       </div>
 
       <div class="summary-card">
         <h3>Prochaine étape</h3>
-        <p>Création des couples mâle / femelle.</p>
-        <p class="muted-line">Père et mère seront repris depuis les fiches oiseaux existantes.</p>
+        <p>Saisons, pontes, œufs, mirage et jeunes.</p>
+        <p class="muted-line">Chaque couple pourra avoir plusieurs pontes par saison.</p>
       </div>
     </div>
+
+    <div class="card-section">
+      <h3>➕ Nouveau couple</h3>
+
+      <div class="form-grid">
+        <div>
+          <label for="reproSaison">Saison</label>
+          <input id="reproSaison" type="number" placeholder="Ex : 2026" value="${new Date().getFullYear()}">
+        </div>
+
+        <div>
+          <label for="reproEspece">Espèce / nom du couple</label>
+          <input id="reproEspece" placeholder="Ex : Faucon crécerelle d'Amérique">
+        </div>
+
+        <div>
+          <label for="reproMale">Mâle</label>
+          <select id="reproMale">
+            <option value="">Choisir le mâle</option>
+            ${optionsOiseaux}
+          </select>
+        </div>
+
+        <div>
+          <label for="reproFemelle">Femelle</label>
+          <select id="reproFemelle">
+            <option value="">Choisir la femelle</option>
+            ${optionsOiseaux}
+          </select>
+        </div>
+      </div>
+
+      <button class="btn info-btn" onclick="ajouterCoupleReproduction()">Créer le couple</button>
+    </div>
+
+    <div class="card-section">
+      <h3>📋 Couples existants</h3>
+
+      ${
+        couples.length
+          ? `
+            <div class="feed-table-wrap">
+              <table class="feed-table simple-table">
+                <thead>
+                  <tr>
+                    <th>Saison</th>
+                    <th>Espèce</th>
+                    <th>Mâle</th>
+                    <th>Femelle</th>
+                    <th>Pontes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${couples.map((c) => `
+                    <tr>
+                      <td>${safe(c.saison || "-")}</td>
+                      <td>${safe(c.espece || "-")}</td>
+                      <td>
+                        <strong>${safe(c.maleNom || "-")}</strong><br>
+                        <small>${safe(c.maleBague || "")}</small>
+                      </td>
+                      <td>
+                        <strong>${safe(c.femelleNom || "-")}</strong><br>
+                        <small>${safe(c.femelleBague || "")}</small>
+                      </td>
+                      <td>${safeArray(c.pontes).length}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `
+          : `<p class="muted-line">Aucun couple reproducteur créé pour l’instant.</p>`
+      }
+    </div>
   `;
+}
+
+async function ajouterCoupleReproduction() {
+  const saison = document.getElementById("reproSaison")?.value || "";
+  const especeInput = document.getElementById("reproEspece")?.value.trim() || "";
+  const maleId = document.getElementById("reproMale")?.value || "";
+  const femelleId = document.getElementById("reproFemelle")?.value || "";
+
+  if (!maleId || !femelleId) {
+    alert("Choisis un mâle et une femelle.");
+    return;
+  }
+
+  if (maleId === femelleId) {
+    alert("Le mâle et la femelle doivent être deux oiseaux différents.");
+    return;
+  }
+
+  const male = appData.oiseaux.find((o) => o.id === maleId);
+  const femelle = appData.oiseaux.find((o) => o.id === femelleId);
+
+  if (!male || !femelle) {
+    alert("Oiseau introuvable.");
+    return;
+  }
+
+  const espece = especeInput || femelle.espece || male.espece || "";
+
+  const couple = {
+    id: makeId(),
+    saison,
+    espece,
+    maleId: male.id,
+    maleNom: male.nom || "",
+    maleBague: male.bague || "",
+    maleCites: male.cites || "",
+    maleCarteVerte: male.carteVerte || "",
+    maleEspece: male.espece || "",
+    femelleId: femelle.id,
+    femelleNom: femelle.nom || "",
+    femelleBague: femelle.bague || "",
+    femelleCites: femelle.cites || "",
+    femelleCarteVerte: femelle.carteVerte || "",
+    femelleEspece: femelle.espece || "",
+    pontes: []
+  };
+
+  appData.reproduction.push(couple);
+
+  await saveData();
+  renderReproduction();
+
+  if (statusEl) statusEl.textContent = "Couple reproducteur créé.";
 }
 
 function renderAll() {
@@ -4650,6 +4790,7 @@ window.openBirdVet = openBirdVet;
 window.openBirdFeed = openBirdFeed;
 window.openBirdWeights = openBirdWeights;
 window.openBirdSheetInline = openBirdSheetInline;
+window.ajouterCoupleReproduction = ajouterCoupleReproduction;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
