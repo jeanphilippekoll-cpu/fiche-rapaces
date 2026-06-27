@@ -558,10 +558,10 @@ function getLatestBirdWeight(bird) {
 function getComplementDoseMl(bird) {
   const poids = getLatestBirdWeight(bird) || toNumber(bird.poidsActuel);
   if (!poids) return "dose à définir";
-  if (poids < 200) return "0,5 ml";
-  if (poids < 500) return "1 ml";
-  if (poids < 900) return "1,5 ml";
-  return "2 ml";
+
+  const dose = (poids / 100) * 0.2;
+
+  return `${dose.toFixed(1).replace(".", ",")} ml`;
 }
 
 function getDashboardComplementPlan(dayIndex, bird) {
@@ -609,7 +609,7 @@ function renderWeeklyVitaminTable(birds) {
               .map(bird => {
                 const plan = getDashboardComplementPlan(day.index, bird);
                 if (!plan) return "";
-                return `${safe(bird.nom)} (${getLatestBirdWeight(bird) || "-"} g)`;
+                return `${safe(bird.nom)} — ${getLatestBirdWeight(bird) || "-"} g — ${getComplementDoseMl(bird)}`;
               })
               .filter(Boolean);
 
