@@ -582,6 +582,57 @@ function getDashboardComplementPlan(dayIndex, bird) {
   return "";
 }
 
+function renderWeeklyVitaminTable(birds) {
+  const days = [
+    { label: "Lundi", index: 1 },
+    { label: "Mardi", index: 2 },
+    { label: "Mercredi", index: 3 },
+    { label: "Jeudi", index: 4 },
+    { label: "Vendredi", index: 5 },
+    { label: "Samedi", index: 6 },
+    { label: "Dimanche", index: 0 }
+  ];
+
+  return `
+    <div class="feed-table-wrap">
+      <table class="feed-table simple-table">
+        <thead>
+          <tr>
+            <th>Jour</th>
+            <th>Complément</th>
+            <th>Oiseaux concernés</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${days.map(day => {
+            const rows = birds
+              .map(bird => {
+                const plan = getDashboardComplementPlan(day.index, bird);
+                if (!plan) return "";
+                return `${safe(bird.nom)} (${getLatestBirdWeight(bird) || "-"} g)`;
+              })
+              .filter(Boolean);
+
+            const produit =
+              day.index === 1 ? "Aminovital" :
+              day.index === 3 ? "Feather Energy" :
+              day.index === 5 ? "Aminovital + Condi Plus" :
+              "Repos";
+
+            return `
+              <tr>
+                <td><strong>${day.label}</strong></td>
+                <td>${produit}</td>
+                <td>${rows.length ? rows.join("<br>") : "-"}</td>
+              </tr>
+            `;
+          }).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function getBandageCarePlan(bird) {
   const notes = `${bird.notes || ""} ${bird.statut || ""}`.toLowerCase();
 
@@ -739,19 +790,25 @@ function renderDashboardIntelligent() {
       : `<p class="muted-line">Aucun oiseau dans sa plage de vol.</p>`;
   }
 
-  if (complementsEl) {
-    complementsEl.innerHTML = complements.length
-      ? complements.map(x =>
-          dashboardRow(
-            x.bird.nom,
-            `${x.plan} - ${getComplementDoseMl(x.bird)}`,
-            "Aujourd’hui",
-            "info",
-            x.bird.nom
-          )
-        ).join("")
-      : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
-  }
+ if (complementsEl) {
+  const todayComplements = complements.length
+    ? complements.map(x =>
+        dashboardRow(
+          x.bird.nom,
+          x.plan,
+          "Aujourd’hui",
+          "info",
+          x.bird.nom
+        )
+      ).join("")
+    : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
+
+  complementsEl.innerHTML = `
+    ${todayComplements}
+    <h4 style="margin-top:16px;">Planning vitamines semaine</h4>
+    ${renderWeeklyVitaminTable(birds)}
+  `;
+}
 
 if (surveillanceEl) {
   surveillanceEl.innerHTML = soins.length
