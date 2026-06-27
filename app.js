@@ -3391,11 +3391,11 @@ function renderReproduction() {
  const oiseaux = getSortedBirds(getActiveBirds());
 
 const males = oiseaux.filter(o =>
-    (o.sexe || "").toLowerCase().includes("mâle")
+    (o.sexe || "").trim().toUpperCase() === "M"
 );
 
 const femelles = oiseaux.filter(o =>
-    (o.sexe || "").toLowerCase().includes("femelle")
+    (o.sexe || "").trim().toUpperCase() === "F"
 );
 
 const optionsMale = males.map(o=>`
