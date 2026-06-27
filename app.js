@@ -3947,8 +3947,12 @@ async function sauverDetailPonte(coupleId, saisonId, ponteId) {
   ponte.nbCouveuse = toNumber(document.getElementById("ponteCouveuse")?.value || 0);
   ponte.observations = document.getElementById("ponteObservations")?.value || "";
 
-  await saveData();
-  ouvrirDetailPonte(coupleId, saisonId, ponteId);
+ await saveData();
+
+if (statusEl) statusEl.textContent = "Ponte enregistrée.";
+alert("Ponte enregistrée.");
+
+ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
 
 async function supprimerPonte(coupleId, saisonId, ponteId) {
