@@ -3995,10 +3995,110 @@ async function ajouterOeufPonte(coupleId, saisonId, ponteId) {
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
 
-function ouvrirOeuf(coupleId,saisonId,ponteId,oeufId){
+function ouvrirOeuf(coupleId, saisonId, ponteId, oeufId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  const oeuf = safeArray(ponte?.oeufs).find(o => o.id === oeufId);
 
-alert("La fiche individuelle de l'œuf arrive à l'étape suivante.");
+  if (!oeuf) return;
 
+  const zone = document.getElementById("reproductionZone");
+  if (!zone) return;
+
+  zone.innerHTML = `
+    <div class="card-section">
+      <button class="btn secondary-btn" onclick="ouvrirDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
+        ⬅ Retour à la ponte
+      </button>
+
+      <h2>🥚 Œuf ${oeuf.numero}</h2>
+      <p class="muted-line">${safe(couple.espece)} — Ponte ${safe(ponte.numero)}</p>
+
+      <div class="form-grid">
+        <div>
+          <label>Date de ponte</label>
+          <input id="oeufDatePonte" type="date" value="${safeAttr(oeuf.datePonte || "")}">
+        </div>
+
+        <div>
+          <label>Statut</label>
+          <select id="oeufStatut">
+            ${["Inconnu", "Clair", "Fécondé", "Éclos", "Mort dans l'œuf"].map(s => `
+              <option value="${safeAttr(s)}" ${oeuf.statut === s ? "selected" : ""}>${safe(s)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Emplacement</label>
+          <select id="oeufEmplacement">
+            ${["Sous mère", "Couveuse", "Éleveuse"].map(e => `
+              <option value="${safeAttr(e)}" ${oeuf.emplacement === e ? "selected" : ""}>${safe(e)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Date mirage</label>
+          <input id="oeufDateMirage" type="date" value="${safeAttr(oeuf.dateMirage || "")}">
+        </div>
+
+        <div>
+          <label>Date éclosion</label>
+          <input id="oeufDateEclosion" type="date" value="${safeAttr(oeuf.dateEclosion || "")}">
+        </div>
+      </div>
+
+      <label>Notes</label>
+      <textarea id="oeufNotes">${safe(oeuf.notes || "")}</textarea>
+
+      <div class="actions">
+        <button class="btn info-btn" onclick="sauverOeuf('${coupleId}','${saisonId}','${ponteId}','${oeufId}')">
+          Enregistrer l’œuf
+        </button>
+
+        <button class="btn btn-danger" onclick="supprimerOeuf('${coupleId}','${saisonId}','${ponteId}','${oeufId}')">
+          Supprimer l’œuf
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function sauverOeuf(coupleId, saisonId, ponteId, oeufId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  const oeuf = safeArray(ponte?.oeufs).find(o => o.id === oeufId);
+
+  if (!oeuf) return;
+
+  oeuf.datePonte = document.getElementById("oeufDatePonte")?.value || "";
+  oeuf.statut = document.getElementById("oeufStatut")?.value || "Inconnu";
+  oeuf.emplacement = document.getElementById("oeufEmplacement")?.value || "Sous mère";
+  oeuf.dateMirage = document.getElementById("oeufDateMirage")?.value || "";
+  oeuf.dateEclosion = document.getElementById("oeufDateEclosion")?.value || "";
+  oeuf.notes = document.getElementById("oeufNotes")?.value || "";
+
+  await saveData();
+  ouvrirDetailPonte(coupleId, saisonId, ponteId);
+}
+
+async function supprimerOeuf(coupleId, saisonId, ponteId, oeufId) {
+  if (!confirm("Supprimer cet œuf ?")) return;
+
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+
+  if (!ponte) return;
+
+  ponte.oeufs = safeArray(ponte.oeufs).filter(o => o.id !== oeufId);
+  ponte.nbOeufs = ponte.oeufs.length;
+
+  await saveData();
+  ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
 
 function renderAll() {
@@ -5256,6 +5356,8 @@ window.sauverDetailPonte = sauverDetailPonte;
 window.supprimerPonte = supprimerPonte;
 window.ajouterOeufPonte = ajouterOeufPonte;
 window.ouvrirOeuf=ouvrirOeuf;
+window.sauverOeuf = sauverOeuf;
+window.supprimerOeuf = supprimerOeuf;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
