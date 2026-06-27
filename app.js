@@ -3518,14 +3518,78 @@ ${safe(o.nom)} — ${safe(o.espece)}
 }
 
 async function ajouterCoupleReproduction() {
-  const saison = document.getElementById("reproSaison")?.value || "";
+  const saison = document.getElementById("reproSaison")?.value || String(new Date().getFullYear());
   const especeInput = document.getElementById("reproEspece")?.value.trim() || "";
   const maleId = document.getElementById("reproMale")?.value || "";
   const femelleId = document.getElementById("reproFemelle")?.value || "";
 
-  if (male.espece !== femelle.espece) {
+  if (!maleId || !femelleId) {
+    alert("Choisis un mâle et une femelle.");
+    return;
+  }
+
+  if (maleId === femelleId) {
+    alert("Le mâle et la femelle doivent être deux oiseaux différents.");
+    return;
+  }
+
+  const male = appData.oiseaux.find((o) => o.id === maleId);
+  const femelle = appData.oiseaux.find((o) => o.id === femelleId);
+
+  if (!male || !femelle) {
+    alert("Oiseau introuvable.");
+    return;
+  }
+
+  if ((male.espece || "").trim() !== (femelle.espece || "").trim()) {
     alert("Le mâle et la femelle doivent être de la même espèce.");
     return;
+  }
+
+  const deja = appData.reproduction.find(c =>
+    c.maleId === male.id &&
+    c.femelleId === femelle.id
+  );
+
+  if (deja) {
+    alert("Ce couple existe déjà.");
+    return;
+  }
+
+  const espece = especeInput || femelle.espece || male.espece || "";
+
+  const couple = {
+    id: makeId(),
+    saison,
+    espece,
+    maleId: male.id,
+    maleNom: male.nom || "",
+    maleBague: male.bague || "",
+    maleCites: male.cites || "",
+    maleCarteVerte: male.carteVerte || "",
+    maleEspece: male.espece || "",
+    femelleId: femelle.id,
+    femelleNom: femelle.nom || "",
+    femelleBague: femelle.bague || "",
+    femelleCites: femelle.cites || "",
+    femelleCarteVerte: femelle.carteVerte || "",
+    femelleEspece: femelle.espece || "",
+    saisons: [
+      {
+        id: makeId(),
+        annee: saison,
+        pontes: []
+      }
+    ],
+    pontes: []
+  };
+
+  appData.reproduction.push(couple);
+
+  await saveData();
+  renderReproduction();
+
+  if (statusEl) statusEl.textContent = "Couple reproducteur créé.";
 }
 
 const deja = appData.reproduction.find(c =>
@@ -3696,9 +3760,9 @@ function ouvrirFichePonte(coupleId, saisonId){
 
             html+=`
 
-            <div class="bird-card">
+            <div class="bird-card clickable-bird-card" onclick="ouvrirDetailPonte('${couple.id}','${saison.id}','${p.id}')">
 
-                <strong>Ponte ${p.numero}</strong>
+    <strong>🥚 Ponte ${p.numero}</strong>
 
                 <br>
 
