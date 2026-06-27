@@ -561,16 +561,42 @@ function getComplementDoseMl(bird) {
 }
 
 function getDashboardComplementPlan(dayIndex, bird) {
-  const notes = `${bird.notes || ""} ${bird.age || ""}`.toLowerCase();
+  const poids = getLatestBirdWeight(bird);
 
-  if (notes.includes("jeune")) {
-    if ([2, 4].includes(dayIndex)) return "Feather Energy";
-    return "";
+  if (!poids) return "";
+
+  let dose = "dose à définir";
+  if (poids < 200) dose = "0,5 ml";
+  else if (poids < 500) dose = "1 ml";
+  else if (poids < 900) dose = "1,5 ml";
+  else dose = "2 ml";
+
+  if (dayIndex === 1) return `Aminovital — ${dose}`;
+  if (dayIndex === 3) return `Feather Energy — ${dose}`;
+  if (dayIndex === 5) return `Aminovital + Condi Plus — ${dose}`;
+
+  return "";
+}
+
+function getBandageCarePlan(bird) {
+  const notes = `${bird.notes || ""} ${bird.statut || ""}`.toLowerCase();
+
+  const match = notes.match(/bandage\s*(\d+)j/);
+  if (!match) return "";
+
+  const interval = toNumber(match[1]);
+  if (!interval) return "";
+
+  const startDate = bird.dateEntree || todayStr();
+  const today = new Date(todayStr());
+  const start = new Date(startDate);
+  const days = Math.floor((today - start) / 86400000);
+
+  if (!Number.isFinite(days)) return "";
+
+  if (days % interval === 0) {
+    return `Changer bandage — tous les ${interval} jours`;
   }
-
-  if (dayIndex === 1) return "Aminovital";
-  if (dayIndex === 3) return "Feather Energy";
-  if (dayIndex === 5) return "Aminovital + Condi Plus";
 
   return "";
 }
@@ -695,17 +721,6 @@ function renderDashboardIntelligent() {
 
     const name = (b.nom || "").trim().toLowerCase();
 
-    if (!fedToday.has(name)) {
-      alerts.push(
-        dashboardRow(
-          b.nom,
-          "Aucun nourrissage enregistré aujourd’hui",
-          "Nourrir",
-          "warn",
-          b.nom
-        )
-      );
-    }
   });
 
   const stock = appData.stock || {};
@@ -771,7 +786,7 @@ if (surveillanceEl) {
           x.bird.nom
         )
       ).join("")
-    : `<p class="muted-line">Aucun bandage / soin prévu aujourd’hui.</p>`;
+    : `<p class="muted-line">Aucun bandage prévu aujourd’hui.</p>`;
 }
 
   if (tasksEl) {
