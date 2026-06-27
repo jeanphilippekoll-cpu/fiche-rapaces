@@ -1579,7 +1579,7 @@ function renderOiseaux() {
   zone.innerHTML = `
     <div class="bird-grid">
       ${oiseaux.map((oiseau) => `
-        <article class="bird-card">
+        <article class="bird-card clickable-bird-card" onclick="openBirdSheetInline('${oiseau.id}')">
           <div class="bird-card-head">
             <div>
               <h3>${safe(oiseau.nom)}</h3>
@@ -1600,31 +1600,31 @@ function renderOiseaux() {
           </div>
     
          <div class="bird-badges">
-  <button class="bird-badge-btn" onclick="openBirdDocuments('${oiseau.id}')">
-    📎 Docs (${safeArray(oiseau.documents).length})
-  </button>
+  <button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdDocuments('${oiseau.id}')">
+  📎 Docs (${safeArray(oiseau.documents).length})
+</button>
 
-  <button class="bird-badge-btn" onclick="openBirdVet('${oiseau.id}')">
-    🏥 Véto (${getVetForBird(oiseau.nom).length})
-  </button>
+<button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdVet('${oiseau.id}')">
+  🏥 Véto (${getVetForBird(oiseau.nom).length})
+</button>
 
-  <button class="bird-badge-btn" onclick="openBirdFeed('${oiseau.id}')">
-    🍗 Nourr. (${getFeedsForBird(oiseau.nom).length})
-  </button>
+<button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdFeed('${oiseau.id}')">
+  🍗 Nourr. (${getFeedsForBird(oiseau.nom).length})
+</button>
 
-  <button class="bird-badge-btn" onclick="openBirdWeights('${oiseau.id}')">
-    ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
-  </button>
+<button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdWeights('${oiseau.id}')">
+  ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
+</button>
 </div> 
 
 
           <div class="small-actions">
-            <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
-            <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>
-            <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-            <button class="btn info-btn" onclick="openBirdSheetInline('${oiseau.id}')" >Ouvrir fiche</button>
-            <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
-            <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
+         <button class="btn secondary-btn" onclick="event.stopPropagation(); monterOiseau('${oiseau.id}')">Monter</button>
+<button class="btn secondary-btn" onclick="event.stopPropagation(); descendreOiseau('${oiseau.id}')">Descendre</button>
+<button class="btn secondary-btn" onclick="event.stopPropagation(); modifierOiseau('${oiseau.id}')">Modifier</button>
+<button class="btn info-btn" onclick="event.stopPropagation(); openBirdSheetInline('${oiseau.id}')">Ouvrir fiche</button>
+<button class="btn warn-btn" onclick="event.stopPropagation(); partagerFicheOiseau('${oiseau.id}')">Partager</button>
+<button class="btn btn-danger" onclick="event.stopPropagation(); supprimerOiseau('${oiseau.id}')">Supprimer</button>   
           </div>
         </article>
       `).join("")}
