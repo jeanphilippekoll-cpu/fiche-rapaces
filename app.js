@@ -3855,8 +3855,10 @@ function ouvrirDetailPonte(coupleId, saisonId, ponteId) {
       <p><strong>♂</strong> ${safe(couple.maleNom)} &nbsp;&nbsp; <strong>♀</strong> ${safe(couple.femelleNom)}</p>
 
       <div class="summary-grid">
-        <div class="summary-card"><h3>Œufs</h3><p class="summary-total">${ponte.oeufs.length}</p></div>
-        <div class="summary-card"><h3>Jeunes</h3><p class="summary-total">${ponte.jeunes.length}</p></div>
+       <div class="summary-card"><h3>Œufs</h3><p class="summary-total">${ponte.nbOeufs || ponte.oeufs.length || 0}</p></div>
+<div class="summary-card"><h3>Fécondés</h3><p class="summary-total">${ponte.nbFecondes || 0}</p></div>
+<div class="summary-card"><h3>Clairs</h3><p class="summary-total">${ponte.nbClairs || 0}</p></div>
+<div class="summary-card"><h3>Jeunes</h3><p class="summary-total">${ponte.jeunes.length}</p></div>
         <div class="summary-card"><h3>🔦 Mirage</h3><p class="summary-total">${dateMirageCalc ? formatDateFR(dateMirageCalc) : "-"}</p></div>
         <div class="summary-card"><h3>🐣 Éclosion</h3><p class="summary-total">${dateEclosionCalc ? formatDateFR(dateEclosionCalc) : "-"}</p><p class="muted-line">${joursRestants}</p></div>
       </div>
