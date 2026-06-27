@@ -3992,8 +3992,7 @@ function ouvrirOeuf(coupleId, saisonId, ponteId, oeufId) {
   const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
   const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
   const oeuf = safeArray(ponte?.oeufs).find(o => o.id === oeufId);
-
-  if (!oeuf) return;
+  if (!couple || !saison || !ponte || !oeuf) return;
 
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
@@ -4005,7 +4004,7 @@ function ouvrirOeuf(coupleId, saisonId, ponteId, oeufId) {
       </button>
 
       <h2>🥚 Œuf ${oeuf.numero}</h2>
-      <p class="muted-line">${safe(couple.espece)} — Ponte ${safe(ponte.numero)}</p>
+      <p class="muted-line">${safe(couple.espece)} — Saison ${safe(saison.annee)} — Ponte ${safe(ponte.numero)}</p>
 
       <div class="form-grid">
         <div>
@@ -4014,19 +4013,19 @@ function ouvrirOeuf(coupleId, saisonId, ponteId, oeufId) {
         </div>
 
         <div>
-          <label>Statut</label>
-          <select id="oeufStatut">
-            ${["Inconnu", "Clair", "Fécondé", "Éclos", "Mort dans l'œuf"].map(s => `
-              <option value="${safeAttr(s)}" ${oeuf.statut === s ? "selected" : ""}>${safe(s)}</option>
+          <label>Emplacement</label>
+          <select id="oeufEmplacement">
+            ${["Sous mère", "Couveuse", "Éleveuse"].map(v => `
+              <option value="${safeAttr(v)}" ${oeuf.emplacement === v ? "selected" : ""}>${safe(v)}</option>
             `).join("")}
           </select>
         </div>
 
         <div>
-          <label>Emplacement</label>
-          <select id="oeufEmplacement">
-            ${["Sous mère", "Couveuse", "Éleveuse"].map(e => `
-              <option value="${safeAttr(e)}" ${oeuf.emplacement === e ? "selected" : ""}>${safe(e)}</option>
+          <label>Statut</label>
+          <select id="oeufStatut">
+            ${["Inconnu", "Clair", "Fécondé", "Éclos", "Mort dans l'œuf"].map(v => `
+              <option value="${safeAttr(v)}" ${oeuf.statut === v ? "selected" : ""}>${safe(v)}</option>
             `).join("")}
           </select>
         </div>
@@ -4037,8 +4036,41 @@ function ouvrirOeuf(coupleId, saisonId, ponteId, oeufId) {
         </div>
 
         <div>
+          <label>Résultat mirage</label>
+          <select id="oeufResultatMirage">
+            ${["Non miré", "Clair", "Fécondé", "Mort précoce", "Mort tardive"].map(v => `
+              <option value="${safeAttr(v)}" ${(oeuf.resultatMirage || "Non miré") === v ? "selected" : ""}>${safe(v)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
           <label>Date éclosion</label>
           <input id="oeufDateEclosion" type="date" value="${safeAttr(oeuf.dateEclosion || "")}">
+        </div>
+
+        <div>
+          <label>Poids œuf (g)</label>
+          <input id="oeufPoids" type="number" step="0.1" value="${safeAttr(oeuf.poids || "")}">
+        </div>
+
+        <div>
+          <label>Température couveuse</label>
+          <input id="oeufTemperature" value="${safeAttr(oeuf.temperature || "")}" placeholder="Ex : 37.2">
+        </div>
+
+        <div>
+          <label>Humidité</label>
+          <input id="oeufHumidite" value="${safeAttr(oeuf.humidite || "")}" placeholder="Ex : 55%">
+        </div>
+
+        <div>
+          <label>Assistance éclosion</label>
+          <select id="oeufAssistance">
+            ${["Non", "Oui"].map(v => `
+              <option value="${v}" ${oeuf.assistance === v ? "selected" : ""}>${v}</option>
+            `).join("")}
+          </select>
         </div>
       </div>
 
@@ -4063,38 +4095,58 @@ async function sauverOeuf(coupleId, saisonId, ponteId, oeufId) {
   const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
   const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
   const oeuf = safeArray(ponte?.oeufs).find(o => o.id === oeufId);
-
-  if (!oeuf) return;
+  if (!ponte || !oeuf) return;
 
   oeuf.datePonte = document.getElementById("oeufDatePonte")?.value || "";
-  oeuf.statut = document.getElementById("oeufStatut")?.value || "Inconnu";
   oeuf.emplacement = document.getElementById("oeufEmplacement")?.value || "Sous mère";
+  oeuf.statut = document.getElementById("oeufStatut")?.value || "Inconnu";
   oeuf.dateMirage = document.getElementById("oeufDateMirage")?.value || "";
+  oeuf.resultatMirage = document.getElementById("oeufResultatMirage")?.value || "Non miré";
   oeuf.dateEclosion = document.getElementById("oeufDateEclosion")?.value || "";
+  oeuf.poids = document.getElementById("oeufPoids")?.value || "";
+  oeuf.temperature = document.getElementById("oeufTemperature")?.value || "";
+  oeuf.humidite = document.getElementById("oeufHumidite")?.value || "";
+  oeuf.assistance = document.getElementById("oeufAssistance")?.value || "Non";
   oeuf.notes = document.getElementById("oeufNotes")?.value || "";
 
   if (oeuf.statut === "Éclos") {
-  if (!ponte.jeunes) ponte.jeunes = [];
+    if (!ponte.jeunes) ponte.jeunes = [];
 
-  const jeuneExiste = ponte.jeunes.find(j => j.oeufId === oeuf.id);
+    const jeuneExiste = ponte.jeunes.find(j => j.oeufId === oeuf.id);
 
-  if (!jeuneExiste) {
-    ponte.jeunes.push({
-      id: makeId(),
-      oeufId: oeuf.id,
-      numero: ponte.jeunes.length + 1,
-      couleur: "",
-      bague: "",
-      sexe: "",
-      dateNaissance: oeuf.dateEclosion || "",
-      modeNaissance: oeuf.emplacement || "",
-      destination: "",
-      notes: ""
-    });
+    if (!jeuneExiste) {
+      ponte.jeunes.push({
+        id: makeId(),
+        oeufId: oeuf.id,
+        numero: ponte.jeunes.length + 1,
+        couleur: "",
+        bague: "",
+        sexe: "Inconnu",
+        dateNaissance: oeuf.dateEclosion || "",
+        dateBaguage: "",
+        dateSexage: "",
+        modeNaissance: oeuf.emplacement || "",
+        destination: "",
+        notes: ""
+      });
+    }
   }
-}
+
+  recalculerStatsPonte(ponte);
+
   await saveData();
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
+}
+
+function recalculerStatsPonte(ponte) {
+  const oeufs = safeArray(ponte.oeufs);
+
+  ponte.nbOeufs = oeufs.length;
+  ponte.nbFecondes = oeufs.filter(o => o.statut === "Fécondé" || o.statut === "Éclos").length;
+  ponte.nbClairs = oeufs.filter(o => o.statut === "Clair").length;
+  ponte.nbSousMere = oeufs.filter(o => o.emplacement === "Sous mère").length;
+  ponte.nbCouveuse = oeufs.filter(o => o.emplacement === "Couveuse").length;
+  ponte.nbMorts = oeufs.filter(o => o.statut === "Mort dans l'œuf").length;
 }
 
 async function supprimerOeuf(coupleId, saisonId, ponteId, oeufId) {
@@ -5575,6 +5627,7 @@ window.ouvrirJeune = ouvrirJeune;
 window.sauverJeune = sauverJeune;
 window.supprimerJeune = supprimerJeune;
 window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
+window.recalculerStatsPonte = recalculerStatsPonte;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
