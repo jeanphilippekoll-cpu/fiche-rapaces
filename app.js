@@ -3639,62 +3639,116 @@ if(couple.saisons.length===0){
 
 const saison=couple.saisons[0];
 
-const numero=saison.pontes.length+1;
+if (!saison.pontes) saison.pontes = [];
 
-if(!confirm("Créer la ponte "+numero+" ?"))
-    return;
+ouvrirFichePonte(couple.id, saison.id);
+}
 
-saison.pontes.push({
+function ouvrirFichePonte(coupleId, saisonId){
 
-    id: makeId(),
+    const couple = appData.reproduction.find(c=>c.id===coupleId);
+    if(!couple) return;
 
-    numero,
+    const saison = couple.saisons.find(s=>s.id===saisonId);
+    if(!saison) return;
 
-    premierOeuf: "",
+    if(!saison.pontes) saison.pontes=[];
 
-    dernierOeuf: "",
+    let html=`
+    <div class="card-section">
 
-    debutCouvaison: "",
+    <h2>🥚 ${safe(couple.espece)}</h2>
 
-    dureeIncubation: 30,
+    <h3>Saison ${safe(saison.annee)}</h3>
 
-    joursMirage: 10,
+    <button class="btn info-btn"
+        onclick="nouvellePonte('${couple.id}','${saison.id}')">
 
-    dateMirage: "",
+        ➕ Nouvelle ponte
 
-    dateEclosionPrevue: "",
+    </button>
 
-    datePremiereEclosion: "",
+    <hr>
+    `;
 
-    dateDerniereEclosion: "",
+    if(saison.pontes.length===0){
 
-    nbOeufs: 0,
+        html+=`
+        <p>Aucune ponte enregistrée.</p>
+        `;
 
-    nbFecondes: 0,
+    }else{
 
-    nbClairs: 0,
+        saison.pontes.forEach(p=>{
 
-    nbSousMere: 0,
+            html+=`
 
-    nbCouveuse: 0,
+            <div class="bird-card">
 
-    nbEclosSousMere: 0,
+                <strong>Ponte ${p.numero}</strong>
 
-    nbEclosCouveuse: 0,
+                <br>
 
-    nbMorts: 0,
+                Premier œuf :
+                ${p.premierOeuf || "-"}
 
-    observations: "",
+                <br>
 
-    jeunes: []
+                Début couvaison :
+                ${p.debutCouvaison || "-"}
 
-});
+            </div>
 
-saveData();
+            `;
 
-renderReproduction();
+        });
 
-alert("Ponte "+numero+" créée.");
+    }
+
+    html+="</div>";
+
+    document.getElementById("reproductionZone").innerHTML=html;
+
+}
+
+function nouvellePonte(coupleId,saisonId){
+
+    const couple=appData.reproduction.find(c=>c.id===coupleId);
+
+    const saison=couple.saisons.find(s=>s.id===saisonId);
+
+    const numero=saison.pontes.length+1;
+
+    saison.pontes.push({
+
+        id:makeId(),
+
+        numero,
+
+        premierOeuf:"",
+
+        dernierOeuf:"",
+
+        debutCouvaison:"",
+
+        dureeIncubation:30,
+
+        joursMirage:10,
+
+        dateMirage:"",
+
+        dateEclosionPrevue:"",
+
+        nbOeufs:0,
+
+        jeunes:[]
+
+    });
+
+    saveData();
+
+    ouvrirFichePonte(coupleId,saisonId);
+
 }
 
 function renderAll() {
@@ -4945,6 +4999,8 @@ window.openBirdSheetInline = openBirdSheetInline;
 window.ajouterCoupleReproduction = ajouterCoupleReproduction;
 window.ouvrirSaisonReproduction=ouvrirSaisonReproduction;
 window.ouvrirPonte=ouvrirPonte;
+window.ouvrirFichePonte = ouvrirFichePonte;
+window.nouvellePonte = nouvellePonte;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
