@@ -859,6 +859,43 @@ function getBirdFeedStats(birdName) {
   };
 }
 
+function refreshBirdPremiumTabs(bird) {
+  if (!bird) return;
+
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value || "-";
+  };
+
+  setText("birdFoodHabit", bird.nourritureHabituelle || "-");
+  setText("birdFoodQty", bird.quantiteHabituelle ? `${bird.quantiteHabituelle}` : "-");
+
+  const feeds = getFeedsForBird(bird.nom);
+  const lastFeed = feeds[0];
+
+  setText(
+    "birdLastFeed",
+    lastFeed ? `${formatDateFR(lastFeed.date)} - ${lastFeed.nourriture} x${lastFeed.quantite}` : "-"
+  );
+
+  const complement = getDashboardComplementPlan(new Date().getDay(), bird);
+  setText("birdComplementToday", complement || "Aucun");
+
+  const historyEl = document.getElementById("birdFeedHistory");
+  if (historyEl) {
+    historyEl.innerHTML = feeds.length
+      ? feeds.slice(0, 10).map(f => `
+          <div class="dashboard-row">
+            <div>
+              <strong>${safe(formatDateFR(f.date))}</strong>
+              <small>${safe(f.nourriture)} x${safe(f.quantite)} ${f.remarques ? "- " + safe(f.remarques) : ""}</small>
+            </div>
+          </div>
+        `).join("")
+      : `<p class="muted-line">Aucun historique nourrissage.</p>`;
+  }
+}
+
 function partagerFicheOiseau(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -3497,6 +3534,8 @@ function modifierOiseau(id) {
   if (btn) btn.textContent = "Enregistrer les modifications";
   if (cancelBtn) cancelBtn.classList.remove("hidden");
 
+  refreshBirdPremiumTabs(bird);
+  
   showSection("oiseaux");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
