@@ -3875,6 +3875,55 @@ if (dateEclosionCalc) {
   ➕ Ajouter un œuf
 </button>
 
+<hr>
+
+<h3>🥚 Œufs</h3>
+
+${
+    ponte.oeufs && ponte.oeufs.length
+    ?
+
+    ponte.oeufs.map(o=>`
+
+    <div class="bird-card">
+
+        <h4>🥚 Œuf ${o.numero}</h4>
+
+        <p>
+
+        Date :
+        ${o.datePonte || "-"}
+
+        <br>
+
+        Emplacement :
+        ${o.emplacement}
+
+        <br>
+
+        Statut :
+        ${o.statut}
+
+        </p>
+
+        <button
+        class="small-btn"
+        onclick="ouvrirOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}')">
+
+        Modifier
+
+        </button>
+
+    </div>
+
+    `).join("")
+
+    :
+
+    "<p>Aucun œuf.</p>"
+
+}
+
       <div class="actions">
         <button class="btn info-btn" onclick="sauverDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
           Enregistrer la ponte
@@ -3944,6 +3993,12 @@ async function ajouterOeufPonte(coupleId, saisonId, ponteId) {
 
   await saveData();
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
+}
+
+function ouvrirOeuf(coupleId,saisonId,ponteId,oeufId){
+
+alert("La fiche individuelle de l'œuf arrive à l'étape suivante.");
+
 }
 
 function renderAll() {
@@ -5200,6 +5255,7 @@ window.renderReproduction = renderReproduction;
 window.sauverDetailPonte = sauverDetailPonte;
 window.supprimerPonte = supprimerPonte;
 window.ajouterOeufPonte = ajouterOeufPonte;
+window.ouvrirOeuf=ouvrirOeuf;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
