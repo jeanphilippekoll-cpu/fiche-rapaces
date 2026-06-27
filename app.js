@@ -3646,35 +3646,48 @@ if(!confirm("Créer la ponte "+numero+" ?"))
 
 saison.pontes.push({
 
-    id:makeId(),
+    id: makeId(),
 
     numero,
 
-    premierOeuf:"",
+    premierOeuf: "",
 
-    dernierOeuf:"",
+    dernierOeuf: "",
 
-    debutCouvaison:"",
+    debutCouvaison: "",
 
-    duree:30,
+    dureeIncubation: 30,
 
-    mirageJours:10,
+    joursMirage: 10,
 
-    dateMirage:"",
+    dateMirage: "",
 
-    dateEclosion:"",
+    dateEclosionPrevue: "",
 
-    oeufs:0,
+    datePremiereEclosion: "",
 
-    fecondes:0,
+    dateDerniereEclosion: "",
 
-    clairs:0,
+    nbOeufs: 0,
 
-    sousMere:0,
+    nbFecondes: 0,
 
-    couveuse:0,
+    nbClairs: 0,
 
-    jeunes:[]
+    nbSousMere: 0,
+
+    nbCouveuse: 0,
+
+    nbEclosSousMere: 0,
+
+    nbEclosCouveuse: 0,
+
+    nbMorts: 0,
+
+    observations: "",
+
+    jeunes: []
+
 });
 
 saveData();
