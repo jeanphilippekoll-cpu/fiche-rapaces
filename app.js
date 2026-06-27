@@ -55,6 +55,7 @@ let appData = {
   stock: {},
   veterinaire: [],
   entretien: [],
+  reproduction: [],
 
   prixNourriture: {
     "Poussin": 0,
@@ -281,6 +282,38 @@ function normalizeReproduction(value) {
   };
 }
 
+function normalizeReproductionModule(list) {
+  return safeArray(list).map((item, index) => ({
+    id: item?.id || `repro_${index}_${makeId()}`,
+    saison: item?.saison || "",
+    espece: item?.espece || "",
+    maleId: item?.maleId || "",
+    maleNom: item?.maleNom || "",
+    femelleId: item?.femelleId || "",
+    femelleNom: item?.femelleNom || "",
+    pontes: safeArray(item?.pontes).map((p, pIndex) => ({
+      id: p?.id || `ponte_${pIndex}_${makeId()}`,
+      numero: toNumber(p?.numero) || pIndex + 1,
+      debutPonte: p?.debutPonte || "",
+      finPonte: p?.finPonte || "",
+      nbOeufs: toNumber(p?.nbOeufs),
+      debutCouvaison: p?.debutCouvaison || "",
+      mirageApresJours: toNumber(p?.mirageApresJours) || 10,
+      dateMirageReelle: p?.dateMirageReelle || "",
+      dureeCouvaison: toNumber(p?.dureeCouvaison),
+      oeufsFecondes: toNumber(p?.oeufsFecondes),
+      oeufsClairs: toNumber(p?.oeufsClairs),
+      oeufsSousMere: toNumber(p?.oeufsSousMere),
+      oeufsCouveuse: toNumber(p?.oeufsCouveuse),
+      eclosSousMere: toNumber(p?.eclosSousMere),
+      eclosCouveuse: toNumber(p?.eclosCouveuse),
+      mortsDansOeuf: toNumber(p?.mortsDansOeuf),
+      notes: p?.notes || "",
+      jeunes: normalizeJeunesReproduction(p?.jeunes)
+    }))
+  }));
+}
+
 function normalizeNourrissage(list) {
   return safeArray(list).map((item, index) => ({
     id: item?.id || `feed_${index}_${makeId()}`,
@@ -400,6 +433,7 @@ function normalizeData(rapacesData, userData) {
     nourrissage: normalizeNourrissage(nourrissageSource),
     veterinaire: normalizeVeterinaire(veterinaireSource),
    entretien: safeArray(userData?.entretien || rapacesData?.entretien),
+   reproduction: normalizeReproductionModule(rapacesData?.reproduction || userData?.reproduction),
    stock,
    prixNourriture: {
     "Poussin": toNumber(rapacesData?.prixNourriture?.["Poussin"]),
@@ -496,6 +530,7 @@ function buildRapacesPayload() {
       })),
       prixNourriture: appData.prixNourriture || {},
       coutOiseauxMasques: safeArray(appData.coutOiseauxMasques)
+      reproduction: normalizeReproductionModule(appData.reproduction),
   };
 }
 
