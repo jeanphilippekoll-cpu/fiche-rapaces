@@ -291,6 +291,7 @@ function normalizeReproductionModule(list) {
     maleNom: item?.maleNom || "",
     femelleId: item?.femelleId || "",
     femelleNom: item?.femelleNom || "",
+    saisons: safeArray(item?.saisons),
     pontes: safeArray(item?.pontes).map((p, pIndex) => ({
       id: p?.id || `ponte_${pIndex}_${makeId()}`,
       numero: toNumber(p?.numero) || pIndex + 1,
@@ -3477,6 +3478,7 @@ ${safe(o.nom)} — ${safe(o.espece)}
                     <th>Femelle</th>
                     <th>Pontes</th>
                     <th>Actions</th>
+                    <th>Saisons</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3493,6 +3495,7 @@ ${safe(o.nom)} — ${safe(o.espece)}
                         <small>${safe(c.femelleBague || "")}</small>
                       </td>
                       <td>${safeArray(c.pontes).length}</td>
+                      <td>${safeArray(c.saisons).length}</td>
 
 <td>
 <button
@@ -3570,7 +3573,15 @@ if (deja) {
     femelleCites: femelle.cites || "",
     femelleCarteVerte: femelle.carteVerte || "",
     femelleEspece: femelle.espece || "",
-    pontes: []
+    saisons: [
+    {
+        id: makeId(),
+        annee: saison,
+        pontes: []
+    }
+],
+
+pontes: []
   };
 
   appData.reproduction.push(couple);
@@ -3579,6 +3590,28 @@ if (deja) {
   renderReproduction();
 
   if (statusEl) statusEl.textContent = "Couple reproducteur créé.";
+}
+
+function ouvrirSaisonReproduction(id){
+
+const couple=appData.reproduction.find(c=>c.id===id);
+
+if(!couple) return;
+
+const saison=prompt(
+"Saison à ouvrir",
+couple.saison || new Date().getFullYear()
+);
+
+if(!saison) return;
+
+couple.saison=saison;
+
+saveData();
+
+renderReproduction();
+
+alert("Saison "+saison+" enregistrée.");
 }
 
 function renderAll() {
@@ -4827,6 +4860,7 @@ window.openBirdFeed = openBirdFeed;
 window.openBirdWeights = openBirdWeights;
 window.openBirdSheetInline = openBirdSheetInline;
 window.ajouterCoupleReproduction = ajouterCoupleReproduction;
+window.ouvrirSaisonReproduction=ouvrirSaisonReproduction;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
