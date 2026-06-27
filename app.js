@@ -3815,30 +3815,29 @@ jeunes: []
 
 function ouvrirDetailPonte(coupleId, saisonId, ponteId) {
   const couple = appData.reproduction.find(c => c.id === coupleId);
-  if (!couple) return;
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  if (!couple || !saison || !ponte) return;
 
-  const saison = safeArray(couple.saisons).find(s => s.id === saisonId);
-  if (!saison) return;
-
-  const ponte = safeArray(saison.pontes).find(p => p.id === ponteId);
-  if (!ponte) return;
+  if (!ponte.oeufs) ponte.oeufs = [];
+  if (!ponte.jeunes) ponte.jeunes = [];
 
   const addDays = (dateStr, days) => {
-  if (!dateStr) return "";
-  const d = new Date(dateStr);
-  if (Number.isNaN(d.getTime())) return "";
-  d.setDate(d.getDate() + toNumber(days));
-  return d.toISOString().slice(0, 10);
-};
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return "";
+    d.setDate(d.getDate() + toNumber(days));
+    return d.toISOString().slice(0, 10);
+  };
 
-const dateMirageCalc = addDays(ponte.debutCouvaison, ponte.joursMirage || 10);
-const dateEclosionCalc = addDays(ponte.debutCouvaison, ponte.dureeIncubation || 30);
+  const dateMirageCalc = addDays(ponte.debutCouvaison, ponte.joursMirage || 10);
+  const dateEclosionCalc = addDays(ponte.debutCouvaison, ponte.dureeIncubation || 30);
 
-let joursRestants = "";
-if (dateEclosionCalc) {
-  const diff = Math.ceil((new Date(dateEclosionCalc) - new Date(todayStr())) / 86400000);
-  joursRestants = diff >= 0 ? `${diff} jour(s) restant(s)` : `Dépassé de ${Math.abs(diff)} jour(s)`;
-}
+  let joursRestants = "-";
+  if (dateEclosionCalc) {
+    const diff = Math.ceil((new Date(dateEclosionCalc) - new Date(todayStr())) / 86400000);
+    joursRestants = diff >= 0 ? `${diff} jour(s)` : `Dépassé de ${Math.abs(diff)} jour(s)`;
+  }
 
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
@@ -3851,153 +3850,69 @@ if (dateEclosionCalc) {
 
       <h2>🥚 Ponte ${ponte.numero}</h2>
       <p class="muted-line">${safe(couple.espece)} — Saison ${safe(saison.annee)}</p>
-
-      <div class="form-grid">
-        <div>
-          <label>Premier œuf</label>
-          <input id="pontePremierOeuf" type="date" value="${safeAttr(ponte.premierOeuf || "")}">
-        </div>
-
-        <div>
-          <label>Dernier œuf</label>
-          <input id="ponteDernierOeuf" type="date" value="${safeAttr(ponte.dernierOeuf || "")}">
-        </div>
-
-        <div>
-          <label>Début couvaison</label>
-          <input id="ponteDebutCouvaison" type="date" value="${safeAttr(ponte.debutCouvaison || "")}">
-        </div>
-
-        <div>
-          <label>Durée incubation</label>
-          <input id="ponteDuree" type="number" value="${ponte.dureeIncubation || 30}">
-        </div>
-
-        <div>
-          <label>Mirage après X jours</label>
-          <input id="ponteMirageJours" type="number" value="${ponte.joursMirage || 10}">
-        </div>
-
-        <div>
-          <label>Nombre d'œufs</label>
-          <input id="ponteNbOeufs" type="number" value="${ponte.nbOeufs || 0}">
-        </div>
-
-        <div>
-          <label>Œufs fécondés</label>
-          <input id="ponteFecondes" type="number" value="${ponte.nbFecondes || 0}">
-        </div>
-
-        <div>
-          <label>Œufs clairs</label>
-          <input id="ponteClairs" type="number" value="${ponte.nbClairs || 0}">
-        </div>
-
-        <div>
-          <label>Sous la mère</label>
-          <input id="ponteSousMere" type="number" value="${ponte.nbSousMere || 0}">
-        </div>
-
-        <div>
-          <label>En couveuse</label>
-          <input id="ponteCouveuse" type="number" value="${ponte.nbCouveuse || 0}">
-        </div>
-      </div>
+      <p><strong>♂</strong> ${safe(couple.maleNom)} &nbsp;&nbsp; <strong>♀</strong> ${safe(couple.femelleNom)}</p>
 
       <div class="summary-grid">
-  <div class="summary-card">
-    <h3>🔦 Mirage prévu</h3>
-    <p class="summary-total">${dateMirageCalc ? formatDateFR(dateMirageCalc) : "-"}</p>
-  </div>
+        <div class="summary-card"><h3>Œufs</h3><p class="summary-total">${ponte.oeufs.length}</p></div>
+        <div class="summary-card"><h3>Jeunes</h3><p class="summary-total">${ponte.jeunes.length}</p></div>
+        <div class="summary-card"><h3>🔦 Mirage</h3><p class="summary-total">${dateMirageCalc ? formatDateFR(dateMirageCalc) : "-"}</p></div>
+        <div class="summary-card"><h3>🐣 Éclosion</h3><p class="summary-total">${dateEclosionCalc ? formatDateFR(dateEclosionCalc) : "-"}</p><p class="muted-line">${joursRestants}</p></div>
+      </div>
 
-  <div class="summary-card">
-    <h3>🐣 Éclosion prévue</h3>
-    <p class="summary-total">${dateEclosionCalc ? formatDateFR(dateEclosionCalc) : "-"}</p>
-    <p class="muted-line">${joursRestants}</p>
-  </div>
-</div>
+      <div class="form-grid">
+        <div><label>Premier œuf</label><input id="pontePremierOeuf" type="date" value="${safeAttr(ponte.premierOeuf || "")}"></div>
+        <div><label>Dernier œuf</label><input id="ponteDernierOeuf" type="date" value="${safeAttr(ponte.dernierOeuf || "")}"></div>
+        <div><label>Début couvaison</label><input id="ponteDebutCouvaison" type="date" value="${safeAttr(ponte.debutCouvaison || "")}"></div>
+        <div><label>Durée incubation</label><input id="ponteDuree" type="number" value="${ponte.dureeIncubation || 30}"></div>
+        <div><label>Mirage après X jours</label><input id="ponteMirageJours" type="number" value="${ponte.joursMirage || 10}"></div>
+        <div><label>Nombre d'œufs</label><input id="ponteNbOeufs" type="number" value="${ponte.nbOeufs || ponte.oeufs.length || 0}"></div>
+        <div><label>Œufs fécondés</label><input id="ponteFecondes" type="number" value="${ponte.nbFecondes || 0}"></div>
+        <div><label>Œufs clairs</label><input id="ponteClairs" type="number" value="${ponte.nbClairs || 0}"></div>
+        <div><label>Sous la mère</label><input id="ponteSousMere" type="number" value="${ponte.nbSousMere || 0}"></div>
+        <div><label>En couveuse</label><input id="ponteCouveuse" type="number" value="${ponte.nbCouveuse || 0}"></div>
+      </div>
 
       <label>Observations</label>
       <textarea id="ponteObservations">${safe(ponte.observations || "")}</textarea>
 
       <button class="btn secondary-btn" onclick="ajouterOeufPonte('${coupleId}','${saisonId}','${ponteId}')">
-  ➕ Ajouter un œuf
-</button>
+        ➕ Ajouter un œuf
+      </button>
 
-<hr>
+      <hr>
+      <h3>🥚 Œufs</h3>
+      ${
+        ponte.oeufs.length
+          ? ponte.oeufs.map(o => `
+            <div class="bird-card clickable-bird-card" onclick="ouvrirOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}')">
+              <h4>🥚 Œuf ${o.numero}</h4>
+              <p>
+                <b>Date :</b> ${formatDateFR(o.datePonte || "") || "-"}<br>
+                <b>Emplacement :</b> ${safe(o.emplacement || "-")}<br>
+                <b>Statut :</b> ${safe(o.statut || "-")}
+              </p>
+            </div>
+          `).join("")
+          : `<p class="muted-line">Aucun œuf enregistré.</p>`
+      }
 
-<h3>🥚 Œufs</h3>
-
-${
-    ponte.oeufs && ponte.oeufs.length
-    ?
-
-    ponte.oeufs.map(o=>`
-
-    <div class="bird-card">
-
-        <h4>🥚 Œuf ${o.numero}</h4>
-
-        <p>
-
-        Date :
-        ${o.datePonte || "-"}
-
-        <br>
-
-        Emplacement :
-        ${o.emplacement}
-
-        <br>
-
-        Statut :
-        ${o.statut}
-
-        </p>
-
-        <button
-        class="small-btn"
-        onclick="ouvrirOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}')">
-
-        Modifier
-
-        </button>
-
-    </div>
-
-    `).join("")
-
-    :
-
-    "<p>Aucun œuf.</p>"
-
-}
-
-<hr>
-
-<h3>🐣 Jeunes</h3>
-
-${
-  ponte.jeunes && ponte.jeunes.length
-    ? ponte.jeunes.map(j => `
-      <div class="bird-card">
-        <h4>🐣 Jeune ${j.numero}</h4>
-        <p>
-          <b>Couleur :</b> ${j.couleur || "-"}<br>
-          <b>Bague :</b> ${j.bague || "-"}<br>
-          <b>Sexe :</b> ${j.sexe || "-"}<br>
-          <b>Naissance :</b> ${formatDateFR(j.dateNaissance || "") || "-"}
-        </p>
-
-        <button
-          class="small-btn"
-          onclick="ouvrirJeune('${coupleId}','${saisonId}','${ponteId}','${j.id}')">
-          Modifier
-        </button>
-      </div>
-    `).join("")
-    : "<p>Aucun jeune enregistré.</p>"
-}
+      <hr>
+      <h3>🐣 Jeunes</h3>
+      ${
+        ponte.jeunes.length
+          ? ponte.jeunes.map(j => `
+            <div class="bird-card clickable-bird-card" onclick="ouvrirJeune('${coupleId}','${saisonId}','${ponteId}','${j.id}')">
+              <h4>🐣 Jeune ${j.numero}</h4>
+              <p>
+                <b>Couleur :</b> ${safe(j.couleur || "-")}<br>
+                <b>Bague :</b> ${safe(j.bague || "-")}<br>
+                <b>Sexe :</b> ${safe(j.sexe || "-")}<br>
+                <b>Naissance :</b> ${formatDateFR(j.dateNaissance || "") || "-"}
+              </p>
+            </div>
+          `).join("")
+          : `<p class="muted-line">Aucun jeune enregistré.</p>`
+      }
 
       <div class="actions">
         <button class="btn info-btn" onclick="sauverDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
