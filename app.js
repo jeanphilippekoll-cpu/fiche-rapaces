@@ -3476,6 +3476,7 @@ ${safe(o.nom)} — ${safe(o.espece)}
                     <th>Mâle</th>
                     <th>Femelle</th>
                     <th>Pontes</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3492,6 +3493,14 @@ ${safe(o.nom)} — ${safe(o.espece)}
                         <small>${safe(c.femelleBague || "")}</small>
                       </td>
                       <td>${safeArray(c.pontes).length}</td>
+
+<td>
+<button
+class="small-btn"
+onclick="ouvrirSaisonReproduction('${c.id}');event.stopPropagation();">
+📅 Saison
+</button>
+</td>
                     </tr>
                   `).join("")}
                 </tbody>
