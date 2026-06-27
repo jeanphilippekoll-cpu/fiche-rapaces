@@ -738,6 +738,53 @@ function renderDashboardIntelligent() {
   const complementsEl = document.getElementById("dashboardComplements");
   const surveillanceEl = document.getElementById("dashboardSurveillance");
   const tasksEl = document.getElementById("dashboardTasks");
+  const reproAlerts = [];
+
+safeArray(appData.reproduction).forEach(couple => {
+  safeArray(couple.saisons).forEach(saison => {
+    safeArray(saison.pontes).forEach(ponte => {
+      const addDays = (dateStr, days) => {
+        if (!dateStr) return "";
+        const d = new Date(dateStr);
+        if (Number.isNaN(d.getTime())) return "";
+        d.setDate(d.getDate() + toNumber(days));
+        return d.toISOString().slice(0, 10);
+      };
+
+      const mirage = addDays(ponte.debutCouvaison, ponte.joursMirage || 10);
+      const eclosion = addDays(ponte.debutCouvaison, ponte.dureeIncubation || 30);
+
+      if (mirage === today) {
+        reproAlerts.push(dashboardRow(
+          `Mirage ${couple.espece}`,
+          `Saison ${saison.annee} — Ponte ${ponte.numero}`,
+          "Aujourd’hui",
+          "warn"
+        ));
+      }
+
+      if (eclosion === today) {
+        reproAlerts.push(dashboardRow(
+          `Éclosion ${couple.espece}`,
+          `Saison ${saison.annee} — Ponte ${ponte.numero}`,
+          "Aujourd’hui",
+          "danger"
+        ));
+      }
+
+      safeArray(ponte.jeunes).forEach(j => {
+        if (!j.bague) {
+          reproAlerts.push(dashboardRow(
+            `Jeune à baguer`,
+            `${couple.espece} — jeune ${j.numero}`,
+            "Bague",
+            "warn"
+          ));
+        }
+      });
+    });
+  });
+});
   const alertsEl = document.getElementById("dashboardAlerts");
 
   const today = todayStr();
@@ -908,9 +955,11 @@ if (surveillanceEl) {
   }
 
   if (alertsEl) {
-    alertsEl.innerHTML = alerts.length
-      ? alerts.join("")
-      : `<p class="muted-line">Aucune alerte active.</p>`;
+    const allAlerts = [...reproAlerts, ...alerts];
+
+alertsEl.innerHTML = allAlerts.length
+  ? allAlerts.join("")
+  : `<p class="muted-line">Aucune alerte active.</p>`;
   }
 }
 
