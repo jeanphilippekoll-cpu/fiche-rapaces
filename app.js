@@ -3949,6 +3949,25 @@ async function sauverDetailPonte(coupleId, saisonId, ponteId) {
   ponte.nbCouveuse = toNumber(document.getElementById("ponteCouveuse")?.value || 0);
   ponte.observations = document.getElementById("ponteObservations")?.value || "";
 
+  if (!ponte.oeufs) ponte.oeufs = [];
+
+const nbVoulu = toNumber(ponte.nbOeufs);
+
+while (ponte.oeufs.length < nbVoulu) {
+  ponte.oeufs.push({
+    id: makeId(),
+    numero: ponte.oeufs.length + 1,
+    datePonte: "",
+    statut: "Inconnu",
+    emplacement: "Sous mère",
+    notes: ""
+  });
+}
+
+if (ponte.oeufs.length > nbVoulu) {
+  ponte.oeufs = ponte.oeufs.slice(0, nbVoulu);
+}
+
  await saveData();
 
 if (statusEl) statusEl.textContent = "Ponte enregistrée.";
