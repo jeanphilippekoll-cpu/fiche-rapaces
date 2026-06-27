@@ -3388,15 +3388,27 @@ function renderReproduction() {
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
 
-  const oiseaux = getSortedBirds(getActiveBirds());
+ const oiseaux = getSortedBirds(getActiveBirds());
 
-  const optionsOiseaux = oiseaux
-    .map((o) => `
-      <option value="${safeAttr(o.id)}">
-        ${safe(o.nom)} — ${safe(o.espece || "Espèce non indiquée")} — ${safe(o.sexe || "Sexe ?")}
-      </option>
-    `)
-    .join("");
+const males = oiseaux.filter(o =>
+    (o.sexe || "").toLowerCase().includes("mâle")
+);
+
+const femelles = oiseaux.filter(o =>
+    (o.sexe || "").toLowerCase().includes("femelle")
+);
+
+const optionsMale = males.map(o=>`
+<option value="${safeAttr(o.id)}">
+${safe(o.nom)} — ${safe(o.espece)}
+</option>
+`).join("");
+
+const optionsFemelle = femelles.map(o=>`
+<option value="${safeAttr(o.id)}">
+${safe(o.nom)} — ${safe(o.espece)}
+</option>
+`).join("");
 
   const couples = safeArray(appData.reproduction);
 
@@ -3433,7 +3445,7 @@ function renderReproduction() {
           <label for="reproMale">Mâle</label>
           <select id="reproMale">
             <option value="">Choisir le mâle</option>
-            ${optionsOiseaux}
+            ${optionsMale}
           </select>
         </div>
 
@@ -3441,7 +3453,7 @@ function renderReproduction() {
           <label for="reproFemelle">Femelle</label>
           <select id="reproFemelle">
             <option value="">Choisir la femelle</option>
-            ${optionsOiseaux}
+            ${optionsFemelle}
           </select>
         </div>
       </div>
@@ -3497,6 +3509,21 @@ async function ajouterCoupleReproduction() {
   const especeInput = document.getElementById("reproEspece")?.value.trim() || "";
   const maleId = document.getElementById("reproMale")?.value || "";
   const femelleId = document.getElementById("reproFemelle")?.value || "";
+
+  if (male.espece !== femelle.espece) {
+    alert("Le mâle et la femelle doivent être de la même espèce.");
+    return;
+}
+
+const deja = appData.reproduction.find(c =>
+    c.maleId === male.id &&
+    c.femelleId === femelle.id
+);
+
+if (deja) {
+    alert("Ce couple existe déjà.");
+    return;
+}
 
   if (!maleId || !femelleId) {
     alert("Choisis un mâle et une femelle.");
