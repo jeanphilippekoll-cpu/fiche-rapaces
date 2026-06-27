@@ -509,6 +509,10 @@ function showSection(section) {
   document.getElementById(`btn-${section}`)?.classList.add("active");
 
   if (section === "vacances") renderVacances();
+
+  if (section === "dashboard" || section === "accueil") {
+    renderDashboardIntelligent();
+  }
 }
 
 function refreshStats() {
