@@ -1081,6 +1081,10 @@ function getBirdFoodCostSummary(birdName) {
   return result;
 }
 
+function openBirdSheetInline(id) {
+  modifierOiseau(id);
+}
+
 function openBirdSheet(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
@@ -1618,7 +1622,7 @@ function renderOiseaux() {
             <button class="btn secondary-btn" onclick="monterOiseau('${oiseau.id}')">Monter</button>
             <button class="btn secondary-btn" onclick="descendreOiseau('${oiseau.id}')">Descendre</button>
             <button class="btn secondary-btn" onclick="modifierOiseau('${oiseau.id}')">Modifier</button>
-            <button class="btn info-btn" onclick="openBirdSheet('${oiseau.id}')">Ouvrir fiche</button>
+            <button class="btn info-btn" onclick="openBirdSheetInline('${oiseau.id}')" >Ouvrir fiche</button>
             <button class="btn warn-btn" onclick="partagerFicheOiseau('${oiseau.id}')">Partager</button>
             <button class="btn btn-danger" onclick="supprimerOiseau('${oiseau.id}')">Supprimer</button>
           </div>
@@ -4476,6 +4480,7 @@ window.openBirdDocuments = openBirdDocuments;
 window.openBirdVet = openBirdVet;
 window.openBirdFeed = openBirdFeed;
 window.openBirdWeights = openBirdWeights;
+
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
