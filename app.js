@@ -244,6 +244,43 @@ function normalizeDocuments(list) {
   }));
 }
 
+function normalizeJeunesReproduction(list) {
+  return safeArray(list).map((j, index) => ({
+    id: j?.id || `jeune_${index}_${makeId()}`,
+    couleur: j?.couleur || "",
+    bague: j?.bague || "",
+    sexe: j?.sexe || "",
+    destination: j?.destination || "",
+    notes: j?.notes || ""
+  }));
+}
+
+function normalizeReproduction(value) {
+  const r = value || {};
+
+  return {
+    saison: r.saison || "",
+    couple: r.couple || "",
+    nbOeufs: toNumber(r.nbOeufs),
+    debutPonte: r.debutPonte || "",
+    finPonte: r.finPonte || "",
+    debutCouvaison: r.debutCouvaison || "",
+    dureeCouvaison: toNumber(r.dureeCouvaison),
+    dateMirage: r.dateMirage || "",
+    oeufsFecondes: toNumber(r.oeufsFecondes),
+    oeufsClairs: toNumber(r.oeufsClairs),
+    oeufsSousMere: toNumber(r.oeufsSousMere),
+    oeufsCouveuse: toNumber(r.oeufsCouveuse),
+    dateEclosionPrevue: r.dateEclosionPrevue || "",
+    eclosSousMere: toNumber(r.eclosSousMere),
+    eclosCouveuse: toNumber(r.eclosCouveuse),
+    mortsDansOeuf: toNumber(r.mortsDansOeuf),
+    jeunesVivants: toNumber(r.jeunesVivants),
+    jeunes: normalizeJeunesReproduction(r.jeunes),
+    notes: r.notes || ""
+  };
+}
+
 function normalizeNourrissage(list) {
   return safeArray(list).map((item, index) => ({
     id: item?.id || `feed_${index}_${makeId()}`,
@@ -305,7 +342,8 @@ function normalizeData(rapacesData, userData) {
   nourritureHabituelle: o.nourritureHabituelle || "Poussin",
   quantiteHabituelle: toNumber(o.quantiteHabituelle),
   nourritureHabituelle2: o.nourritureHabituelle2 || "",
-  quantiteHabituelle2: toNumber(o.quantiteHabituelle2)
+  quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
+  reproduction: normalizeReproduction(o.reproduction)
 }));
 
   const pesees = peseesSource.map((e, index) => ({
@@ -417,7 +455,8 @@ function buildRapacesPayload() {
       historiquePoids: safeArray(o.historiquePoids).map((h) => ({
         date: h?.date || "",
         poids: h?.poids ?? ""
-      }))
+      })),
+      reproduction: normalizeReproduction(o.reproduction)
     };
   });
 
