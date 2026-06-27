@@ -3753,7 +3753,8 @@ function nouvellePonte(coupleId,saisonId){
 
         nbOeufs:0,
 
-        jeunes:[]
+       oeufs: [],
+jeunes: []
 
     });
 
@@ -3772,6 +3773,23 @@ function ouvrirDetailPonte(coupleId, saisonId, ponteId) {
 
   const ponte = safeArray(saison.pontes).find(p => p.id === ponteId);
   if (!ponte) return;
+
+  const addDays = (dateStr, days) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + toNumber(days));
+  return d.toISOString().slice(0, 10);
+};
+
+const dateMirageCalc = addDays(ponte.debutCouvaison, ponte.joursMirage || 10);
+const dateEclosionCalc = addDays(ponte.debutCouvaison, ponte.dureeIncubation || 30);
+
+let joursRestants = "";
+if (dateEclosionCalc) {
+  const diff = Math.ceil((new Date(dateEclosionCalc) - new Date(todayStr())) / 86400000);
+  joursRestants = diff >= 0 ? `${diff} jour(s) restant(s)` : `Dépassé de ${Math.abs(diff)} jour(s)`;
+}
 
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
@@ -3837,8 +3855,25 @@ function ouvrirDetailPonte(coupleId, saisonId, ponteId) {
         </div>
       </div>
 
+      <div class="summary-grid">
+  <div class="summary-card">
+    <h3>🔦 Mirage prévu</h3>
+    <p class="summary-total">${dateMirageCalc ? formatDateFR(dateMirageCalc) : "-"}</p>
+  </div>
+
+  <div class="summary-card">
+    <h3>🐣 Éclosion prévue</h3>
+    <p class="summary-total">${dateEclosionCalc ? formatDateFR(dateEclosionCalc) : "-"}</p>
+    <p class="muted-line">${joursRestants}</p>
+  </div>
+</div>
+
       <label>Observations</label>
       <textarea id="ponteObservations">${safe(ponte.observations || "")}</textarea>
+
+      <button class="btn secondary-btn" onclick="ajouterOeufPonte('${coupleId}','${saisonId}','${ponteId}')">
+  ➕ Ajouter un œuf
+</button>
 
       <div class="actions">
         <button class="btn info-btn" onclick="sauverDetailPonte('${coupleId}','${saisonId}','${ponteId}')">
@@ -3886,6 +3921,29 @@ async function supprimerPonte(coupleId, saisonId, ponteId) {
 
   await saveData();
   ouvrirFichePonte(coupleId, saisonId);
+}
+
+async function ajouterOeufPonte(coupleId, saisonId, ponteId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  if (!ponte) return;
+
+  if (!ponte.oeufs) ponte.oeufs = [];
+
+  ponte.oeufs.push({
+    id: makeId(),
+    numero: ponte.oeufs.length + 1,
+    datePonte: "",
+    statut: "Inconnu",
+    emplacement: "Sous mère",
+    notes: ""
+  });
+
+  ponte.nbOeufs = ponte.oeufs.length;
+
+  await saveData();
+  ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
 
 function renderAll() {
@@ -5141,6 +5199,7 @@ window.nouvellePonte = nouvellePonte;
 window.renderReproduction = renderReproduction;
 window.sauverDetailPonte = sauverDetailPonte;
 window.supprimerPonte = supprimerPonte;
+window.ajouterOeufPonte = ajouterOeufPonte;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
