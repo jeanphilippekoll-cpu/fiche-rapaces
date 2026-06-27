@@ -4480,7 +4480,7 @@ window.openBirdDocuments = openBirdDocuments;
 window.openBirdVet = openBirdVet;
 window.openBirdFeed = openBirdFeed;
 window.openBirdWeights = openBirdWeights;
-
+window.openBirdSheetInline = openBirdSheetInline;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
