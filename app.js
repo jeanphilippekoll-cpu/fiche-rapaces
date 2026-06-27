@@ -3657,14 +3657,27 @@ function ouvrirFichePonte(coupleId, saisonId){
     let html=`
     <div class="card-section">
 
+    <div style="margin-bottom:15px;">
+    <button
+        class="btn secondary-btn"
+        onclick="renderReproduction()">
+        ⬅ Retour aux couples
+    </button>
+</div>
+
     <h2>🥚 ${safe(couple.espece)}</h2>
 
     <h3>Saison ${safe(saison.annee)}</h3>
+    <div style="margin:15px 0;">
+    <strong>♂</strong> ${safe(couple.maleNom)}
+    &nbsp;&nbsp;
+    <strong>♀</strong> ${safe(couple.femelleNom)}
+</div>
 
     <button class="btn info-btn"
         onclick="nouvellePonte('${couple.id}','${saison.id}')">
 
-        ➕ Nouvelle ponte
+       ➕ Ajouter une ponte
 
     </button>
 
