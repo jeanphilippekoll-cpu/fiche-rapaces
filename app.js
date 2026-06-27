@@ -601,32 +601,6 @@ function getBandageCarePlan(bird) {
   return "";
 }
 
-function getBandageCarePlan(bird) {
-  const notes = `${bird.notes || ""} ${bird.statut || ""}`.toLowerCase();
-
-  const hasCare =
-    notes.includes("bandage") ||
-    notes.includes("pansement") ||
-    notes.includes("convalescence") ||
-    notes.includes("bless") ||
-    notes.includes("soin");
-
-  if (!hasCare) return "";
-
-  const startDate = bird.dateEntree || todayStr();
-  const today = new Date(todayStr());
-  const start = new Date(startDate);
-  const days = Math.floor((today - start) / 86400000);
-
-  if (!Number.isFinite(days)) return "";
-
-  if (days % 4 === 0) {
-    return "Bandage / pansement à faire";
-  }
-
-  return "";
-}
-
 function renderDashboardIntelligent() {
   const dateEl = document.getElementById("dashboardDate");
   const toWeighEl = document.getElementById("dashboardToWeigh");
