@@ -240,8 +240,8 @@ function normalizeHistoriquePoids(list) {
 
 function normalizeDocuments(list) {
   return safeArray(list).map((docItem) => ({
-    name: docItem?.name || docItem?.nom || "Document",
-    url: getSafeUrl(docItem)
+    name: docItem?.name || docItem?.nom || docItem?.titre || "Document",
+    url: getSafeUrl(docItem) || docItem?.lien || ""
   }));
 }
 
@@ -482,14 +482,14 @@ function buildRapacesPayload() {
       nourritureHabituelle2: o.nourritureHabituelle2 || "",
       quantiteHabituelle2: toNumber(o.quantiteHabituelle2),
       photo: {
-        ...(ancien?.photo || {}),
-        url: o.photoUrl || ""
-      },
-      documents: normalizeDocuments(o.documents),
-      historiquePoids: safeArray(o.historiquePoids).map((h) => ({
-        date: h?.date || "",
-        poids: h?.poids ?? ""
-      })),
+  ...(ancien?.photo || {}),
+  url: o.photoUrl || getSafeUrl(ancien?.photo) || getSafeUrl(ancien?.photoUrl) || ""
+},
+photoUrl: o.photoUrl || getSafeUrl(ancien?.photo) || getSafeUrl(ancien?.photoUrl) || "",
+      documents: normalizeDocuments(o.documents).map((d) => ({
+  name: d.name || "Document",
+  url: d.url || ""
+})),
       reproduction: normalizeReproduction(o.reproduction)
     };
   });
