@@ -862,6 +862,23 @@ function getBirdFeedStats(birdName) {
 function refreshBirdPremiumTabs(bird) {
   if (!bird) return;
 
+    const latestWeightDate = () => {
+    const hist = safeArray(bird.historiquePoids)
+      .filter(p => p.date)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    return hist[0]?.date || "";
+  };
+
+  setTimeout(() => {
+    const current = document.getElementById("birdPremiumCurrentWeight");
+    const flight = document.getElementById("birdPremiumFlightWeight");
+    const last = document.getElementById("birdPremiumLastWeightDate");
+
+    if (current) current.textContent = `${getLatestBirdWeight(bird) || "-"} g`;
+    if (flight) flight.textContent = bird.poidsVol ? `${bird.poidsVol} g` : "-";
+    if (last) last.textContent = latestWeightDate() ? formatDateFR(latestWeightDate()) : "-";
+  }, 0);
+
   const setText = (id, value) => {
     const el = document.getElementById(id);
     if (el) el.textContent = value || "-";
@@ -3535,7 +3552,7 @@ function modifierOiseau(id) {
   if (cancelBtn) cancelBtn.classList.remove("hidden");
 
   refreshBirdPremiumTabs(bird);
-  
+
   showSection("oiseaux");
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
