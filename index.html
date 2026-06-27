@@ -2157,29 +2157,5 @@ bird-card .bird-badges {
   </div>
 
 <script type="module" src="./app.js"></script>
-
-<script>
-  function forceDashboardAccueil() {
-    const setText = (id, html) => {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = html;
-    };
-
-    const dateEl = document.getElementById("dashboardDate");
-    if (dateEl) dateEl.textContent = "dashboard actif";
-
-    setText("dashboardToWeigh", "<p class='muted-line'>⚖️ Pesées à vérifier aujourd’hui.</p>");
-    setText("dashboardToFly", "<p class='muted-line'>🦅 Poids de vol à vérifier.</p>");
-    setText("dashboardComplements", "<p class='muted-line'>💊 Aucun complément prévu aujourd’hui.</p>");
-    setText("dashboardSurveillance", "<p class='muted-line'>❤️ Aucun soin actif renseigné.</p>");
-    setText("dashboardTasks", "<p class='muted-line'>✅ Contrôle eau, fientes, comportement et stock.</p>");
-    setText("dashboardAlerts", "<p class='muted-line'>⚠️ Aucune alerte active.</p>");
-  }
-
-  setTimeout(forceDashboardAccueil, 500);
-  setTimeout(forceDashboardAccueil, 1500);
-  setTimeout(forceDashboardAccueil, 3000);
-</script>
-
 </body>
 </html>
