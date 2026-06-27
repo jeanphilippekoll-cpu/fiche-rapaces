@@ -563,11 +563,6 @@ function getComplementDoseMl(bird) {
 function getDashboardComplementPlan(dayIndex, bird) {
   const notes = `${bird.notes || ""} ${bird.age || ""}`.toLowerCase();
 
-  if (notes.includes("convalescence") || notes.includes("bless")) {
-    if ([1, 3, 5].includes(dayIndex)) return "Aminovital";
-    return "";
-  }
-
   if (notes.includes("jeune")) {
     if ([2, 4].includes(dayIndex)) return "Feather Energy";
     return "";
@@ -575,7 +570,33 @@ function getDashboardComplementPlan(dayIndex, bird) {
 
   if (dayIndex === 1) return "Aminovital";
   if (dayIndex === 3) return "Feather Energy";
-  if (dayIndex === 5) return "Aminovital";
+  if (dayIndex === 5) return "Aminovital + Condi Plus";
+
+  return "";
+}
+
+function getBandageCarePlan(bird) {
+  const notes = `${bird.notes || ""} ${bird.statut || ""}`.toLowerCase();
+
+  const hasCare =
+    notes.includes("bandage") ||
+    notes.includes("pansement") ||
+    notes.includes("convalescence") ||
+    notes.includes("bless") ||
+    notes.includes("soin");
+
+  if (!hasCare) return "";
+
+  const startDate = bird.dateEntree || todayStr();
+  const today = new Date(todayStr());
+  const start = new Date(startDate);
+  const days = Math.floor((today - start) / 86400000);
+
+  if (!Number.isFinite(days)) return "";
+
+  if (days % 4 === 0) {
+    return "Bandage / pansement à faire";
+  }
 
   return "";
 }
@@ -647,10 +668,12 @@ function renderDashboardIntelligent() {
     })
     .filter(Boolean);
 
-  const soins = birds.filter(b => {
-    const txt = `${b.notes || ""} ${b.statut || ""}`.toLowerCase();
-    return txt.includes("soin") || txt.includes("bless") || txt.includes("convalescence") || txt.includes("traitement");
-  });
+  const soins = birds
+  .map(b => {
+    const care = getBandageCarePlan(b);
+    return care ? { bird: b, care } : null;
+  })
+  .filter(Boolean);
 
   const alerts = [];
 
@@ -737,19 +760,19 @@ function renderDashboardIntelligent() {
       : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
   }
 
-  if (surveillanceEl) {
-    surveillanceEl.innerHTML = soins.length
-      ? soins.map(b =>
-          dashboardRow(
-            b.nom,
-            b.notes || "Surveillance indiquée",
-            "Soins",
-            "danger",
-            b.nom
-          )
-        ).join("")
-      : `<p class="muted-line">Aucun oiseau en soin renseigné.</p>`;
-  }
+if (surveillanceEl) {
+  surveillanceEl.innerHTML = soins.length
+    ? soins.map(x =>
+        dashboardRow(
+          x.bird.nom,
+          x.care,
+          "Bandage",
+          "danger",
+          x.bird.nom
+        )
+      ).join("")
+    : `<p class="muted-line">Aucun bandage / soin prévu aujourd’hui.</p>`;
+}
 
   if (tasksEl) {
     tasksEl.innerHTML = `
@@ -761,7 +784,7 @@ function renderDashboardIntelligent() {
 
   if (alertsEl) {
     alertsEl.innerHTML = alerts.length
-      ? alerts.slice(0, 8).join("")
+      ? alerts.join("")
       : `<p class="muted-line">Aucune alerte active.</p>`;
   }
 }
@@ -3563,12 +3586,12 @@ function modifierOiseau(id) {
 
 function openBirdFromDashboard(nom) {
   const bird = getActiveBirds().find(
-    o => o.nom.toLowerCase() === nom.toLowerCase()
+    o => (o.nom || "").toLowerCase() === (nom || "").toLowerCase()
   );
 
   if (!bird) return;
 
-  modifierOiseau(bird.id);
+  openBirdSheetInline(bird.id);
 }
 
 window.openBirdFromDashboard = openBirdFromDashboard;
