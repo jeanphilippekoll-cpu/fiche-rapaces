@@ -3501,7 +3501,11 @@ ${safe(o.nom)} — ${safe(o.espece)}
 <button
 class="small-btn"
 onclick="ouvrirSaisonReproduction('${c.id}');event.stopPropagation();">
-📅 Saison
+<button
+class="small-btn"
+onclick="ouvrirPonte('${c.id}');event.stopPropagation();">
+🥚 Pontes
+</button>
 </button>
 </td>
                     </tr>
@@ -3612,6 +3616,75 @@ saveData();
 renderReproduction();
 
 alert("Saison "+saison+" enregistrée.");
+}
+
+function ouvrirPonte(id){
+
+const couple=appData.reproduction.find(c=>c.id===id);
+
+if(!couple) return;
+
+if(!couple.saisons)
+    couple.saisons=[];
+
+if(couple.saisons.length===0){
+
+    couple.saisons.push({
+
+        id:makeId(),
+
+        annee:new Date().getFullYear(),
+
+        pontes:[]
+    });
+
+}
+
+const saison=couple.saisons[0];
+
+const numero=saison.pontes.length+1;
+
+if(!confirm("Créer la ponte "+numero+" ?"))
+    return;
+
+saison.pontes.push({
+
+    id:makeId(),
+
+    numero,
+
+    premierOeuf:"",
+
+    dernierOeuf:"",
+
+    debutCouvaison:"",
+
+    duree:30,
+
+    mirageJours:10,
+
+    dateMirage:"",
+
+    dateEclosion:"",
+
+    oeufs:0,
+
+    fecondes:0,
+
+    clairs:0,
+
+    sousMere:0,
+
+    couveuse:0,
+
+    jeunes:[]
+});
+
+saveData();
+
+renderReproduction();
+
+alert("Ponte "+numero+" créée.");
 }
 
 function renderAll() {
@@ -4861,6 +4934,7 @@ window.openBirdWeights = openBirdWeights;
 window.openBirdSheetInline = openBirdSheetInline;
 window.ajouterCoupleReproduction = ajouterCoupleReproduction;
 window.ouvrirSaisonReproduction=ouvrirSaisonReproduction;
+window.ouvrirPonte=ouvrirPonte;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
