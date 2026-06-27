@@ -529,8 +529,8 @@ function buildRapacesPayload() {
         lien: d.lien || ""
       })),
       prixNourriture: appData.prixNourriture || {},
-      coutOiseauxMasques: safeArray(appData.coutOiseauxMasques)
-      reproduction: normalizeReproductionModule(appData.reproduction),
+      coutOiseauxMasques: safeArray(appData.coutOiseauxMasques),
+      reproduction: normalizeReproductionModule(appData.reproduction)
   };
 }
 
