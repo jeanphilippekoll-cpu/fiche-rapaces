@@ -276,6 +276,7 @@ function getAlertesPonte(ponte) {
     const oiseaux = getActiveOiseaux();
     const couples = data().reproduction;
     const stats = computeStats();
+    const elevageStats = calculerStatsElevage();
 
     root.innerHTML = `
     <div id="dashboardReproduction"></div>
@@ -312,6 +313,19 @@ function getAlertesPonte(ponte) {
           <strong>${stats.jeunes}</strong>
         </div>
       </div>
+
+      <div class="card">
+  <h2>Statistiques d’élevage</h2>
+
+  <div class="resume-grid">
+    <div><strong>${elevageStats.tauxFertilite}%</strong><span>Fertilité</span></div>
+    <div><strong>${elevageStats.tauxEclosion}%</strong><span>Éclosion</span></div>
+    <div><strong>${elevageStats.tauxReussite}%</strong><span>Réussite globale</span></div>
+    <div><strong>${elevageStats.eclos}</strong><span>Éclos</span></div>
+    <div><strong>${elevageStats.morts}</strong><span>Morts dans l’œuf</span></div>
+    <div><strong>${elevageStats.perdus}</strong><span>Perdus</span></div>
+  </div>
+</div>
 
       <div class="card">
         <h2>Créer un couple reproducteur</h2>
@@ -1877,6 +1891,50 @@ async function ajouterPeseeJeune(coupleId, saisonId, ponteId, jeuneId) {
 
     ouvrirJeuneReproduction(coupleId, saisonId, ponteId, jeuneId);
 
+}
+
+function calculerStatsElevage() {
+  const stats = {
+    couples: 0,
+    saisons: 0,
+    pontes: 0,
+    oeufs: 0,
+    fecondes: 0,
+    clairs: 0,
+    eclos: 0,
+    morts: 0,
+    perdus: 0,
+    jeunes: 0
+  };
+
+  safeArray(data().reproduction).forEach(couple => {
+    stats.couples++;
+
+    safeArray(couple.saisons).forEach(saison => {
+      stats.saisons++;
+
+      safeArray(saison.pontes).forEach(ponte => {
+        recalculerPonte(ponte);
+        stats.pontes++;
+
+        const oeufs = safeArray(ponte.oeufs);
+
+        stats.oeufs += oeufs.length;
+        stats.fecondes += oeufs.filter(o => o.statut === "Fécondé" || o.statut === "Éclos").length;
+        stats.clairs += oeufs.filter(o => o.statut === "Clair").length;
+        stats.eclos += oeufs.filter(o => o.statut === "Éclos").length;
+        stats.morts += oeufs.filter(o => o.statut === "Mort dans l’œuf").length;
+        stats.perdus += oeufs.filter(o => o.statut === "Perdu").length;
+        stats.jeunes += safeArray(ponte.jeunes).length;
+      });
+    });
+  });
+
+  stats.tauxFertilite = stats.oeufs ? Math.round((stats.fecondes / stats.oeufs) * 100) : 0;
+  stats.tauxEclosion = stats.fecondes ? Math.round((stats.eclos / stats.fecondes) * 100) : 0;
+  stats.tauxReussite = stats.oeufs ? Math.round((stats.jeunes / stats.oeufs) * 100) : 0;
+
+  return stats;
 }
 
   window.renderReproduction = renderReproduction;
