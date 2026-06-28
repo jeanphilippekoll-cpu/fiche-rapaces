@@ -527,6 +527,7 @@ font-size:18px;
 }
 
 .repro-mini-stats{
+
   display:grid;
   grid-template-columns:repeat(2,1fr);
   gap:8px;
@@ -543,4 +544,74 @@ font-size:18px;
 
 .repro-dates p{
   margin:6px 0;
+}
+
+.repro-resume{
+
+margin-bottom:25px;
+
+}
+
+.resume-box{
+
+background:#fffdf8;
+
+border:1px solid #e6dac7;
+
+border-radius:18px;
+
+padding:20px;
+
+}
+
+.resume-box h3{
+
+margin-top:0;
+
+margin-bottom:20px;
+
+}
+
+.resume-grid{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+
+gap:14px;
+
+}
+
+.resume-grid div{
+
+background:white;
+
+border-radius:14px;
+
+padding:15px;
+
+text-align:center;
+
+border:1px solid #eadfce;
+
+}
+
+.resume-grid strong{
+
+display:block;
+
+font-size:28px;
+
+margin-bottom:8px;
+
+color:#8c6239;
+
+}
+
+.resume-grid span{
+
+font-size:14px;
+
+color:#666;
+
 }

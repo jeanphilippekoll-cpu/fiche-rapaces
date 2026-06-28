@@ -692,7 +692,53 @@ function getAlertesPonte(ponte) {
 
         ${
           saison.pontes.length
-            ? `
+            ? 
+            `
+            ${(() => {
+
+    const pontes = safeArray(saison.pontes);
+
+    const oeufs = pontes.reduce((t,p)=>t+toNumber(p.nbOeufs),0);
+
+    const fecondes = pontes.reduce((t,p)=>t+toNumber(p.nbFecondes),0);
+
+    const clairs = pontes.reduce((t,p)=>t+toNumber(p.nbClairs),0);
+
+    const jeunes = pontes.reduce((t,p)=>t+safeArray(p.jeunes).length,0);
+
+    const taux = oeufs ? Math.round((fecondes/oeufs)*100) : 0;
+
+    return `
+
+<div class="repro-resume">
+
+<div class="resume-box">
+
+<h3>Résumé de la saison</h3>
+
+<div class="resume-grid">
+
+<div><strong>${pontes.length}</strong><span>Pontes</span></div>
+
+<div><strong>${oeufs}</strong><span>Œufs</span></div>
+
+<div><strong>${fecondes}</strong><span>Fécondés</span></div>
+
+<div><strong>${clairs}</strong><span>Clairs</span></div>
+
+<div><strong>${jeunes}</strong><span>Jeunes</span></div>
+
+<div><strong>${taux}%</strong><span>Fertilité</span></div>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+})()}
               <div class="repro-ponte-grid">
   ${saison.pontes.map(p => {
     recalculerPonte(p);
