@@ -784,10 +784,10 @@
         </div>
 
                 <div class="info-box">
-          <p><strong>Mirage prévu :</strong> ${safe(getMirageDate(ponte) || "-")}</p>
-          <p><strong>Éclosion prévue :</strong> ${safe(getEclosionDate(ponte) || "-")}</p>
-          <p><strong>Baguage conseillé :</strong> ${safe(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourBaguage || 14) || "-")}</p>
-          <p><strong>Sortie éleveuse estimée :</strong> ${safe(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourSortieEleveuse || 40) || "-")}</p>
+          <p><strong>Mirage prévu :</strong> ${formatDateBE(getMirageDate(ponte))}</p>
+<p><strong>Éclosion prévue :</strong> ${formatDateBE(getEclosionDate(ponte))}</p>
+<p><strong>Baguage conseillé :</strong> ${formatDateBE(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourBaguage || 14))}</p>
+<p><strong>Sortie éleveuse estimée :</strong> ${formatDateBE(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourSortieEleveuse || 40))}</p>
         </div>
 
         <label>Observations</label>
@@ -859,20 +859,54 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${safeArray(ponte.oeufs).map(o => `
-                      <tr>
-                        <td>${safe(o.numero || "-")}</td>
-                        <td>${formatDateBE(o.date)}</td>
-                        <td>${safe(o.statut || "-")}</td>
-                        <td>${safe(o.lieu || "-")}</td>
-                        <td>${safe(o.notes || "")}</td>
-                        <td>
-                          <button class="btn btn-danger small-btn" onclick="supprimerOeufReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(o.id)}')">
-                            Supprimer
-                          </button>
-                        </td>
-                      </tr>
-                    `).join("")}
+                   ${safeArray(ponte.oeufs).map(o => {
+  let couleur = "#FFC107";
+
+  if (o.statut === "Fécondé") couleur = "#4CAF50";
+  if (o.statut === "Clair") couleur = "#9E9E9E";
+  if (o.statut === "Éclos") couleur = "#2196F3";
+  if (o.statut === "Mort dans l’œuf") couleur = "#F44336";
+  if (o.statut === "Perdu") couleur = "#000";
+
+  return `
+    <tr>
+      <td><strong>${safe(o.numero || "-")}</strong></td>
+      <td>${formatDateBE(o.date)}</td>
+
+      <td>
+        <select onchange="modifierStatutOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}',this.value)"
+                style="background:${couleur};color:white;font-weight:bold;">
+          <option ${o.statut === "À mirer" ? "selected" : ""}>À mirer</option>
+          <option ${o.statut === "Fécondé" ? "selected" : ""}>Fécondé</option>
+          <option ${o.statut === "Clair" ? "selected" : ""}>Clair</option>
+          <option ${o.statut === "Éclos" ? "selected" : ""}>Éclos</option>
+          <option ${o.statut === "Mort dans l’œuf" ? "selected" : ""}>Mort dans l’œuf</option>
+          <option ${o.statut === "Perdu" ? "selected" : ""}>Perdu</option>
+        </select>
+      </td>
+
+      <td>
+        <select onchange="modifierLieuOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}',this.value)">
+          <option ${o.lieu === "Sous mère" ? "selected" : ""}>Sous mère</option>
+          <option ${o.lieu === "Couveuse" ? "selected" : ""}>Couveuse</option>
+          <option ${o.lieu === "Retiré" ? "selected" : ""}>Retiré</option>
+        </select>
+      </td>
+
+      <td>
+        <input value="${safeAttr(o.notes || "")}"
+               onchange="modifierNoteOeuf('${coupleId}','${saisonId}','${ponteId}','${o.id}',this.value)">
+      </td>
+
+      <td>
+        <button class="btn btn-danger small-btn"
+                onclick="supprimerOeufReproduction('${coupleId}','${saisonId}','${ponteId}','${o.id}')">
+          Supprimer
+        </button>
+      </td>
+    </tr>
+  `;
+}).join("")} 
                   </tbody>
                 </table>
               </div>
@@ -1402,6 +1436,46 @@ ${d.alertes.map(a=>`
 
 }
 
+async function modifierStatutOeuf(coupleId, saisonId, ponteId, oeufId, statut) {
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  const oeuf = safeArray(ponte.oeufs).find(o => o.id === oeufId);
+  if (!oeuf) return;
+
+  oeuf.statut = statut;
+  recalculerPonte(ponte);
+
+  await persistAndRender("Œuf modifié.");
+  ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+}
+
+async function modifierLieuOeuf(coupleId, saisonId, ponteId, oeufId, lieu) {
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  const oeuf = safeArray(ponte.oeufs).find(o => o.id === oeufId);
+  if (!oeuf) return;
+
+  oeuf.lieu = lieu;
+  recalculerPonte(ponte);
+
+  await persistAndRender("Œuf modifié.");
+  ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+}
+
+async function modifierNoteOeuf(coupleId, saisonId, ponteId, oeufId, note) {
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  const oeuf = safeArray(ponte.oeufs).find(o => o.id === oeufId);
+  if (!oeuf) return;
+
+  oeuf.notes = note;
+
+  await persistAndRender("Note œuf modifiée.");
+}
+
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
   window.ouvrirCoupleReproduction = ouvrirCoupleReproduction;
@@ -1426,4 +1500,8 @@ ${d.alertes.map(a=>`
   window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
   window.ajouterOeufReproduction = ajouterOeufReproduction;
   window.supprimerOeufReproduction = supprimerOeufReproduction;
+
+  window.modifierStatutOeuf = modifierStatutOeuf;
+window.modifierLieuOeuf = modifierLieuOeuf;
+window.modifierNoteOeuf = modifierNoteOeuf;
 })();
