@@ -5454,11 +5454,76 @@ function renderVeterinaire() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
       <div class="item">
-        <p><strong>${safe(item.oiseau || "")}</strong> - ${safe(item.date || "")}</p>
-        <p>${safe(item.motif || "")}</p>
+        <p>
+  <strong>${safe(item.oiseau || "")}</strong>
+</p>
+
+<p>
+  📅 ${safe(item.date || "")}
+</p>
+
+<p>
+  🩺 ${safe(item.motif || "")}
+</p>
+
+${item.soinActif ? `
+<p style="color:#c62828;font-weight:bold;">
+🩹 Soin actif
+</p>
+
+<p>
+Type : ${safe(item.soinType || "-")}
+</p>
+
+<p>
+Prochain soin : ${safe(item.soinProchaineDate || "-")}
+</p>
+
+<p>
+Fréquence : tous les ${item.soinFrequence || "-"} jour(s)
+</p>
+` : ""}
+${item.soinActif ? `
+<div class="small-actions">
+  <button class="btn"
+    onclick="marquerSoinVeterinaireEffectue('${item.id}')">
+    ✔ Soin effectué
+  </button>
+</div>
+` : ""}
         <button onclick="supprimerSuiviVeterinaire('${item.id}')">Supprimer</button>
       </div>
     `).join("");
+}
+
+async function marquerSoinVeterinaireEffectue(id) {
+  const soin = appData.veterinaire.find(v => v.id === id);
+  if (!soin) return;
+
+  if (!soin.soinHistorique) soin.soinHistorique = [];
+
+  const aujourdHui = todayStr();
+
+  soin.soinDerniereDate = aujourdHui;
+
+  soin.soinHistorique.unshift({
+    id: makeId(),
+    date: aujourdHui,
+    action: "Soin effectué"
+  });
+
+  const frequence = toNumber(soin.soinFrequence);
+
+  if (frequence > 0) {
+    const prochaine = new Date(aujourdHui + "T00:00:00");
+    prochaine.setDate(prochaine.getDate() + frequence);
+    soin.soinProchaineDate = prochaine.toISOString().slice(0, 10);
+  }
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) statusEl.textContent = "Soin marqué comme effectué";
 }
 
 function ouvrirFicheOiseau(id) {
@@ -5776,6 +5841,7 @@ window.formatDateFR = formatDateFR;
 window.getActiveBirds = getActiveBirds;
 window.getSortedBirds = getSortedBirds;
 window.statusEl = statusEl;
+window.marquerSoinVeterinaireEffectue = marquerSoinVeterinaireEffectue;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
