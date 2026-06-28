@@ -4463,6 +4463,7 @@ async function loadData() {
     rawUserData = userSnap.exists() ? userSnap.data() : {};
 
     appData = normalizeData(rawRapacesData, rawUserData);
+    window.appData = appData;
 
     const feedDateEl = document.getElementById("feedDate");
     const vetDateEl = document.getElementById("vetDate");
