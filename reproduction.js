@@ -69,6 +69,33 @@
 
 }
 
+function joursDepuis(dateStr) {
+
+    if (!dateStr) return 0;
+
+    const d = new Date(dateStr + "T00:00:00");
+    const now = new Date();
+
+    d.setHours(0,0,0,0);
+    now.setHours(0,0,0,0);
+
+    return Math.floor((now - d) / 86400000);
+
+}
+
+function progressionIncubation(ponte){
+
+    const base =
+        ponte.debutCouvaison ||
+        ponte.dernierOeuf ||
+        ponte.premierOeuf;
+
+    if(!base) return 0;
+
+    return joursDepuis(base);
+
+}
+
   function toNumber(value) {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -808,6 +835,21 @@
         </div>
 
                 <div class="info-box">
+                <div class="repro-progress">
+
+<div class="repro-progress-title">
+
+Incubation : Jour ${progressionIncubation(ponte)}
+
+</div>
+
+<progress
+value="${Math.min(progressionIncubation(ponte),35)}"
+max="35"
+style="width:100%;height:18px;">
+</progress>
+
+</div>
           <p><strong>Mirage prévu :</strong> ${formatDateBE(getMirageDate(ponte))}</p>
 <p><strong>Éclosion prévue :</strong> ${formatDateBE(getEclosionDate(ponte))}</p>
 <p><strong>Baguage conseillé :</strong> ${formatDateBE(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourBaguage || 14))}</p>

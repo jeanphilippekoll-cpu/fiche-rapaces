@@ -432,3 +432,19 @@ font-weight:700;
   color:#ffffff !important;
   border-left:6px solid #4f6739 !important;
 }
+
+.repro-progress{
+
+margin:20px 0;
+
+}
+
+.repro-progress-title{
+
+font-weight:bold;
+
+margin-bottom:8px;
+
+font-size:18px;
+
+}
