@@ -580,15 +580,17 @@ function showSection(section) {
     btn.classList.remove("active");
   });
 
-  document.getElementById(`section-${section}`)?.classList.remove("hidden");
-  document.getElementById(`btn-${section}`)?.classList.add("active");
+ const realSection = section === "pesees" ? "poids" : section;
+
+document.getElementById(`section-${realSection}`)?.classList.remove("hidden");
+document.getElementById(`btn-${realSection}`)?.classList.add("active");
 
   if (section === "vacances") renderVacances();
 
   if (section === "dashboard" || section === "accueil") {
     renderDashboardIntelligent();
   }
-  if (section === "pesees") {
+  if (section === "pesees" || section === "poids") {
   refreshBirdSelects();
   const pesDate = document.getElementById("pesDate");
   if (pesDate && !pesDate.value) pesDate.value = todayStr();
