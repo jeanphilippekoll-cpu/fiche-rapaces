@@ -1083,22 +1083,20 @@ todayTodo.unshift(
 );
 
 if (prioritesEl) {
-
   const priorites = [];
 
-  // Soins
-  priorites.push(...soinAlerts.slice(0,2));
+  const nourrissageRow = todayTodo.find(x => x.includes("Nourrissage"));
+  if (nourrissageRow) priorites.push(nourrissageRow);
 
-  // Reproduction urgente
-  priorites.push(...reproAlerts.slice(0,2));
+  priorites.push(...soinAlerts.slice(0, 2));
+  priorites.push(...reproAlerts.slice(0, 2));
 
-  // Une seule pesée
-  const premierePesee = todayTodo.find(x => x.includes("À peser"));
-  if (premierePesee) priorites.push(premierePesee);
+  const peseesRow = todayTodo.find(x => x.includes("Pesées"));
+  if (peseesRow) priorites.push(peseesRow);
 
   prioritesEl.innerHTML = priorites.length
-      ? priorites.slice(0,5).join("")
-      : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
+    ? priorites.slice(0, 5).join("")
+    : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
 }
 
  if (tasksEl) {
