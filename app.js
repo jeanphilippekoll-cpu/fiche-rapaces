@@ -742,8 +742,7 @@ function renderDashboardIntelligent() {
   const complementsEl = document.getElementById("dashboardComplements");
   const surveillanceEl = document.getElementById("dashboardSurveillance");
   const tasksEl = document.getElementById("dashboardTasks");
-  const prioritesEl = document.getElementById("dashboardPriorites");
-
+  
   const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
   const reproAlertsEl = document.getElementById("dashboardReproAlerts");
 const reproInfosEl = document.getElementById("dashboardReproInfos");
@@ -1082,27 +1081,52 @@ todayTodo.unshift(
   )
 );
 
-if (prioritesEl) {
-  const priorites = [];
 
-  const nourrissageRow = todayTodo.find(x => x.includes("Nourrissage"));
-  if (nourrissageRow) priorites.push(nourrissageRow);
+if (tasksEl) {
+  tasksEl.innerHTML = `
+    ${dashboardRow(
+      "Nourrissage",
+      `${fedToday.size} nourri(s) aujourd’hui`,
+      "Ouvrir",
+      "info",
+      "",
+      "nourrissage"
+    )}
 
-  priorites.push(...soinAlerts.slice(0, 2));
-  priorites.push(...reproAlerts.slice(0, 2));
+    ${toWeigh.length ? dashboardRow(
+      "Pesées",
+      `${toWeigh.length} oiseau(x) à peser`,
+      "Ouvrir",
+      "warn",
+      "",
+      "pesees"
+    ) : ""}
 
-  const peseesRow = todayTodo.find(x => x.includes("Pesées"));
-  if (peseesRow) priorites.push(peseesRow);
+    ${soinAlerts.length ? dashboardRow(
+      "Soins",
+      `${soinAlerts.length} soin(s) à faire`,
+      "Ouvrir",
+      "danger",
+      "",
+      "veterinaire"
+    ) : ""}
 
-  prioritesEl.innerHTML = priorites.length
-    ? priorites.slice(0, 5).join("")
-    : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
-}
+    ${reproAlerts.length ? dashboardRow(
+      "Reproduction",
+      `${reproAlerts.length} alerte(s) reproduction`,
+      "Ouvrir",
+      "warn",
+      "",
+      "reproduction"
+    ) : ""}
 
- if (tasksEl) {
-  tasksEl.innerHTML = todayTodo.length
-    ? todayTodo.join("")
-    : `<p class="muted-line">Rien de spécial à faire aujourd’hui.</p>`;
+    ${dashboardRow(
+      "Contrôle général",
+      "Eau, fientes, appétit, comportement",
+      "Chaque jour",
+      "ok"
+    )}
+  `;
 }
 
    if (alertsEl) {
