@@ -999,7 +999,6 @@ if (surveillanceEl) {
 alertsEl.innerHTML = allAlerts.length
   ? allAlerts.join("")
   : `<p class="muted-line">Aucune alerte active.</p>`;
-  }
 }
 if (reproAlertsEl) {
   reproAlertsEl.innerHTML = reproAlerts.length
