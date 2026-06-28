@@ -899,6 +899,14 @@ function getAlertesPonte(ponte) {
   }
 </div>
 
+<div class="repro-alerts">
+  ${
+    getAlertesPonte(ponte).length
+      ? getAlertesPonte(ponte).map(a => `<div class="repro-alert">${safe(a)}</div>`).join("")
+      : `<div class="repro-alert ok">Aucune alerte pour cette ponte</div>`
+  }
+</div>
+
 <div class="repro-progress-title">
 
 Incubation : Jour ${progressionIncubation(ponte)}

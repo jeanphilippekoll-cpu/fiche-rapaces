@@ -468,3 +468,22 @@ font-size:18px;
   background:#edf7ed;
   border-color:#b9ddb9;
 }
+
+.repro-alerts{
+  display:grid;
+  gap:8px;
+  margin:14px 0 18px;
+}
+
+.repro-alert{
+  padding:10px 12px;
+  border-radius:12px;
+  background:#fff3e3;
+  border:1px solid #f0c791;
+  font-weight:bold;
+}
+
+.repro-alert.ok{
+  background:#edf7ed;
+  border-color:#b9ddb9;
+}
