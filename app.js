@@ -5665,10 +5665,12 @@ async function marquerSoinVeterinaireEffectue(id) {
   soin.soinDerniereDate = aujourdHui;
 
   soin.soinHistorique.unshift({
-    id: makeId(),
-    date: aujourdHui,
-    action: "Soin effectué"
-  });
+  id: makeId(),
+  date: aujourdHui,
+  action: "Soin effectué",
+  type: soin.soinType || "",
+  oiseau: soin.oiseau || ""
+});
 
   const frequence = toNumber(soin.soinFrequence);
 
@@ -5677,6 +5679,11 @@ async function marquerSoinVeterinaireEffectue(id) {
     prochaine.setDate(prochaine.getDate() + frequence);
     soin.soinProchaineDate = prochaine.toISOString().slice(0, 10);
   }
+  // Si le soin n'est pas récurrent, on le termine
+if (frequence <= 0) {
+  soin.soinActif = false;
+  soin.soinProchaineDate = "";
+}
 
   renderAll();
   triggerAutoSave();
