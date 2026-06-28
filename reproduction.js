@@ -57,6 +57,18 @@
     return new Date().toISOString().slice(0, 10);
   }
 
+  function formatDateBE(dateStr){
+
+    if(!dateStr) return "-";
+
+    const d=new Date(dateStr+"T00:00:00");
+
+    if(isNaN(d)) return dateStr;
+
+    return d.toLocaleDateString("fr-BE");
+
+}
+
   function toNumber(value) {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -593,10 +605,10 @@
                     ${saison.pontes.map(p => `
                       <tr>
                         <td>${safe(p.numero || "-")}</td>
-                        <td>${safe(p.premierOeuf || "-")}</td>
-                        <td>${safe(p.dernierOeuf || "-")}</td>
-                        <td>${safe(getMirageDate(p) || "-")}</td>
-                        <td>${safe(getEclosionDate(p) || "-")}</td>
+                        <td>${formatDateBE(p.premierOeuf)}</td>
+                        <td>${formatDateBE(p.dernierOeuf)}</td>
+                        <td>${formatDateBE(getMirageDate(p))}</td>
+                        <td>${formatDateBE(getEclosionDate(p))}</td>
                         <td>${toNumber(p.nbOeufs)}</td>
                         <td>${safeArray(p.jeunes).length}</td>
                         <td>
@@ -661,7 +673,6 @@
       joursMirage: params.mirage,
       jourBaguage: params.baguage,
       jourSortieEleveuse: params.sortieEleveuse,
-      joursMirage: 10,
       nbOeufs: 0,
       nbFecondes: 0,
       nbClairs: 0,
@@ -851,7 +862,7 @@
                     ${safeArray(ponte.oeufs).map(o => `
                       <tr>
                         <td>${safe(o.numero || "-")}</td>
-                        <td>${safe(o.date || "-")}</td>
+                        <td>${formatDateBE(o.date)}</td>
                         <td>${safe(o.statut || "-")}</td>
                         <td>${safe(o.lieu || "-")}</td>
                         <td>${safe(o.notes || "")}</td>
@@ -945,7 +956,7 @@
                     ${ponte.jeunes.map(j => `
                       <tr>
                         <td>${safe(j.numero || "-")}</td>
-                        <td>${safe(j.dateNaissance || "-")}</td>
+                        <td>${formatDateBE(j.dateNaissance)}</td>
                         <td>${safe(j.bague || "")}</td>
                         <td>${safe(j.sexe || "Inconnu")}</td>
                         <td>${safe(j.couleur || "")}</td>
