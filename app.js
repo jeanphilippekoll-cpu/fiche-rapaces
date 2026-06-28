@@ -1347,7 +1347,6 @@ function refreshBirdPremiumTabs(bird) {
         `).join("")
       : `<p class="muted-line">Aucun historique nourrissage.</p>`;
   }
-}
 const healthEl = document.getElementById("birdPremiumHealth");
 const vets = getVetForBird(bird.nom);
 
@@ -1368,7 +1367,7 @@ if (healthEl) {
       `).join("")
     : `<p class="muted-line">Aucun suivi vétérinaire pour cet oiseau.</p>`;
 }
-
+}
 function partagerFicheOiseau(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
