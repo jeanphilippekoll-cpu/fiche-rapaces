@@ -604,6 +604,10 @@ if (section === "nourrissage") {
 
 if (section === "veterinaire") {
   refreshBirdSelects();
+
+  const vetDate = document.getElementById("vetDate");
+  if (vetDate && !vetDate.value) vetDate.value = todayStr();
+
   renderVeterinaire();
 }
 }
