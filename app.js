@@ -5622,7 +5622,7 @@ const listeFiltree = filtreOiseau
 </p>
 
 <p>
-  📅 ${safe(item.date || "")}
+  📅 ${formatDateFR(item.date)}
 </p>
 
 <p>
@@ -5639,7 +5639,11 @@ Type : ${safe(item.soinType || "-")}
 </p>
 
 <p>
-Prochain soin : ${safe(item.soinProchaineDate || "-")}
+Prochain soin : ${
+  item.soinProchaineDate
+    ? formatDateFR(item.soinProchaineDate)
+    : "-"
+}
 </p>
 
 <p>
