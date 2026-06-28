@@ -96,6 +96,8 @@ function progressionIncubation(ponte){
 
 }
 
+
+
   function toNumber(value) {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -186,6 +188,59 @@ function progressionIncubation(ponte){
       return !statut.includes("sorti") && !statut.includes("décédé") && !statut.includes("decede");
     });
   }
+
+  function joursRestants(dateStr) {
+
+    if (!dateStr) return null;
+
+    const d = new Date(dateStr + "T00:00:00");
+    const now = new Date();
+
+    d.setHours(0,0,0,0);
+    now.setHours(0,0,0,0);
+
+    return Math.ceil((d - now) / 86400000);
+
+}
+
+function getAlertesPonte(ponte) {
+
+    const alertes=[];
+
+    const mirage=getMirageDate(ponte);
+
+    const eclosion=getEclosionDate(ponte);
+
+    const baguage=getDatePlusDays(
+        ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf,
+        ponte.jourBaguage || 14
+    );
+
+    const rMirage=joursRestants(mirage);
+    const rEclosion=joursRestants(eclosion);
+    const rBaguage=joursRestants(baguage);
+
+    if(rMirage===0)
+        alertes.push("🔦 Mirage aujourd'hui");
+
+    else if(rMirage>0 && rMirage<=2)
+        alertes.push(`🔦 Mirage dans ${rMirage} jour(s)`);
+
+    if(rEclosion===0)
+        alertes.push("🐣 Éclosion aujourd'hui");
+
+    else if(rEclosion>0 && rEclosion<=3)
+        alertes.push(`🐣 Éclosion dans ${rEclosion} jour(s)`);
+
+    if(rBaguage===0)
+        alertes.push("🏷️ Baguage aujourd'hui");
+
+    else if(rBaguage>0 && rBaguage<=2)
+        alertes.push(`🏷️ Baguage dans ${rBaguage} jour(s)`);
+
+    return alertes;
+
+}
 
   function computeStats() {
     const couples = data().reproduction;
@@ -836,6 +891,13 @@ function progressionIncubation(ponte){
 
                 <div class="info-box">
                 <div class="repro-progress">
+                <div class="repro-alerts">
+  ${
+    getAlertesPonte(ponte).length
+      ? getAlertesPonte(ponte).map(a => `<div class="repro-alert">${safe(a)}</div>`).join("")
+      : `<div class="repro-alert ok">Aucune alerte pour cette ponte</div>`
+  }
+</div>
 
 <div class="repro-progress-title">
 
