@@ -4420,6 +4420,23 @@ async function sauverJeune(coupleId, saisonId, ponteId, jeuneId) {
   jeune.destination = document.getElementById("jeuneDestination")?.value || "";
   jeune.notes = document.getElementById("jeuneNotes")?.value || "";
 
+  if (jeune.oiseauId) {
+
+    const oiseau = appData.oiseaux.find(o => o.id === jeune.oiseauId);
+
+    if (oiseau) {
+
+        oiseau.nom = jeune.nom;
+        oiseau.sexe = jeune.sexe;
+        oiseau.bague = jeune.bague;
+        oiseau.dateNaissance = jeune.dateNaissance;
+        oiseau.couleur = jeune.couleur;
+        oiseau.poids = jeune.poidsActuel || jeune.poidsNaissance || "";
+        oiseau.notes = jeune.notes;
+
+    }
+}
+
   await saveData();
   ouvrirDetailPonte(coupleId, saisonId, ponteId);
 }
