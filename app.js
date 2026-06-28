@@ -740,6 +740,8 @@ function renderDashboardIntelligent() {
   const tasksEl = document.getElementById("dashboardTasks");
 
   const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
+  const reproAlertsEl = document.getElementById("dashboardReproAlerts");
+const reproInfosEl = document.getElementById("dashboardReproInfos");
 
  const reproAlerts = [];
 const reproTasks = [];
@@ -998,6 +1000,17 @@ alertsEl.innerHTML = allAlerts.length
   ? allAlerts.join("")
   : `<p class="muted-line">Aucune alerte active.</p>`;
   }
+}
+if (reproAlertsEl) {
+  reproAlertsEl.innerHTML = reproAlerts.length
+    ? reproAlerts.join("")
+    : `<p class="muted-line">Aucune alerte reproduction.</p>`;
+}
+
+if (reproInfosEl) {
+  reproInfosEl.innerHTML = reproTasks.length
+    ? reproTasks.join("")
+    : `<p class="muted-line">Aucune information reproduction à venir.</p>`;
 }
 
 function refreshBirdSelects() {
