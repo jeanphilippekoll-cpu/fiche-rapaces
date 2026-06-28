@@ -851,7 +851,7 @@
                   <thead>
                     <tr>
                       <th>Œuf</th>
-                      <th>Date</th>
+                      <th>Dernière action</th>
                       <th>Statut</th>
                       <th>Lieu</th>
                       <th>Notes</th>
@@ -1244,7 +1244,7 @@ Couleur/repère : ${jeune.couleur || "-"}`,
     ponte.oeufs.push({
       id: makeId(),
       numero: document.getElementById("oeufNumero")?.value || String(ponte.oeufs.length + 1),
-      date: document.getElementById("oeufDate")?.value || "",
+      date: "",
       statut: document.getElementById("oeufStatut")?.value || "À mirer",
       lieu: document.getElementById("oeufLieu")?.value || "Sous mère",
       notes: document.getElementById("oeufNotes")?.value || ""
@@ -1444,6 +1444,7 @@ async function modifierStatutOeuf(coupleId, saisonId, ponteId, oeufId, statut) {
   if (!oeuf) return;
 
   oeuf.statut = statut;
+  oeuf.date = todayStr();
   recalculerPonte(ponte);
 
   await persistAndRender("Œuf modifié.");
@@ -1458,6 +1459,7 @@ async function modifierLieuOeuf(coupleId, saisonId, ponteId, oeufId, lieu) {
   if (!oeuf) return;
 
   oeuf.lieu = lieu;
+  oeuf.date = todayStr();
   recalculerPonte(ponte);
 
   await persistAndRender("Œuf modifié.");
@@ -1472,6 +1474,7 @@ async function modifierNoteOeuf(coupleId, saisonId, ponteId, oeufId, note) {
   if (!oeuf) return;
 
   oeuf.notes = note;
+  oeuf.date = todayStr();
 
   await persistAndRender("Note œuf modifiée.");
 }
