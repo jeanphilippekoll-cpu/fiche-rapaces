@@ -1348,6 +1348,8 @@ function refreshBirdPremiumTabs(bird) {
       : `<p class="muted-line">Aucun historique nourrissage.</p>`;
   }
 }
+const healthEl = document.getElementById("birdPremiumHealth");
+const vets = getVetForBird(bird.nom);
 
 if (healthEl) {
   healthEl.innerHTML = vets.length
