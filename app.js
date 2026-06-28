@@ -605,10 +605,14 @@ function refreshStats() {
 }
 
 
-function dashboardRow(title, detail, badge, type = "info", birdName = "") {
-  const clickAttr = birdName
-    ? ` onclick="openBirdFromDashboard('${safeAttr(birdName)}')"`
-    : "";
+function dashboardRow(title, detail, badge, type = "info", birdName = "", targetSection = "") {
+  let clickAttr = "";
+
+  if (targetSection) {
+    clickAttr = ` onclick="showSection('${safeAttr(targetSection)}')"`;
+  } else if (birdName) {
+    clickAttr = ` onclick="openBirdFromDashboard('${safeAttr(birdName)}')"`;
+  }
 
   return `
     <div class="dashboard-row"${clickAttr}>
@@ -789,11 +793,17 @@ safeArray(appData.reproduction).forEach(couple => {
         const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
 
         if (reste === 0) {
-          reproAlerts.push(dashboardRow(item.titre, detail, "Aujourd’hui", item.type));
+        reproAlerts.push(
+  dashboardRow(item.titre, detail, "Aujourd’hui", item.type, "", "reproduction")
+);
         } else if (reste > 0 && reste <= 3) {
-          reproTasks.push(dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type));
+         reproTasks.push(
+  dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type, "", "reproduction")
+);
         } else if (reste < 0 && item.badge !== "Éleveuse") {
-          reproAlerts.push(dashboardRow(item.titre, detail, "Dépassé", "danger"));
+          reproAlerts.push(
+  dashboardRow(item.titre, detail, "Dépassé", "danger", "", "reproduction")
+);
         }
       });
 
@@ -930,7 +940,8 @@ safeArray(appData.reproduction).forEach(couple => {
             `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
             "À peser",
             "warn",
-            b.nom
+"",
+"pesees"
           )
         ).join("")
       : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
@@ -978,7 +989,8 @@ if (surveillanceEl) {
           x.care,
           "Bandage",
           "danger",
-          x.bird.nom
+"",
+"veterinaire"
         )
       ).join("")
     : `<p class="muted-line">Aucun bandage prévu aujourd’hui.</p>`;
@@ -987,8 +999,8 @@ if (surveillanceEl) {
   if (tasksEl) {
   tasksEl.innerHTML = `
     ${dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok")}
-    ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info")}
-    ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn")}
+    ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info", "", "nourrissage")}
+    ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn", "", "stock")}
     ${reproTasks.length ? `<h4 style="margin:14px 0 8px;">Reproduction à venir</h4>${reproTasks.join("")}` : ""}
   `;
 }
