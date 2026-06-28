@@ -135,6 +135,24 @@ function formatDateFR(dateStr) {
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
 }
 
+function formatReste(dateStr) {
+  if (!dateStr) return "-";
+
+  const aujourdHui = new Date();
+  aujourdHui.setHours(0,0,0,0);
+
+  const d = new Date(dateStr + "T00:00:00");
+
+  const diff = Math.round((d - aujourdHui) / 86400000);
+
+  if (diff === 0) return "Aujourd'hui";
+  if (diff === 1) return "Demain";
+  if (diff > 1) return `Dans ${diff} jours`;
+  if (diff === -1) return "Hier";
+
+  return `Il y a ${Math.abs(diff)} jours`;
+}
+
 function safeArray(v) {
   return Array.isArray(v) ? v : [];
 }
@@ -1059,8 +1077,8 @@ if (surveillanceEl) {
     : "";
 
   const soinsActifs = soinAlerts.length || soinTasks.length
-    ? [...soinAlerts, ...soinTasks].join("")
-    : "";
+  ? [...soinAlerts, ...soinTasks].join("")
+  : "";
 
   surveillanceEl.innerHTML =
     soinsClassiques || soinsActifs
@@ -1137,14 +1155,14 @@ if (tasksEl) {
       "pesees"
     ) : ""}
 
-    ${soinAlerts.length ? dashboardRow(
-      "Soins",
-      `${soinAlerts.length} soin(s) prévu(s)`,
-      "Ouvrir",
-      "danger",
-      "",
-      "veterinaire"
-    ) : ""}
+    ${(soinAlerts.length || soinTasks.length) ? dashboardRow(
+  "Soins",
+  `${soinAlerts.length} urgent(s) • ${soinTasks.length} à venir`,
+  "Ouvrir",
+  soinAlerts.length ? "danger" : "warn",
+  "",
+  "veterinaire"
+) : ""}
 
     ${reproAlerts.length ? dashboardRow(
       "Reproduction",
@@ -1329,6 +1347,27 @@ function refreshBirdPremiumTabs(bird) {
         `).join("")
       : `<p class="muted-line">Aucun historique nourrissage.</p>`;
   }
+}
+
+const healthEl = document.getElementById("birdPremiumHealth");
+const vets = getVetForBird(bird.nom);
+
+if (healthEl) {
+  healthEl.innerHTML = vets.length
+    ? vets.slice(0, 10).map(v => `
+        <div class="dashboard-row">
+          <div>
+            <strong>${safe(formatDateFR(v.date || ""))} - ${safe(v.motif || "Suivi vétérinaire")}</strong>
+            <small>
+              ${v.soinActif ? `Soin actif : ${safe(v.soinType || "-")}<br>` : ""}
+              ${v.soinProchaineDate ? `Prochain soin : ${safe(formatDateFR(v.soinProchaineDate))} (${safe(formatReste(v.soinProchaineDate))})<br>` : ""}
+              ${v.traitement ? `Traitement : ${safe(v.traitement)}<br>` : ""}
+              ${v.observations ? `Observations : ${safe(v.observations)}` : ""}
+            </small>
+          </div>
+        </div>
+      `).join("")
+    : `<p class="muted-line">Aucun suivi vétérinaire pour cet oiseau.</p>`;
 }
 
 function partagerFicheOiseau(id) {
@@ -5641,7 +5680,7 @@ Type : ${safe(item.soinType || "-")}
 <p>
 Prochain soin : ${
   item.soinProchaineDate
-    ? formatDateFR(item.soinProchaineDate)
+    ? `${formatDateFR(item.soinProchaineDate)} (${formatReste(item.soinProchaineDate)})`
     : "-"
 }
 </p>
