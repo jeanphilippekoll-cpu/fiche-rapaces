@@ -1478,6 +1478,15 @@ Créer fiche
   jeune.adnRecu = document.getElementById("editJeuneAdnRecu")?.checked || false;
   jeune.notes = document.getElementById("editJeuneNotes")?.value || "";
 
+  if (!jeune.historique) jeune.historique = [];
+
+jeune.historique.unshift({
+    id: makeId(),
+    date: new Date().toISOString(),
+    action: "Modification",
+    texte: `Fiche du jeune enregistrée.`
+});
+
   await persistAndRender("Jeune enregistré.");
   ouvrirPonteReproduction(coupleId, saisonId, ponteId);
 }
@@ -1551,6 +1560,14 @@ Créer fiche
     data().oiseaux.push(oiseau);
 
     jeune.oiseauId = oiseau.id;
+    if (!jeune.historique) jeune.historique = [];
+
+jeune.historique.unshift({
+    id: makeId(),
+    date: new Date().toISOString(),
+    action: "Création",
+    texte: "Fiche oiseau créée automatiquement."
+});
 
     await persistAndRender("Fiche oiseau créée.");
 
