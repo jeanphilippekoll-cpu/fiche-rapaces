@@ -752,6 +752,8 @@ const reproTasks = [];
 
 const soinAlerts = [];
 const soinTasks = [];
+const todayTodo = [];
+
 
 const today = todayStr();
 const now = new Date();
@@ -789,26 +791,26 @@ safeArray(appData.reproduction).forEach(couple => {
         { date: sortieEleveuse, titre: `Sortie éleveuse ${couple.espece}`, badge: "Éleveuse", type: "info" }
       ];
 
-      items.forEach(item => {
-        const reste = daysUntil(item.date);
-        if (reste === null) return;
+     items.forEach(item => {
+  const reste = daysUntil(item.date);
+  if (reste === null) return;
 
-        const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
+  const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
 
-        if (reste === 0) {
-        reproAlerts.push(
-  dashboardRow(item.titre, detail, "Aujourd’hui", item.type, "", "reproduction")
-);
-        } else if (reste > 0 && reste <= 3) {
-         reproTasks.push(
-  dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type, "", "reproduction")
-);
-        } else if (reste < 0 && item.badge !== "Éleveuse") {
-          reproAlerts.push(
-  dashboardRow(item.titre, detail, "Dépassé", "danger", "", "reproduction")
-);
-        }
-      });
+  if (reste === 0) {
+  const row = dashboardRow(item.titre, detail, "Aujourd’hui", item.type, "", "reproduction");
+  reproAlerts.push(row);
+  todayTodo.push(row);
+} else if (reste > 0 && reste <= 3) {
+  reproTasks.push(
+    dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type, "", "reproduction")
+  );
+} else if (reste < 0 && item.badge !== "Éleveuse") {
+  const row = dashboardRow(item.titre, detail, "Dépassé", "danger", "", "reproduction");
+  reproAlerts.push(row);
+  todayTodo.push(row);
+}
+});
 
       safeArray(ponte.jeunes).forEach(j => {
         if (!j.oiseauId) {
@@ -850,19 +852,19 @@ safeArray(appData.veterinaire).forEach(soin => {
 
   const detail = `${soin.oiseau || "-"} — ${soin.soinType || "Soin"} — ${formatDateFR(soin.soinProchaineDate)}`;
 
-  if (reste === 0) {
-    soinAlerts.push(
-      dashboardRow("Soin à faire", detail, "Aujourd’hui", "danger", "", "veterinaire")
-    );
-  } else if (reste > 0 && reste <= 3) {
-    soinTasks.push(
-      dashboardRow("Soin à venir", detail, `Dans ${reste} j`, "warn", "", "veterinaire")
-    );
-  } else if (reste < 0) {
-    soinAlerts.push(
-      dashboardRow("Soin en retard", detail, "Retard", "danger", "", "veterinaire")
-    );
-  }
+ if (reste === 0) {
+  const row = dashboardRow("Soin à faire", detail, "Aujourd’hui", "danger", "", "veterinaire");
+  soinAlerts.push(row);
+  todayTodo.push(row);
+} else if (reste > 0 && reste <= 3) {
+  soinTasks.push(
+    dashboardRow("Soin à venir", detail, `Dans ${reste} j`, "warn", "", "veterinaire")
+  );
+} else if (reste < 0) {
+  const row = dashboardRow("Soin en retard", detail, "Retard", "danger", "", "veterinaire");
+  soinAlerts.push(row);
+  todayTodo.push(row);
+}
 });
 
   if (dateEl) {
@@ -1031,13 +1033,56 @@ if (surveillanceEl) {
       : `<p class="muted-line">Aucun soin prévu aujourd’hui.</p>`;
 }
 
-  if (tasksEl) {
-  tasksEl.innerHTML = `
-    ${dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok")}
-    ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info", "", "nourrissage")}
-    ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn", "", "stock")}
-    ${reproTasks.length ? `<h4 style="margin:14px 0 8px;">Reproduction à venir</h4>${reproTasks.join("")}` : ""}
-  `;
+toWeigh.forEach(b => {
+  todayTodo.push(
+    dashboardRow(
+      b.nom,
+      `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
+      "À peser",
+      "warn",
+      "",
+      "pesees"
+    )
+  );
+});
+
+complements.forEach(x => {
+  todayTodo.push(
+    dashboardRow(
+      x.bird.nom,
+      x.plan,
+      "Complément",
+      "info",
+      "",
+      "nourrissage"
+    )
+  );
+});
+
+todayTodo.unshift(
+  dashboardRow(
+    "Contrôle général",
+    "Eau, fientes, appétit, comportement",
+    "Chaque jour",
+    "ok"
+  )
+);
+
+todayTodo.unshift(
+  dashboardRow(
+    "Nourrissage",
+    `${fedToday.size} oiseaux nourris aujourd’hui`,
+    "Suivi",
+    "info",
+    "",
+    "nourrissage"
+  )
+);
+
+ if (tasksEl) {
+  tasksEl.innerHTML = todayTodo.length
+    ? todayTodo.join("")
+    : `<p class="muted-line">Rien de spécial à faire aujourd’hui.</p>`;
 }
 
    if (alertsEl) {
