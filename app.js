@@ -1099,9 +1099,9 @@ todayTodo.unshift(
 
 if (tasksEl) {
   tasksEl.innerHTML = `
-    ${dashboardRow(
-      "Nourrissage",
-      `${fedToday.size} nourri(s) aujourd’hui`,
+    dashboardRow(
+  "🍗 Nourrissage",
+  `${fedToday.size} nourri(s) • ${birdsToFeed.length} restant(s)`,
       "Ouvrir",
       "info",
       "",
@@ -1109,8 +1109,8 @@ if (tasksEl) {
     )}
 
     ${toWeigh.length ? dashboardRow(
-      "Pesées",
-      `${toWeigh.length} oiseau(x) à peser`,
+  "⚖️ Pesées",
+      `${toWeigh.length} oiseau(x) en attente de pesée`
       "Ouvrir",
       "warn",
       "",
@@ -1118,8 +1118,8 @@ if (tasksEl) {
     ) : ""}
 
     ${soinAlerts.length ? dashboardRow(
-      "Soins",
-      `${soinAlerts.length} soin(s) à faire`,
+  "🩹 Soins",
+      `${soinAlerts.length} soin(s) prévu(s)`
       "Ouvrir",
       "danger",
       "",
@@ -1127,8 +1127,8 @@ if (tasksEl) {
     ) : ""}
 
     ${reproAlerts.length ? dashboardRow(
-      "Reproduction",
-      `${reproAlerts.length} alerte(s) reproduction`,
+  "🥚 Reproduction",
+      `${reproAlerts.length} intervention(s) à prévoir`
       "Ouvrir",
       "warn",
       "",
