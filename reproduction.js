@@ -1381,7 +1381,27 @@ Créer fiche
 
         <div>
           <label>Poids actuel (g)</label>
-          <input id="editJeunePoidsActuel" type="number" step="0.1" value="${safeAttr(jeune.poidsActuel || "")}">
+          <input
+    id="editJeunePoidsActuel"
+    type="number"
+    step="0.1"
+    value="${safeAttr(jeune.poidsActuel || "")}"
+>
+<div>
+    <label>Date de pesée</label>
+    <input
+        id="editJeuneDatePesee"
+        type="date"
+        value="${todayStr()}"
+    >
+</div>
+
+<div class="actions">
+    <button class="btn"
+        onclick="ajouterPeseeJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(jeuneId)}')">
+        + Ajouter pesée
+    </button>
+</div>
         </div>
 
         <div>
@@ -1827,6 +1847,38 @@ async function modifierNoteOeuf(coupleId, saisonId, ponteId, oeufId, note) {
   await persistAndRender("Note œuf modifiée.");
 }
 
+async function ajouterPeseeJeune(coupleId, saisonId, ponteId, jeuneId) {
+
+    const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
+
+    if (!jeune) return;
+
+    if (!jeune.pesees)
+        jeune.pesees = [];
+
+    const poids = Number(document.getElementById("editJeunePoidsActuel").value);
+
+    if (!poids)
+        return alert("Poids invalide");
+
+    jeune.poidsActuel = poids;
+
+    jeune.pesees.unshift({
+
+        id: makeId(),
+
+        date: document.getElementById("editJeuneDatePesee").value,
+
+        poids
+
+    });
+
+    await persistAndRender("Pesée enregistrée.");
+
+    ouvrirJeuneReproduction(coupleId, saisonId, ponteId, jeuneId);
+
+}
+
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
   window.ouvrirCoupleReproduction = ouvrirCoupleReproduction;
@@ -1855,4 +1907,5 @@ async function modifierNoteOeuf(coupleId, saisonId, ponteId, oeufId, note) {
   window.modifierStatutOeuf = modifierStatutOeuf;
 window.modifierLieuOeuf = modifierLieuOeuf;
 window.modifierNoteOeuf = modifierNoteOeuf;
+window.ajouterPeseeJeune = ajouterPeseeJeune;
 })();
