@@ -2008,6 +2008,48 @@ bird-card .bird-badges {
               <input id="vetFiles" type="file" accept=".pdf,image/*" multiple>
             </div>
 
+            <h3>Suivi des soins</h3>
+
+<div class="form-grid">
+
+  <div>
+    <label>Type de soin</label>
+    <input
+      id="vetSoinType"
+      placeholder="Bandage, médicament, collyre..."
+    >
+  </div>
+
+  <div>
+    <label>Tous les (jours)</label>
+    <input
+      id="vetSoinFrequence"
+      type="number"
+      min="1"
+      placeholder="Ex : 2"
+    >
+  </div>
+
+  <div>
+    <label>Prochain soin</label>
+    <input
+      id="vetSoinProchaineDate"
+      type="date"
+    >
+  </div>
+
+  <div style="display:flex;align-items:end;">
+    <label>
+      <input
+        id="vetSoinActif"
+        type="checkbox"
+      >
+      Soin actif
+    </label>
+  </div>
+
+</div>
+
             <div class="actions">
               <button class="btn" onclick="ajouterSuiviVeterinaire()">Ajouter le suivi vétérinaire</button>
             </div>

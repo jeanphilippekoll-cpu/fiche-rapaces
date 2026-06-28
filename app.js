@@ -5156,6 +5156,11 @@ async function ajouterSuiviVeterinaire() {
   const observations = document.getElementById("vetObservations")?.value.trim() || "";
   const files = document.getElementById("vetFiles")?.files || null;
 
+  const soinType = document.getElementById("vetSoinType")?.value || "";
+  const soinFrequence = Number(document.getElementById("vetSoinFrequence")?.value || 0);
+  const soinProchaineDate = document.getElementById("vetSoinProchaineDate")?.value || "";
+  const soinActif = document.getElementById("vetSoinActif")?.checked || false;
+
   try {
     if (statusEl) statusEl.textContent = "Upload fichiers vétérinaires…";
 
@@ -5173,17 +5178,38 @@ async function ajouterSuiviVeterinaire() {
       traitement,
       protocole,
       observations,
-      fichiers
+      fichiers,
+
+      soinType,
+      soinFrequence,
+      soinProchaineDate,
+      soinActif,
+      soinDerniereDate: "",
+      soinHistorique: []
     });
 
-    ["vetBird", "vetDate", "vetNom", "vetMotif", "vetDiagnostic", "vetTraitement", "vetProtocole", "vetObservations", "vetFiles"].forEach((id) => {
+    [
+      "vetBird",
+      "vetDate",
+      "vetNom",
+      "vetMotif",
+      "vetDiagnostic",
+      "vetTraitement",
+      "vetProtocole",
+      "vetObservations",
+      "vetFiles",
+      "vetSoinType",
+      "vetSoinFrequence",
+      "vetSoinProchaineDate",
+      "vetSoinActif"
+    ].forEach((id) => {
       const el = document.getElementById(id);
       if (!el) return;
-      if (id === "vetDate") {
-        el.value = todayStr();
-      } else {
-        el.value = "";
-      }
+
+      if (id === "vetDate") el.value = todayStr();
+      else if (id === "vetFiles") el.value = "";
+      else if (el.type === "checkbox") el.checked = false;
+      else el.value = "";
     });
 
     renderAll();
