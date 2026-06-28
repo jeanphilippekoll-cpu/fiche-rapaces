@@ -742,6 +742,7 @@ function renderDashboardIntelligent() {
   const complementsEl = document.getElementById("dashboardComplements");
   const surveillanceEl = document.getElementById("dashboardSurveillance");
   const tasksEl = document.getElementById("dashboardTasks");
+  const prioritesEl = document.getElementById("dashboardPriorites");
 
   const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
   const reproAlertsEl = document.getElementById("dashboardReproAlerts");
@@ -1078,6 +1079,16 @@ todayTodo.unshift(
     "nourrissage"
   )
 );
+
+if (prioritesEl) {
+
+    const priorites = todayTodo.slice(0, 5);
+
+    prioritesEl.innerHTML = priorites.length
+        ? priorites.join("")
+        : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
+
+}
 
  if (tasksEl) {
   tasksEl.innerHTML = todayTodo.length
