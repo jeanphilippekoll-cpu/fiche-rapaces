@@ -487,3 +487,60 @@ font-size:18px;
   background:#edf7ed;
   border-color:#b9ddb9;
 }
+
+.repro-ponte-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:16px;
+}
+
+.repro-ponte-card{
+  background:#fffaf3;
+  border:1px solid var(--line, #d9ccb8);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 8px 20px rgba(0,0,0,0.06);
+}
+
+.repro-ponte-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+
+.repro-ponte-head h3{
+  margin:0 0 6px;
+}
+
+.repro-ponte-head p{
+  margin:0;
+  color:#7b6b57;
+}
+
+.repro-badge{
+  background:#efe2d0;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:bold;
+  white-space:nowrap;
+}
+
+.repro-mini-stats{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  margin:14px 0;
+}
+
+.repro-mini-stats span{
+  background:white;
+  border:1px solid #eadfce;
+  border-radius:12px;
+  padding:10px;
+  font-weight:bold;
+}
+
+.repro-dates p{
+  margin:6px 0;
+}
