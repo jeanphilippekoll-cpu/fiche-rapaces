@@ -775,7 +775,7 @@ const reproTasks = [];
 const soinAlerts = [];
 const soinTasks = [];
 const todayTodo = [];
-
+const soinsAujourdHui = [];
 
 const today = todayStr();
 const now = new Date();
@@ -813,26 +813,26 @@ safeArray(appData.reproduction).forEach(couple => {
         { date: sortieEleveuse, titre: `Sortie éleveuse ${couple.espece}`, badge: "Éleveuse", type: "info" }
       ];
 
-     items.forEach(item => {
-  const reste = daysUntil(item.date);
-  if (reste === null) return;
+      items.forEach(item => {
+        const reste = daysUntil(item.date);
+        if (reste === null) return;
 
-  const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
+        const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
 
-  if (reste === 0) {
-  const row = dashboardRow(item.titre, detail, "Aujourd’hui", item.type, "", "reproduction");
-  reproAlerts.push(row);
-  todayTodo.push(row);
-} else if (reste > 0 && reste <= 3) {
-  reproTasks.push(
-    dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type, "", "reproduction")
-  );
-} else if (reste < 0 && item.badge !== "Éleveuse") {
-  const row = dashboardRow(item.titre, detail, "Dépassé", "danger", "", "reproduction");
-  reproAlerts.push(row);
-  todayTodo.push(row);
-}
-});
+        if (reste === 0) {
+          const row = dashboardRow(item.titre, detail, "Aujourd’hui", item.type, "", "reproduction");
+          reproAlerts.push(row);
+          todayTodo.push(row);
+        } else if (reste > 0 && reste <= 3) {
+          reproTasks.push(
+            dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type, "", "reproduction")
+          );
+        } else if (reste < 0 && item.badge !== "Éleveuse") {
+          const row = dashboardRow(item.titre, detail, "Dépassé", "danger", "", "reproduction");
+          reproAlerts.push(row);
+          todayTodo.push(row);
+        }
+      });
 
       safeArray(ponte.jeunes).forEach(j => {
         if (!j.oiseauId) {
@@ -840,7 +840,9 @@ safeArray(appData.reproduction).forEach(couple => {
             "Jeune sans fiche oiseau",
             `${couple.espece || "-"} — jeune ${j.numero || "-"} ${j.nom ? "— " + j.nom : ""}`,
             "À créer",
-            "warn"
+            "warn",
+            "",
+            "reproduction"
           ));
         }
 
@@ -849,7 +851,9 @@ safeArray(appData.reproduction).forEach(couple => {
             "Jeune à baguer",
             `${couple.espece || "-"} — jeune ${j.numero || "-"} ${j.dateNaissance ? "né le " + formatDateFR(j.dateNaissance) : ""}`,
             "Bague",
-            "warn"
+            "warn",
+            "",
+            "reproduction"
           ));
         }
 
@@ -858,7 +862,9 @@ safeArray(appData.reproduction).forEach(couple => {
             "ADN en attente",
             `${couple.espece || "-"} — jeune ${j.numero || "-"}`,
             "ADN",
-            "info"
+            "info",
+            "",
+            "reproduction"
           ));
         }
       });
@@ -871,24 +877,31 @@ safeArray(appData.veterinaire).forEach(soin => {
   if (!soin.soinProchaineDate) return;
 
   const reste = daysUntil(soin.soinProchaineDate);
-
   const detail = `${soin.oiseau || "-"} — ${soin.soinType || "Soin"} — ${formatDateFR(soin.soinProchaineDate)}`;
 
- if (reste === 0) {
-  const row = dashboardRow("Soin à faire", detail, "Aujourd’hui", "danger", "", "veterinaire");
-  soinAlerts.push(row);
-  todayTodo.push(row);
-} else if (reste > 0 && reste <= 3) {
-  soinTasks.push(
-    dashboardRow("Soin à venir", detail, `Dans ${reste} j`, "warn", "", "veterinaire")
-  );
-} else if (reste < 0) {
-  const row = dashboardRow("Soin en retard", detail, "Retard", "danger", "", "veterinaire");
-  soinAlerts.push(row);
-  todayTodo.push(row);
-}
-});
+  if (reste === 0) {
+    const row = dashboardRow(
+      soin.oiseau || "Soin",
+      `${soin.soinType || "Soin"} à effectuer`,
+      "Aujourd'hui",
+      "danger",
+      "",
+      "veterinaire"
+    );
 
+    soinAlerts.push(row);
+    soinsAujourdHui.push(row);
+    todayTodo.push(row);
+  } else if (reste > 0 && reste <= 3) {
+    soinTasks.push(
+      dashboardRow("Soin à venir", detail, `Dans ${reste} j`, "warn", "", "veterinaire")
+    );
+  } else if (reste < 0) {
+    const row = dashboardRow("Soin en retard", detail, "Retard", "danger", "", "veterinaire");
+    soinAlerts.push(row);
+    todayTodo.push(row);
+  }
+});
   if (dateEl) {
     dateEl.textContent = now.toLocaleDateString("fr-BE", {
       weekday: "long",
