@@ -741,51 +741,85 @@ function renderDashboardIntelligent() {
 
   const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
 
-  const reproAlerts = [];
+ const reproAlerts = [];
+const reproTasks = [];
 
-  const today = todayStr();
-  const now = new Date();
-  const birds = getSortedBirds(getActiveBirds());
+const today = todayStr();
+const now = new Date();
+const birds = getSortedBirds(getActiveBirds());
+
+const addDays = (dateStr, days) => {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
+  d.setDate(d.getDate() + toNumber(days));
+  return d.toISOString().slice(0, 10);
+};
+
+const daysUntil = (dateStr) => {
+  if (!dateStr) return null;
+  const d = new Date(dateStr + "T00:00:00");
+  const t = new Date(today + "T00:00:00");
+  return Math.ceil((d - t) / 86400000);
+};
 
 safeArray(appData.reproduction).forEach(couple => {
   safeArray(couple.saisons).forEach(saison => {
     safeArray(saison.pontes).forEach(ponte => {
-      const addDays = (dateStr, days) => {
-        if (!dateStr) return "";
-        const d = new Date(dateStr);
-        if (Number.isNaN(d.getTime())) return "";
-        d.setDate(d.getDate() + toNumber(days));
-        return d.toISOString().slice(0, 10);
-      };
+      const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
 
-      const mirage = addDays(ponte.debutCouvaison, ponte.joursMirage || 10);
-      const eclosion = addDays(ponte.debutCouvaison, ponte.dureeIncubation || 30);
+      const mirage = addDays(base, ponte.joursMirage || 10);
+      const eclosion = addDays(base, ponte.dureeIncubation || 30);
+      const baguage = addDays(base, ponte.jourBaguage || 14);
+      const sortieEleveuse = addDays(base, ponte.jourSortieEleveuse || 40);
 
-      if (mirage === today) {
-        reproAlerts.push(dashboardRow(
-          `Mirage ${couple.espece}`,
-          `Saison ${saison.annee} — Ponte ${ponte.numero}`,
-          "Aujourd’hui",
-          "warn"
-        ));
-      }
+      const items = [
+        { date: mirage, titre: `Mirage ${couple.espece}`, badge: "Mirage", type: "warn" },
+        { date: eclosion, titre: `Éclosion ${couple.espece}`, badge: "Éclosion", type: "danger" },
+        { date: baguage, titre: `Baguage ${couple.espece}`, badge: "Baguage", type: "warn" },
+        { date: sortieEleveuse, titre: `Sortie éleveuse ${couple.espece}`, badge: "Éleveuse", type: "info" }
+      ];
 
-      if (eclosion === today) {
-        reproAlerts.push(dashboardRow(
-          `Éclosion ${couple.espece}`,
-          `Saison ${saison.annee} — Ponte ${ponte.numero}`,
-          "Aujourd’hui",
-          "danger"
-        ));
-      }
+      items.forEach(item => {
+        const reste = daysUntil(item.date);
+        if (reste === null) return;
+
+        const detail = `Saison ${saison.annee || "-"} — Ponte ${ponte.numero || "-"} — ${formatDateFR(item.date)}`;
+
+        if (reste === 0) {
+          reproAlerts.push(dashboardRow(item.titre, detail, "Aujourd’hui", item.type));
+        } else if (reste > 0 && reste <= 3) {
+          reproTasks.push(dashboardRow(item.titre, detail, `Dans ${reste} j`, item.type));
+        } else if (reste < 0 && item.badge !== "Éleveuse") {
+          reproAlerts.push(dashboardRow(item.titre, detail, "Dépassé", "danger"));
+        }
+      });
 
       safeArray(ponte.jeunes).forEach(j => {
-        if (!j.bague) {
+        if (!j.oiseauId) {
           reproAlerts.push(dashboardRow(
-            `Jeune à baguer`,
-            `${couple.espece} — jeune ${j.numero}`,
+            "Jeune sans fiche oiseau",
+            `${couple.espece || "-"} — jeune ${j.numero || "-"} ${j.nom ? "— " + j.nom : ""}`,
+            "À créer",
+            "warn"
+          ));
+        }
+
+        if (!j.bague && j.statut !== "Décédé") {
+          reproTasks.push(dashboardRow(
+            "Jeune à baguer",
+            `${couple.espece || "-"} — jeune ${j.numero || "-"} ${j.dateNaissance ? "né le " + formatDateFR(j.dateNaissance) : ""}`,
             "Bague",
             "warn"
+          ));
+        }
+
+        if (j.adnEnvoye && !j.adnRecu) {
+          reproTasks.push(dashboardRow(
+            "ADN en attente",
+            `${couple.espece || "-"} — jeune ${j.numero || "-"}`,
+            "ADN",
+            "info"
           ));
         }
       });
@@ -949,12 +983,13 @@ if (surveillanceEl) {
 }
 
   if (tasksEl) {
-    tasksEl.innerHTML = `
-      ${dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok")}
-      ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info")}
-      ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn")}
-    `;
-  }
+  tasksEl.innerHTML = `
+    ${dashboardRow("Contrôle général", "Eau, fientes, appétit, comportement", "Chaque jour", "ok")}
+    ${dashboardRow("Nourrissage", `${fedToday.size} oiseaux nourris aujourd’hui`, "Suivi", "info")}
+    ${dashboardRow("Stock", "Vérifier poussins, cailles, pigeons et cailleteaux", "Stock", "warn")}
+    ${reproTasks.length ? `<h4 style="margin:14px 0 8px;">Reproduction à venir</h4>${reproTasks.join("")}` : ""}
+  `;
+}
 
   if (alertsEl) {
     const allAlerts = [...reproAlerts, ...alerts];
