@@ -588,6 +588,21 @@ function showSection(section) {
   if (section === "dashboard" || section === "accueil") {
     renderDashboardIntelligent();
   }
+  if (section === "pesees") {
+  refreshBirdSelects();
+  const pesDate = document.getElementById("pesDate");
+  if (pesDate && !pesDate.value) pesDate.value = todayStr();
+}
+
+if (section === "nourrissage") {
+  refreshBirdSelects();
+  const feedDate = document.getElementById("feedDate");
+  if (feedDate && !feedDate.value) feedDate.value = todayStr();
+}
+
+if (section === "veterinaire") {
+  refreshBirdSelects();
+  renderVeterinaire();
 }
 
 function refreshStats() {
