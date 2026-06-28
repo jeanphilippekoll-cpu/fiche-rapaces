@@ -3959,7 +3959,7 @@ while (ponte.oeufs.length < nbVoulu) {
     numero: ponte.oeufs.length + 1,
     datePonte: "",
     statut: "Inconnu",
-    emplacement: "Sous mère",
+    
     notes: ""
   });
 }
