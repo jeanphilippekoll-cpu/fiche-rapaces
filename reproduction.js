@@ -925,7 +925,7 @@ function getAlertesPonte(ponte) {
 
           <div>
             <label>Mirage après X jours</label>
-            <input id="detailPonteMirage" type="number" value="${safeAttr(ponte.joursMirage || 10)}">
+            <input id="detailPonteMirage" type="number" value="${safeAttr(ponte.joursMirage || 10)}">s
           </div>
 
           <div>
@@ -1120,47 +1120,92 @@ style="width:100%;height:18px;">
         <h2>Ajouter un jeune</h2>
 
         <div class="form-grid">
-          <div>
-            <label>Numéro</label>
-            <input id="jeuneNumero" value="${safeAttr(ponte.jeunes.length + 1)}">
-          </div>
+  <div>
+    <label>Numéro</label>
+    <input id="jeuneNumero" value="${safeAttr(ponte.jeunes.length + 1)}">
+  </div>
 
-          <div>
-            <label>Date naissance</label>
-            <input id="jeuneDateNaissance" type="date" value="${todayStr()}">
-          </div>
+  <div>
+    <label>Nom</label>
+    <input id="jeuneNom" placeholder="Ex : Jeune 1, Koa, Plume...">
+  </div>
 
-          <div>
-            <label>Bague</label>
-            <input id="jeuneBague">
-          </div>
+  <div>
+    <label>Date naissance</label>
+    <input id="jeuneDateNaissance" type="date" value="${todayStr()}">
+  </div>
 
-          <div>
-            <label>Sexe</label>
-            <select id="jeuneSexe">
-              <option>Inconnu</option>
-              <option>Mâle</option>
-              <option>Femelle</option>
-            </select>
-          </div>
+  <div>
+    <label>Poids naissance (g)</label>
+    <input id="jeunePoidsNaissance" type="number" step="0.1">
+  </div>
 
-          <div>
-            <label>Couleur / repère</label>
-            <input id="jeuneCouleur">
-          </div>
+  <div>
+    <label>Poids actuel (g)</label>
+    <input id="jeunePoidsActuel" type="number" step="0.1">
+  </div>
 
-          <div>
-            <label>Destination</label>
-            <select id="jeuneDestination">
-              <option value="">À définir</option>
-              <option>Gardé</option>
-              <option>Vendu</option>
-              <option>Échangé</option>
-              <option>Cédé</option>
-              <option>Décédé</option>
-            </select>
-          </div>
-        </div>
+  <div>
+    <label>Bague</label>
+    <input id="jeuneBague">
+  </div>
+
+  <div>
+    <label>Date baguage</label>
+    <input id="jeuneDateBaguage" type="date">
+  </div>
+
+  <div>
+    <label>Sexe</label>
+    <select id="jeuneSexe">
+      <option>Inconnu</option>
+      <option>Mâle</option>
+      <option>Femelle</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Couleur / repère</label>
+    <input id="jeuneCouleur">
+  </div>
+
+  <div>
+    <label>Statut</label>
+    <select id="jeuneStatut">
+      <option>Vivant</option>
+      <option>Décédé</option>
+      <option>Gardé</option>
+      <option>Cédé</option>
+      <option>Vendu</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Destination</label>
+    <select id="jeuneDestination">
+      <option value="">À définir</option>
+      <option>Gardé</option>
+      <option>Vendu</option>
+      <option>Échangé</option>
+      <option>Cédé</option>
+      <option>Décédé</option>
+    </select>
+  </div>
+
+  <div>
+    <label>
+      <input id="jeuneAdnEnvoye" type="checkbox">
+      ADN envoyé
+    </label>
+  </div>
+
+  <div>
+    <label>
+      <input id="jeuneAdnRecu" type="checkbox">
+      ADN reçu
+    </label>
+  </div>
+</div>
 
         <div class="actions">
           <button class="btn" onclick="ajouterJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}')">+ Ajouter le jeune</button>
@@ -1178,36 +1223,40 @@ style="width:100%;height:18px;">
                   <thead>
                     <tr>
                       <th>N°</th>
-                      <th>Naissance</th>
-                      <th>Bague</th>
-                      <th>Sexe</th>
-                      <th>Repère</th>
-                      <th>Destination</th>
-                      <th>Fiche oiseau</th>
-                      <th>Actions</th>
+<th>Nom</th>
+<th>Naissance</th>
+<th>Âge</th>
+<th>Poids</th>
+<th>Bague</th>
+<th>Sexe</th>
+<th>ADN</th>
+<th>Statut</th>
+<th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${ponte.jeunes.map(j => `
-                      <tr>
-                        <td>${safe(j.numero || "-")}</td>
-                        <td>${formatDateBE(j.dateNaissance)}</td>
-                        <td>${safe(j.bague || "")}</td>
-                        <td>${safe(j.sexe || "Inconnu")}</td>
-                        <td>${safe(j.couleur || "")}</td>
-                        <td>${safe(j.destination || "")}</td>
-                        <td>${j.oiseauId ? "✅ créée" : "—"}</td>
-                        <td>
-                          <button class="btn small-btn" onclick="ouvrirJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Modifier</button>
-                          ${
-                            j.oiseauId
-                              ? ""
-                              : `<button class="btn secondary-btn small-btn" onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Créer fiche</button>`
-                          }
-                          <button class="btn btn-danger small-btn" onclick="supprimerJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Supprimer</button>
-                        </td>
-                      </tr>
-                    `).join("")}
+  <tr>
+    <td>${safe(j.numero || "-")}</td>
+    <td>${safe(j.nom || j.couleur || "-")}</td>
+    <td>${formatDateBE(j.dateNaissance)}</td>
+    <td>${j.dateNaissance ? joursDepuis(j.dateNaissance) + " j" : "-"}</td>
+    <td>${safe(j.poidsActuel || j.poidsNaissance || "-")} g</td>
+    <td>${safe(j.bague || "-")}</td>
+    <td>${safe(j.sexe || "Inconnu")}</td>
+    <td>${j.adnRecu ? "✅ Reçu" : j.adnEnvoye ? "📨 Envoyé" : "—"}</td>
+    <td>${safe(j.statut || j.destination || "Vivant")}</td>
+    <td>
+      <button class="btn small-btn" onclick="ouvrirJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Modifier</button>
+      ${
+        j.oiseauId
+          ? ""
+          : `<button class="btn secondary-btn small-btn" onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Créer fiche</button>`
+      }
+      <button class="btn btn-danger small-btn" onclick="supprimerJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Supprimer</button>
+    </td>
+  </tr>
+`).join("")}
                   </tbody>
                 </table>
               </div>
@@ -1248,16 +1297,23 @@ style="width:100%;height:18px;">
     if (!Array.isArray(ponte.jeunes)) ponte.jeunes = [];
 
     ponte.jeunes.push({
-      id: makeId(),
-      numero: document.getElementById("jeuneNumero")?.value || String(ponte.jeunes.length + 1),
-      dateNaissance: document.getElementById("jeuneDateNaissance")?.value || "",
-      bague: document.getElementById("jeuneBague")?.value || "",
-      sexe: document.getElementById("jeuneSexe")?.value || "Inconnu",
-      couleur: document.getElementById("jeuneCouleur")?.value || "",
-      destination: document.getElementById("jeuneDestination")?.value || "",
-      notes: "",
-      oiseauId: ""
-    });
+  id: makeId(),
+  numero: document.getElementById("jeuneNumero")?.value || String(ponte.jeunes.length + 1),
+  nom: document.getElementById("jeuneNom")?.value || "",
+  dateNaissance: document.getElementById("jeuneDateNaissance")?.value || "",
+  bague: document.getElementById("jeuneBague")?.value || "",
+  dateBaguage: document.getElementById("jeuneDateBaguage")?.value || "",
+  sexe: document.getElementById("jeuneSexe")?.value || "Inconnu",
+  poidsNaissance: document.getElementById("jeunePoidsNaissance")?.value || "",
+  poidsActuel: document.getElementById("jeunePoidsActuel")?.value || "",
+  adnEnvoye: document.getElementById("jeuneAdnEnvoye")?.checked || false,
+  adnRecu: document.getElementById("jeuneAdnRecu")?.checked || false,
+  couleur: document.getElementById("jeuneCouleur")?.value || "",
+  destination: document.getElementById("jeuneDestination")?.value || "",
+  statut: document.getElementById("jeuneStatut")?.value || "Vivant",
+  notes: "",
+  oiseauId: ""
+});
 
     await persistAndRender("Jeune ajouté.");
     ouvrirPonteReproduction(coupleId, saisonId, ponteId);
