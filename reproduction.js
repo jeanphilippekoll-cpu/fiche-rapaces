@@ -1319,96 +1319,156 @@ style="width:100%;height:18px;">
     ouvrirPonteReproduction(coupleId, saisonId, ponteId);
   }
 
-  function ouvrirJeuneReproduction(coupleId, saisonId, ponteId, jeuneId) {
-    const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
-    if (!jeune) return;
+ function ouvrirJeuneReproduction(coupleId, saisonId, ponteId, jeuneId) {
+  const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
+  if (!jeune) return;
 
-    const root = document.getElementById("reproductionContent")
-      || document.getElementById("section-reproduction");
+  const root = document.getElementById("reproductionContent")
+    || document.getElementById("section-reproduction");
 
-    if (!root) return;
+  if (!root) return;
 
-    root.innerHTML = `
-      <div class="module-header">
+  root.innerHTML = `
+    <div class="module-header">
+      <div>
+        <h1>${safe(jeune.nom || "Jeune " + (jeune.numero || ""))}</h1>
+        <p class="muted-line">
+          Né le ${formatDateBE(jeune.dateNaissance)} —
+          ${jeune.dateNaissance ? joursDepuis(jeune.dateNaissance) + " jours" : "âge inconnu"}
+        </p>
+      </div>
+
+      <button class="btn secondary-btn" onclick="ouvrirPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}')">
+        ← Retour ponte
+      </button>
+    </div>
+
+    <div class="card">
+      <h2>Fiche jeune</h2>
+
+      <div class="form-grid">
         <div>
-          <h1>Jeune ${safe(jeune.numero || "")}</h1>
-          <p class="muted-line">Modification du jeune</p>
+          <label>Numéro</label>
+          <input id="editJeuneNumero" value="${safeAttr(jeune.numero || "")}">
         </div>
 
-        <button class="btn secondary-btn" onclick="ouvrirPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}')">← Retour ponte</button>
+        <div>
+          <label>Nom</label>
+          <input id="editJeuneNom" value="${safeAttr(jeune.nom || "")}">
+        </div>
+
+        <div>
+          <label>Date naissance</label>
+          <input id="editJeuneDateNaissance" type="date" value="${safeAttr(jeune.dateNaissance || "")}">
+        </div>
+
+        <div>
+          <label>Poids naissance (g)</label>
+          <input id="editJeunePoidsNaissance" type="number" step="0.1" value="${safeAttr(jeune.poidsNaissance || "")}">
+        </div>
+
+        <div>
+          <label>Poids actuel (g)</label>
+          <input id="editJeunePoidsActuel" type="number" step="0.1" value="${safeAttr(jeune.poidsActuel || "")}">
+        </div>
+
+        <div>
+          <label>Bague</label>
+          <input id="editJeuneBague" value="${safeAttr(jeune.bague || "")}">
+        </div>
+
+        <div>
+          <label>Date baguage</label>
+          <input id="editJeuneDateBaguage" type="date" value="${safeAttr(jeune.dateBaguage || "")}">
+        </div>
+
+        <div>
+          <label>Sexe</label>
+          <select id="editJeuneSexe">
+            ${["Inconnu", "Mâle", "Femelle"].map(s => `
+              <option ${jeune.sexe === s ? "selected" : ""}>${safe(s)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Couleur / repère</label>
+          <input id="editJeuneCouleur" value="${safeAttr(jeune.couleur || "")}">
+        </div>
+
+        <div>
+          <label>Statut</label>
+          <select id="editJeuneStatut">
+            ${["Vivant", "Décédé", "Gardé", "Cédé", "Vendu", "Échangé"].map(s => `
+              <option ${jeune.statut === s ? "selected" : ""}>${safe(s)}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>Destination</label>
+          <select id="editJeuneDestination">
+            ${["", "Gardé", "Vendu", "Échangé", "Cédé", "Décédé"].map(s => `
+              <option value="${safeAttr(s)}" ${jeune.destination === s ? "selected" : ""}>${safe(s || "À définir")}</option>
+            `).join("")}
+          </select>
+        </div>
+
+        <div>
+          <label>
+            <input id="editJeuneAdnEnvoye" type="checkbox" ${jeune.adnEnvoye ? "checked" : ""}>
+            ADN envoyé
+          </label>
+        </div>
+
+        <div>
+          <label>
+            <input id="editJeuneAdnRecu" type="checkbox" ${jeune.adnRecu ? "checked" : ""}>
+            ADN reçu
+          </label>
+        </div>
       </div>
 
-      <div class="card">
-        <div class="form-grid">
-          <div>
-            <label>Numéro</label>
-            <input id="editJeuneNumero" value="${safeAttr(jeune.numero || "")}">
-          </div>
+      <label>Notes</label>
+      <textarea id="editJeuneNotes">${safe(jeune.notes || "")}</textarea>
 
-          <div>
-            <label>Date naissance</label>
-            <input id="editJeuneDateNaissance" type="date" value="${safeAttr(jeune.dateNaissance || "")}">
-          </div>
+      <div class="actions">
+        <button class="btn" onclick="sauverJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(jeuneId)}')">
+          Enregistrer
+        </button>
 
-          <div>
-            <label>Bague</label>
-            <input id="editJeuneBague" value="${safeAttr(jeune.bague || "")}">
-          </div>
-
-          <div>
-            <label>Sexe</label>
-            <select id="editJeuneSexe">
-              ${["Inconnu", "Mâle", "Femelle"].map(s => `
-                <option ${jeune.sexe === s ? "selected" : ""}>${safe(s)}</option>
-              `).join("")}
-            </select>
-          </div>
-
-          <div>
-            <label>Couleur / repère</label>
-            <input id="editJeuneCouleur" value="${safeAttr(jeune.couleur || "")}">
-          </div>
-
-          <div>
-            <label>Destination</label>
-            <select id="editJeuneDestination">
-              ${["", "Gardé", "Vendu", "Échangé", "Cédé", "Décédé"].map(s => `
-                <option value="${safeAttr(s)}" ${jeune.destination === s ? "selected" : ""}>${safe(s || "À définir")}</option>
-              `).join("")}
-            </select>
-          </div>
-        </div>
-
-        <label>Notes</label>
-        <textarea id="editJeuneNotes">${safe(jeune.notes || "")}</textarea>
-
-        <div class="actions">
-          <button class="btn" onclick="sauverJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(jeuneId)}')">Enregistrer</button>
-          ${
-            jeune.oiseauId
-              ? ""
-              : `<button class="btn secondary-btn" onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(jeuneId)}')">Créer fiche oiseau</button>`
-          }
-        </div>
+        ${
+          jeune.oiseauId
+            ? ""
+            : `<button class="btn secondary-btn" onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(jeuneId)}')">Créer fiche oiseau</button>`
+        }
       </div>
-    `;
-  }
+    </div>
+  `;
+}
 
-  async function sauverJeuneReproduction(coupleId, saisonId, ponteId, jeuneId) {
-    const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
-    if (!jeune) return;
+ async function sauverJeuneReproduction(coupleId, saisonId, ponteId, jeuneId) {
+  const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
+  if (!jeune) return;
 
-    jeune.numero = document.getElementById("editJeuneNumero")?.value || "";
-    jeune.dateNaissance = document.getElementById("editJeuneDateNaissance")?.value || "";
-    jeune.bague = document.getElementById("editJeuneBague")?.value || "";
-    jeune.sexe = document.getElementById("editJeuneSexe")?.value || "Inconnu";
-    jeune.couleur = document.getElementById("editJeuneCouleur")?.value || "";
-    jeune.destination = document.getElementById("editJeuneDestination")?.value || "";
-    jeune.notes = document.getElementById("editJeuneNotes")?.value || "";
+  jeune.numero = document.getElementById("editJeuneNumero")?.value || "";
+  jeune.nom = document.getElementById("editJeuneNom")?.value || "";
+  jeune.dateNaissance = document.getElementById("editJeuneDateNaissance")?.value || "";
+  jeune.poidsNaissance = document.getElementById("editJeunePoidsNaissance")?.value || "";
+  jeune.poidsActuel = document.getElementById("editJeunePoidsActuel")?.value || "";
+  jeune.bague = document.getElementById("editJeuneBague")?.value || "";
+  jeune.dateBaguage = document.getElementById("editJeuneDateBaguage")?.value || "";
+  jeune.sexe = document.getElementById("editJeuneSexe")?.value || "Inconnu";
+  jeune.couleur = document.getElementById("editJeuneCouleur")?.value || "";
+  jeune.statut = document.getElementById("editJeuneStatut")?.value || "Vivant";
+  jeune.destination = document.getElementById("editJeuneDestination")?.value || "";
+  jeune.adnEnvoye = document.getElementById("editJeuneAdnEnvoye")?.checked || false;
+  jeune.adnRecu = document.getElementById("editJeuneAdnRecu")?.checked || false;
+  jeune.notes = document.getElementById("editJeuneNotes")?.value || "";
 
-    await persistAndRender("Jeune enregistré.");
-    ouvrirPonteReproduction(coupleId, saisonId, ponteId);
-  }
+  await persistAndRender("Jeune enregistré.");
+  ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+}
 
   async function supprimerJeuneReproduction(coupleId, saisonId, ponteId, jeuneId) {
     if (!confirm("Supprimer ce jeune ?")) return;
