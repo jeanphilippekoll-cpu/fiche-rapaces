@@ -4403,7 +4403,11 @@ function renderAll() {
   renderVeterinaire();
   renderInventaire();
   renderEntretien();
+  if (typeof window.renderReproduction === "function") {
+  window.renderReproduction();
+} else {
   renderReproduction();
+}
   fillStockForm();
   fillPrixNourritureForm();
   renderCoutNourriture();
