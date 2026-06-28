@@ -129,6 +129,30 @@
     return safeArray(ponte?.jeunes).find(j => j.id === jeuneId);
   }
 
+  function recalculerPonte(ponte) {
+  if (!ponte) return;
+
+  const oeufs = safeArray(ponte.oeufs);
+
+  ponte.nbOeufs = oeufs.length;
+
+  ponte.nbFecondes = oeufs.filter(o =>
+    o.statut === "Fécondé" || o.statut === "Éclos"
+  ).length;
+
+  ponte.nbClairs = oeufs.filter(o =>
+    o.statut === "Clair"
+  ).length;
+
+  ponte.nbSousMere = oeufs.filter(o =>
+    o.lieu === "Sous mère"
+  ).length;
+
+  ponte.nbCouveuse = oeufs.filter(o =>
+    o.lieu === "Couveuse"
+  ).length;
+}
+
   function getActiveOiseaux() {
     return data().oiseaux.filter(o => {
       const statut = String(o.statut || "").toLowerCase();
