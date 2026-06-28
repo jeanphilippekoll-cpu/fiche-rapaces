@@ -993,23 +993,25 @@ if (surveillanceEl) {
   `;
 }
 
-  if (alertsEl) {
-    const allAlerts = [...reproAlerts, ...alerts];
+   if (alertsEl) {
+    const allAlerts = [...alerts];
 
-alertsEl.innerHTML = allAlerts.length
-  ? allAlerts.join("")
-  : `<p class="muted-line">Aucune alerte active.</p>`;
-}
-if (reproAlertsEl) {
-  reproAlertsEl.innerHTML = reproAlerts.length
-    ? reproAlerts.join("")
-    : `<p class="muted-line">Aucune alerte reproduction.</p>`;
-}
+    alertsEl.innerHTML = allAlerts.length
+      ? allAlerts.join("")
+      : `<p class="muted-line">Aucune alerte active.</p>`;
+  }
 
-if (reproInfosEl) {
-  reproInfosEl.innerHTML = reproTasks.length
-    ? reproTasks.join("")
-    : `<p class="muted-line">Aucune information reproduction à venir.</p>`;
+  if (reproAlertsEl) {
+    reproAlertsEl.innerHTML = reproAlerts.length
+      ? reproAlerts.join("")
+      : `<p class="muted-line">Aucune alerte reproduction.</p>`;
+  }
+
+  if (reproInfosEl) {
+    reproInfosEl.innerHTML = reproTasks.length
+      ? reproTasks.join("")
+      : `<p class="muted-line">Aucune information reproduction à venir.</p>`;
+  }
 }
 
 function refreshBirdSelects() {
