@@ -5601,13 +5601,18 @@ function renderVeterinaire() {
   if (!zone) return;
 
   const liste = Array.isArray(appData.veterinaire) ? appData.veterinaire : [];
+const filtreOiseau = document.getElementById("vetFilterBird")?.value || "";
 
-  if (!liste.length) {
+const listeFiltree = filtreOiseau
+  ? liste.filter(v => (v.oiseau || "") === filtreOiseau)
+  : liste;
+
+  if (!listeFiltree.length) {
     zone.innerHTML = `<p class="muted-line">Aucun suivi vétérinaire.</p>`;
     return;
   }
 
-  zone.innerHTML = liste
+  zone.innerHTML = listeFiltree
     .slice()
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""))
     .map((item) => `
@@ -5664,13 +5669,7 @@ async function marquerSoinVeterinaireEffectue(id) {
 
   soin.soinDerniereDate = aujourdHui;
 
-  soin.soinHistorique.unshift({
-  id: makeId(),
-  date: aujourdHui,
-  action: "Soin effectué",
-  type: soin.soinType || "",
-  oiseau: soin.oiseau || ""
-});
+  
 
   const frequence = toNumber(soin.soinFrequence);
 
