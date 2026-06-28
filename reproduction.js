@@ -11,6 +11,28 @@
 (function () {
   "use strict";
 
+    const REPRO_ESPECES_PARAMS = {
+    "Parabuteo unicinctus": { incubation: 35, mirage: 10, baguage: 18, sortieEleveuse: 45 },
+    "Falco peregrinus": { incubation: 32, mirage: 8, baguage: 12, sortieEleveuse: 42 },
+    "Falco cherrug": { incubation: 32, mirage: 8, baguage: 12, sortieEleveuse: 42 },
+    "Falco rusticolus": { incubation: 34, mirage: 8, baguage: 12, sortieEleveuse: 45 },
+    "Falco sparverius": { incubation: 30, mirage: 8, baguage: 10, sortieEleveuse: 35 },
+    "Bubo bubo": { incubation: 35, mirage: 10, baguage: 18, sortieEleveuse: 50 },
+    "Bubo sibiricus": { incubation: 35, mirage: 10, baguage: 18, sortieEleveuse: 50 },
+    "Tyto alba": { incubation: 31, mirage: 9, baguage: 14, sortieEleveuse: 45 },
+    "Strix aluco": { incubation: 30, mirage: 9, baguage: 14, sortieEleveuse: 40 },
+    "Asio otus": { incubation: 28, mirage: 8, baguage: 12, sortieEleveuse: 38 },
+    "Strix virgata": { incubation: 30, mirage: 9, baguage: 14, sortieEleveuse: 40 },
+    "Ptilopsis leucotis": { incubation: 30, mirage: 9, baguage: 14, sortieEleveuse: 40 },
+    "Megascops choliba": { incubation: 26, mirage: 7, baguage: 10, sortieEleveuse: 35 },
+    "Glaucidium brasilianum": { incubation: 28, mirage: 8, baguage: 10, sortieEleveuse: 35 },
+    default: { incubation: 30, mirage: 10, baguage: 14, sortieEleveuse: 40 }
+  };
+
+  function getParamsEspece(espece) {
+    return REPRO_ESPECES_PARAMS[espece] || REPRO_ESPECES_PARAMS.default;
+  }
+
   function data() {
     if (!window.appData) window.appData = {};
     if (!Array.isArray(window.appData.reproduction)) {
@@ -536,7 +558,7 @@
 
           <div>
             <label>Durée incubation</label>
-            <input id="ponteDuree" type="number" value="30">
+            <input id="ponteDuree" type="number" value="${safeAttr(getParamsEspece(couple.espece || '').incubation)}">
           </div>
         </div>
 
@@ -624,13 +646,19 @@
 
     if (!Array.isArray(saison.pontes)) saison.pontes = [];
 
+        const couple = getCouple(coupleId);
+    const params = getParamsEspece(couple?.espece || "");
+
     saison.pontes.push({
       id: makeId(),
       numero: document.getElementById("ponteNumero")?.value || String(saison.pontes.length + 1),
       premierOeuf: document.getElementById("pontePremierOeuf")?.value || "",
       dernierOeuf: document.getElementById("ponteDernierOeuf")?.value || "",
       debutCouvaison: document.getElementById("ponteDebutCouvaison")?.value || "",
-      dureeIncubation: toNumber(document.getElementById("ponteDuree")?.value || 30),
+      dureeIncubation: toNumber(document.getElementById("ponteDuree")?.value || params.incubation),
+      joursMirage: params.mirage,
+      jourBaguage: params.baguage,
+      jourSortieEleveuse: params.sortieEleveuse,
       joursMirage: 10,
       nbOeufs: 0,
       nbFecondes: 0,
@@ -742,9 +770,11 @@
           </div>
         </div>
 
-        <div class="info-box">
+                <div class="info-box">
           <p><strong>Mirage prévu :</strong> ${safe(getMirageDate(ponte) || "-")}</p>
           <p><strong>Éclosion prévue :</strong> ${safe(getEclosionDate(ponte) || "-")}</p>
+          <p><strong>Baguage conseillé :</strong> ${safe(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourBaguage || 14) || "-")}</p>
+          <p><strong>Sortie éleveuse estimée :</strong> ${safe(getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.jourSortieEleveuse || 40) || "-")}</p>
         </div>
 
         <label>Observations</label>
@@ -950,6 +980,8 @@
     ponte.debutCouvaison = document.getElementById("detailPonteDebutCouvaison")?.value || "";
     ponte.dureeIncubation = toNumber(document.getElementById("detailPonteDuree")?.value || 30);
     ponte.joursMirage = toNumber(document.getElementById("detailPonteMirage")?.value || 10);
+        if (!ponte.jourBaguage) ponte.jourBaguage = 14;
+    if (!ponte.jourSortieEleveuse) ponte.jourSortieEleveuse = 40;
     ponte.nbOeufs = toNumber(document.getElementById("detailPonteNbOeufs")?.value || 0);
     ponte.nbFecondes = toNumber(document.getElementById("detailPonteFecondes")?.value || 0);
     ponte.nbClairs = toNumber(document.getElementById("detailPonteClairs")?.value || 0);
