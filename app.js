@@ -1082,12 +1082,21 @@ todayTodo.unshift(
 
 if (prioritesEl) {
 
-    const priorites = todayTodo.slice(0, 5);
+  const priorites = [];
 
-    prioritesEl.innerHTML = priorites.length
-        ? priorites.join("")
-        : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
+  // Soins
+  priorites.push(...soinAlerts.slice(0,2));
 
+  // Reproduction urgente
+  priorites.push(...reproAlerts.slice(0,2));
+
+  // Une seule pesée
+  const premierePesee = todayTodo.find(x => x.includes("À peser"));
+  if (premierePesee) priorites.push(premierePesee);
+
+  prioritesEl.innerHTML = priorites.length
+      ? priorites.slice(0,5).join("")
+      : `<p class="muted-line">Aucune priorité aujourd'hui.</p>`;
 }
 
  if (tasksEl) {
