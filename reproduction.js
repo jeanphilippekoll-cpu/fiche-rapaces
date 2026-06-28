@@ -160,6 +160,7 @@
     const stats = computeStats();
 
     root.innerHTML = `
+    <div id="dashboardReproduction"></div>
       <div class="module-header">
         <div>
           <h1>Reproduction</h1>
@@ -280,6 +281,7 @@
         }
       </div>
     `;
+    renderDashboardReproduction();
   }
 
   async function ajouterCoupleReproduction() {
@@ -1230,6 +1232,164 @@ Couleur/repère : ${jeune.couleur || "-"}`,
     await persistAndRender("Œuf supprimé.");
     ouvrirPonteReproduction(coupleId, saisonId, ponteId);
   }
+
+  /* =====================================================
+   DASHBOARD REPRODUCTION
+===================================================== */
+
+function getReproductionDashboard() {
+
+    const resume = {
+        couples: 0,
+        saisons: 0,
+        pontes: 0,
+        oeufs: 0,
+        fecondes: 0,
+        clairs: 0,
+        eclos: 0,
+        jeunes: 0,
+        alertes: []
+    };
+
+    safeArray(appData.reproduction).forEach(couple => {
+
+        resume.couples++;
+
+        safeArray(couple.saisons).forEach(saison => {
+
+            resume.saisons++;
+
+            safeArray(saison.pontes).forEach(ponte => {
+
+                resume.pontes++;
+
+                resume.oeufs += Number(ponte.nbOeufs || 0);
+                resume.fecondes += Number(ponte.nbFecondes || 0);
+                resume.clairs += Number(ponte.nbClairs || 0);
+                resume.jeunes += safeArray(ponte.jeunes).length;
+
+                safeArray(ponte.oeufs).forEach(oeuf => {
+
+                    if (oeuf.statut === "Éclos")
+                        resume.eclos++;
+
+                });
+
+                const mirage = getMirageDate(ponte);
+
+                if (mirage && mirage < todayStr()) {
+
+                    resume.alertes.push({
+                        type: "mirage",
+                        texte:
+                            `${couple.espece} • Ponte ${ponte.numero} : mirage prévu le ${mirage}`
+                    });
+
+                }
+
+                const eclosion = getEclosionDate(ponte);
+
+                if (eclosion && eclosion < todayStr()) {
+
+                    resume.alertes.push({
+                        type: "eclosion",
+                        texte:
+                            `${couple.espece} • Ponte ${ponte.numero} : éclosion prévue le ${eclosion}`
+                    });
+
+                }
+
+            });
+
+        });
+
+    });
+
+    return resume;
+
+}
+
+function renderDashboardReproduction(containerId = "dashboardReproduction") {
+
+    const container = document.getElementById(containerId);
+
+    if (!container) return;
+
+    const d = getReproductionDashboard();
+
+    const taux =
+        d.oeufs === 0
+            ? 0
+            : Math.round((d.fecondes / d.oeufs) * 100);
+
+    container.innerHTML = `
+
+<div class="dashboard-grid">
+
+<div class="card">
+<h3>Couples</h3>
+<h2>${d.couples}</h2>
+</div>
+
+<div class="card">
+<h3>Saisons</h3>
+<h2>${d.saisons}</h2>
+</div>
+
+<div class="card">
+<h3>Pontes</h3>
+<h2>${d.pontes}</h2>
+</div>
+
+<div class="card">
+<h3>Œufs</h3>
+<h2>${d.oeufs}</h2>
+</div>
+
+<div class="card">
+<h3>Fécondés</h3>
+<h2>${d.fecondes}</h2>
+</div>
+
+<div class="card">
+<h3>Jeunes</h3>
+<h2>${d.jeunes}</h2>
+</div>
+
+<div class="card">
+<h3>Taux fécondité</h3>
+<h2>${taux}%</h2>
+</div>
+
+</div>
+
+<div class="card" style="margin-top:20px">
+
+<h2>Alertes reproduction</h2>
+
+${
+d.alertes.length
+?
+`
+<ul>
+
+${d.alertes.map(a=>`
+
+<li>${safe(a.texte)}</li>
+
+`).join("")}
+
+</ul>
+`
+:
+"<p>Aucune alerte.</p>"
+}
+
+</div>
+
+`;
+
+}
 
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
