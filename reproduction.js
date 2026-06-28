@@ -693,39 +693,58 @@ function getAlertesPonte(ponte) {
         ${
           saison.pontes.length
             ? `
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Ponte</th>
-                      <th>Premier œuf</th>
-                      <th>Dernier œuf</th>
-                      <th>Mirage prévu</th>
-                      <th>Éclosion prévue</th>
-                      <th>Œufs</th>
-                      <th>Jeunes</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${saison.pontes.map(p => `
-                      <tr>
-                        <td>${safe(p.numero || "-")}</td>
-                        <td>${formatDateBE(p.premierOeuf)}</td>
-                        <td>${formatDateBE(p.dernierOeuf)}</td>
-                        <td>${formatDateBE(getMirageDate(p))}</td>
-                        <td>${formatDateBE(getEclosionDate(p))}</td>
-                        <td>${toNumber(p.nbOeufs)}</td>
-                        <td>${safeArray(p.jeunes).length}</td>
-                        <td>
-                          <button class="btn small-btn" onclick="ouvrirPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(p.id)}')">Ouvrir</button>
-                          <button class="btn btn-danger small-btn" onclick="supprimerPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(p.id)}')">Supprimer</button>
-                        </td>
-                      </tr>
-                    `).join("")}
-                  </tbody>
-                </table>
-              </div>
+              <div class="repro-ponte-grid">
+  ${saison.pontes.map(p => {
+    recalculerPonte(p);
+
+    const total = toNumber(p.nbOeufs);
+    const fecondes = toNumber(p.nbFecondes);
+    const clairs = toNumber(p.nbClairs);
+    const jeunes = safeArray(p.jeunes).length;
+    const alertes = getAlertesPonte(p);
+
+    return `
+      <div class="repro-ponte-card">
+        <div class="repro-ponte-head">
+          <div>
+            <h3>🥚 Ponte ${safe(p.numero || "-")}</h3>
+            <p>${formatDateBE(p.premierOeuf)} → ${formatDateBE(p.dernierOeuf)}</p>
+          </div>
+          <span class="repro-badge">${progressionIncubation(p)} j</span>
+        </div>
+
+        <div class="repro-mini-stats">
+          <span>🥚 ${total} œufs</span>
+          <span>🟢 ${fecondes} fécondés</span>
+          <span>⚪ ${clairs} clairs</span>
+          <span>👶 ${jeunes} jeunes</span>
+        </div>
+
+        <div class="repro-dates">
+          <p><strong>Mirage :</strong> ${formatDateBE(getMirageDate(p))}</p>
+          <p><strong>Éclosion :</strong> ${formatDateBE(getEclosionDate(p))}</p>
+        </div>
+
+        <div class="repro-card-alerts">
+          ${
+            alertes.length
+              ? alertes.map(a => `<div class="repro-alert">${safe(a)}</div>`).join("")
+              : `<div class="repro-alert ok">Aucune alerte</div>`
+          }
+        </div>
+
+        <div class="actions">
+          <button class="btn small-btn" onclick="ouvrirPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(p.id)}')">
+            Ouvrir
+          </button>
+          <button class="btn btn-danger small-btn" onclick="supprimerPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(p.id)}')">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("")}
+</div>
             `
             : `<p class="muted-line">Aucune ponte créée.</p>`
         }
