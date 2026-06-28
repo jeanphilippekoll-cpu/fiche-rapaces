@@ -1248,11 +1248,23 @@ style="width:100%;height:18px;">
     <td>${safe(j.statut || j.destination || "Vivant")}</td>
     <td>
       <button class="btn small-btn" onclick="ouvrirJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Modifier</button>
-      ${
-        j.oiseauId
-          ? ""
-          : `<button class="btn secondary-btn small-btn" onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Créer fiche</button>`
-      }
+     ${
+j.oiseauId
+
+?
+
+`<button class="btn small-btn"
+onclick="window.ouvrirFicheOiseau && window.ouvrirFicheOiseau('${safeAttr(j.oiseauId)}')">
+Ouvrir fiche
+</button>`
+
+:
+
+`<button class="btn secondary-btn small-btn"
+onclick="creerOiseauDepuisJeune('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">
+Créer fiche
+</button>`
+}
       <button class="btn btn-danger small-btn" onclick="supprimerJeuneReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(j.id)}')">Supprimer</button>
     </td>
   </tr>
@@ -1483,74 +1495,76 @@ style="width:100%;height:18px;">
   }
 
   async function creerOiseauDepuisJeune(coupleId, saisonId, ponteId, jeuneId) {
+
     const couple = getCouple(coupleId);
-    const saison = getSaison(coupleId, saisonId);
-    const ponte = getPonte(coupleId, saisonId, ponteId);
     const jeune = getJeune(coupleId, saisonId, ponteId, jeuneId);
 
-    if (!couple || !saison || !ponte || !jeune) return;
+    if (!couple || !jeune) return;
 
     if (jeune.oiseauId) {
-      alert("Une fiche oiseau existe déjà pour ce jeune.");
-      return;
+        alert("Une fiche existe déjà.");
+        return;
     }
 
-    const nouvelOiseau = {
-      id: makeId(),
-      nom: jeune.couleur ? `Jeune ${jeune.couleur}` : `Jeune ${jeune.numero}`,
-      ordre: 0,
-      bague: jeune.bague || "",
-      cites: "",
-      carteVerte: "",
-      espece: couple.espece || "",
-      sexe: jeune.sexe || "Inconnu",
-      age: jeune.dateNaissance || "",
-      annexe: "",
-      dateEntree: jeune.dateNaissance || todayStr(),
-      registreEntree: "",
-      statut: "Né chez Phil Ô Plumes",
-      dateSortie: "",
-      registreSortie: "",
-      motifSortie: "",
-      poidsActuel: "",
-      poidsVol: 0,
-      toleranceVol: 0,
-      notes: `Né chez Phil Ô Plumes
-Père : ${couple.maleNom || "-"} (${couple.maleBague || "-"})
-Mère : ${couple.femelleNom || "-"} (${couple.femelleBague || "-"})
-Saison : ${saison.annee || "-"}
-Ponte : ${ponte.numero || "-"}
-Couleur/repère : ${jeune.couleur || "-"}`,
-      nourritureHabituelle: "Poussin",
-      quantiteHabituelle: 0,
-      nourritureHabituelle2: "",
-      quantiteHabituelle2: "",
-      photoUrl: "",
-      documents: [],
-      historiquePoids: [],
-      reproduction: {
-        pereId: couple.maleId || "",
-        pereNom: couple.maleNom || "",
-        pereBague: couple.maleBague || "",
-        mereId: couple.femelleId || "",
-        mereNom: couple.femelleNom || "",
-        mereBague: couple.femelleBague || "",
-        coupleId,
-        saisonId,
-        ponteId,
-        jeuneId
-      }
+    const oiseau = {
+
+        id: makeId(),
+
+        nom: jeune.nom || ("Jeune " + (jeune.numero || "")),
+
+        espece: couple.espece || "",
+
+        sexe: jeune.sexe || "Inconnu",
+
+        bague: jeune.bague || "",
+
+        dateNaissance: jeune.dateNaissance || "",
+
+        couleur: jeune.couleur || "",
+
+        origine: "Né à l'élevage",
+
+        statut: "Elevage",
+
+        cites: "",
+
+        carteVerte: "",
+
+        pere: couple.maleNom || "",
+
+        mere: couple.femelleNom || "",
+
+        poids: jeune.poidsActuel || jeune.poidsNaissance || "",
+
+        documents: [],
+
+        sante: [],
+
+        nourrissage: [],
+
+        reproduction: [],
+
+        notes: jeune.notes || ""
+
     };
 
-    data().oiseaux.unshift(nouvelOiseau);
-    jeune.oiseauId = nouvelOiseau.id;
+    data().oiseaux.push(oiseau);
+
+    jeune.oiseauId = oiseau.id;
 
     await persistAndRender("Fiche oiseau créée.");
 
-    if (typeof window.showSection === "function") {
-      window.showSection("oiseaux");
+    if (typeof window.ouvrirFicheOiseau === "function") {
+
+        window.ouvrirFicheOiseau(oiseau.id);
+
+    } else {
+
+        ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+
     }
-  }
+
+}
 
     async function ajouterOeufReproduction(coupleId, saisonId, ponteId) {
     const ponte = getPonte(coupleId, saisonId, ponteId);
