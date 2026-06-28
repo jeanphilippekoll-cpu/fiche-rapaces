@@ -1034,18 +1034,20 @@ if (surveillanceEl) {
       : `<p class="muted-line">Aucun soin prévu aujourd’hui.</p>`;
 }
 
-toWeigh.forEach(b => {
+if (toWeigh.length) {
+
   todayTodo.push(
     dashboardRow(
-      b.nom,
-      `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
-      "À peser",
+      "Pesées",
+      `${toWeigh.length} oiseau(x) à peser`,
+      "Ouvrir",
       "warn",
       "",
       "pesees"
     )
   );
-});
+
+}
 
 complements.forEach(x => {
   todayTodo.push(
