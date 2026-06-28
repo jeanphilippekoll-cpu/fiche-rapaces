@@ -1349,9 +1349,6 @@ function refreshBirdPremiumTabs(bird) {
   }
 }
 
-const healthEl = document.getElementById("birdPremiumHealth");
-const vets = getVetForBird(bird.nom);
-
 if (healthEl) {
   healthEl.innerHTML = vets.length
     ? vets.slice(0, 10).map(v => `
