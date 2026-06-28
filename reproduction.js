@@ -638,6 +638,7 @@
       nbSousMere: 0,
       nbCouveuse: 0,
       observations: "",
+      oeufs: [],
       jeunes: []
     });
 
@@ -752,6 +753,89 @@
         <div class="actions">
           <button class="btn" onclick="sauverPonteReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}')">Enregistrer la ponte</button>
         </div>
+      </div>
+
+            <div class="card">
+        <h2>Suivi des œufs</h2>
+
+        <div class="form-grid">
+          <div>
+            <label>Numéro œuf</label>
+            <input id="oeufNumero" value="${safeAttr(safeArray(ponte.oeufs).length + 1)}">
+          </div>
+
+          <div>
+            <label>Date de ponte</label>
+            <input id="oeufDate" type="date" value="${todayStr()}">
+          </div>
+
+          <div>
+            <label>Statut</label>
+            <select id="oeufStatut">
+              <option>À mirer</option>
+              <option>Fécondé</option>
+              <option>Clair</option>
+              <option>Mort dans l’œuf</option>
+              <option>Éclos</option>
+              <option>Perdu</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Lieu</label>
+            <select id="oeufLieu">
+              <option>Sous mère</option>
+              <option>Couveuse</option>
+              <option>Retiré</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Notes œuf</label>
+        <textarea id="oeufNotes"></textarea>
+
+        <div class="actions">
+          <button class="btn" onclick="ajouterOeufReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}')">
+            + Ajouter l’œuf
+          </button>
+        </div>
+
+        ${
+          safeArray(ponte.oeufs).length
+            ? `
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Œuf</th>
+                      <th>Date</th>
+                      <th>Statut</th>
+                      <th>Lieu</th>
+                      <th>Notes</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${safeArray(ponte.oeufs).map(o => `
+                      <tr>
+                        <td>${safe(o.numero || "-")}</td>
+                        <td>${safe(o.date || "-")}</td>
+                        <td>${safe(o.statut || "-")}</td>
+                        <td>${safe(o.lieu || "-")}</td>
+                        <td>${safe(o.notes || "")}</td>
+                        <td>
+                          <button class="btn btn-danger small-btn" onclick="supprimerOeufReproduction('${safeAttr(coupleId)}','${safeAttr(saisonId)}','${safeAttr(ponteId)}','${safeAttr(o.id)}')">
+                            Supprimer
+                          </button>
+                        </td>
+                      </tr>
+                    `).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `
+            : `<p class="muted-line">Aucun œuf encodé pour cette ponte.</p>`
+        }
       </div>
 
       <div class="card">
@@ -1072,6 +1156,49 @@ Couleur/repère : ${jeune.couleur || "-"}`,
     }
   }
 
+    async function ajouterOeufReproduction(coupleId, saisonId, ponteId) {
+    const ponte = getPonte(coupleId, saisonId, ponteId);
+    if (!ponte) return;
+
+    if (!Array.isArray(ponte.oeufs)) ponte.oeufs = [];
+
+    ponte.oeufs.push({
+      id: makeId(),
+      numero: document.getElementById("oeufNumero")?.value || String(ponte.oeufs.length + 1),
+      date: document.getElementById("oeufDate")?.value || "",
+      statut: document.getElementById("oeufStatut")?.value || "À mirer",
+      lieu: document.getElementById("oeufLieu")?.value || "Sous mère",
+      notes: document.getElementById("oeufNotes")?.value || ""
+    });
+
+    ponte.nbOeufs = safeArray(ponte.oeufs).length;
+    ponte.nbFecondes = safeArray(ponte.oeufs).filter(o => o.statut === "Fécondé" || o.statut === "Éclos").length;
+    ponte.nbClairs = safeArray(ponte.oeufs).filter(o => o.statut === "Clair").length;
+    ponte.nbSousMere = safeArray(ponte.oeufs).filter(o => o.lieu === "Sous mère").length;
+    ponte.nbCouveuse = safeArray(ponte.oeufs).filter(o => o.lieu === "Couveuse").length;
+
+    await persistAndRender("Œuf ajouté.");
+    ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+  }
+
+  async function supprimerOeufReproduction(coupleId, saisonId, ponteId, oeufId) {
+    if (!confirm("Supprimer cet œuf ?")) return;
+
+    const ponte = getPonte(coupleId, saisonId, ponteId);
+    if (!ponte) return;
+
+    ponte.oeufs = safeArray(ponte.oeufs).filter(o => o.id !== oeufId);
+
+    ponte.nbOeufs = safeArray(ponte.oeufs).length;
+    ponte.nbFecondes = safeArray(ponte.oeufs).filter(o => o.statut === "Fécondé" || o.statut === "Éclos").length;
+    ponte.nbClairs = safeArray(ponte.oeufs).filter(o => o.statut === "Clair").length;
+    ponte.nbSousMere = safeArray(ponte.oeufs).filter(o => o.lieu === "Sous mère").length;
+    ponte.nbCouveuse = safeArray(ponte.oeufs).filter(o => o.lieu === "Couveuse").length;
+
+    await persistAndRender("Œuf supprimé.");
+    ouvrirPonteReproduction(coupleId, saisonId, ponteId);
+  }
+
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
   window.ouvrirCoupleReproduction = ouvrirCoupleReproduction;
@@ -1094,4 +1221,6 @@ Couleur/repère : ${jeune.couleur || "-"}`,
   window.supprimerJeuneReproduction = supprimerJeuneReproduction;
 
   window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
+  window.ajouterOeufReproduction = ajouterOeufReproduction;
+  window.supprimerOeufReproduction = supprimerOeufReproduction;
 })();
