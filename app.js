@@ -750,6 +750,9 @@ const reproInfosEl = document.getElementById("dashboardReproInfos");
  const reproAlerts = [];
 const reproTasks = [];
 
+const soinAlerts = [];
+const soinTasks = [];
+
 const today = todayStr();
 const now = new Date();
 const birds = getSortedBirds(getActiveBirds());
@@ -837,6 +840,29 @@ safeArray(appData.reproduction).forEach(couple => {
       });
     });
   });
+});
+
+safeArray(appData.veterinaire).forEach(soin => {
+  if (!soin.soinActif) return;
+  if (!soin.soinProchaineDate) return;
+
+  const reste = daysUntil(soin.soinProchaineDate);
+
+  const detail = `${soin.oiseau || "-"} — ${soin.soinType || "Soin"} — ${formatDateFR(soin.soinProchaineDate)}`;
+
+  if (reste === 0) {
+    soinAlerts.push(
+      dashboardRow("Soin à faire", detail, "Aujourd’hui", "danger", "", "veterinaire")
+    );
+  } else if (reste > 0 && reste <= 3) {
+    soinTasks.push(
+      dashboardRow("Soin à venir", detail, `Dans ${reste} j`, "warn", "", "veterinaire")
+    );
+  } else if (reste < 0) {
+    soinAlerts.push(
+      dashboardRow("Soin en retard", detail, "Retard", "danger", "", "veterinaire")
+    );
+  }
 });
 
   if (dateEl) {
@@ -982,18 +1008,27 @@ safeArray(appData.reproduction).forEach(couple => {
 }
 
 if (surveillanceEl) {
-  surveillanceEl.innerHTML = soins.length
+  const soinsClassiques = soins.length
     ? soins.map(x =>
         dashboardRow(
           x.bird.nom,
           x.care,
           "Bandage",
           "danger",
-"",
-"veterinaire"
+          "",
+          "veterinaire"
         )
       ).join("")
-    : `<p class="muted-line">Aucun bandage prévu aujourd’hui.</p>`;
+    : "";
+
+  const soinsActifs = soinAlerts.length || soinTasks.length
+    ? [...soinAlerts, ...soinTasks].join("")
+    : "";
+
+  surveillanceEl.innerHTML =
+    soinsClassiques || soinsActifs
+      ? `${soinsClassiques}${soinsActifs}`
+      : `<p class="muted-line">Aucun soin prévu aujourd’hui.</p>`;
 }
 
   if (tasksEl) {
@@ -1006,7 +1041,7 @@ if (surveillanceEl) {
 }
 
    if (alertsEl) {
-    const allAlerts = [...alerts];
+    const allAlerts = [...soinAlerts, ...alerts];
 
     alertsEl.innerHTML = allAlerts.length
       ? allAlerts.join("")
