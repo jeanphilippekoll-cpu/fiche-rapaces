@@ -5653,6 +5653,20 @@ window.sauverJeune = sauverJeune;
 window.supprimerJeune = supprimerJeune;
 window.creerOiseauDepuisJeune = creerOiseauDepuisJeune;
 window.recalculerStatsPonte = recalculerStatsPonte;
+window.appData = appData;
+window.safe = safe;
+window.safeAttr = safeAttr;
+window.safeArray = safeArray;
+window.toNumber = toNumber;
+window.makeId = makeId;
+window.saveData = saveData;
+window.renderAll = renderAll;
+window.showSection = showSection;
+window.todayStr = todayStr;
+window.formatDateFR = formatDateFR;
+window.getActiveBirds = getActiveBirds;
+window.getSortedBirds = getSortedBirds;
+window.statusEl = statusEl;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
