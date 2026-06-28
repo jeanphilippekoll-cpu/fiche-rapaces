@@ -604,6 +604,7 @@ if (section === "veterinaire") {
   refreshBirdSelects();
   renderVeterinaire();
 }
+}
 
 function refreshStats() {
   const setCounter = (ids, value) => {
@@ -1099,9 +1100,9 @@ todayTodo.unshift(
 
 if (tasksEl) {
   tasksEl.innerHTML = `
-    dashboardRow(
-  "🍗 Nourrissage",
-  `${fedToday.size} nourri(s) • ${birdsToFeed.length} restant(s)`,
+    ${dashboardRow(
+      "Nourrissage",
+      `${fedToday.size} nourri(s) aujourd’hui`,
       "Ouvrir",
       "info",
       "",
@@ -1109,8 +1110,8 @@ if (tasksEl) {
     )}
 
     ${toWeigh.length ? dashboardRow(
-  "⚖️ Pesées",
-      `${toWeigh.length} oiseau(x) en attente de pesée`
+      "Pesées",
+      `${toWeigh.length} oiseau(x) en attente de pesée`,
       "Ouvrir",
       "warn",
       "",
@@ -1118,8 +1119,8 @@ if (tasksEl) {
     ) : ""}
 
     ${soinAlerts.length ? dashboardRow(
-  "🩹 Soins",
-      `${soinAlerts.length} soin(s) prévu(s)`
+      "Soins",
+      `${soinAlerts.length} soin(s) prévu(s)`,
       "Ouvrir",
       "danger",
       "",
@@ -1127,8 +1128,8 @@ if (tasksEl) {
     ) : ""}
 
     ${reproAlerts.length ? dashboardRow(
-  "🥚 Reproduction",
-      `${reproAlerts.length} intervention(s) à prévoir`
+      "Reproduction",
+      `${reproAlerts.length} intervention(s) à prévoir`,
       "Ouvrir",
       "warn",
       "",
@@ -1143,7 +1144,6 @@ if (tasksEl) {
     )}
   `;
 }
-
    if (alertsEl) {
     const allAlerts = [...soinAlerts, ...alerts];
 
