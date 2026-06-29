@@ -5135,8 +5135,15 @@ function quickOpenFeed(birdId) {
     if (food2) food2.value = bird.nourritureHabituelle2 || "";
     if (qty2) qty2.value = toNumber(bird.quantiteHabituelle2) > 0 ? bird.quantiteHabituelle2 : "";
 
+    const target = qty1 || food1 || document.getElementById(`feedCard_${bird.id}`);
+
+    target?.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
     qty1?.focus();
-  }, 100);
+  }, 150);
 }
 
 function quickOpenVet(birdId) {
