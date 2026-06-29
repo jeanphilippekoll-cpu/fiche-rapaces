@@ -355,7 +355,14 @@ function normalizeVeterinaire(list) {
     traitement: item?.traitement || "",
     protocole: item?.protocole || "",
     observations: item?.observations || "",
-    fichiers: normalizeDocuments(item?.fichiers)
+    fichiers: normalizeDocuments(item?.fichiers),
+
+    soinType: item?.soinType || "",
+    soinFrequence: toNumber(item?.soinFrequence),
+    soinProchaineDate: item?.soinProchaineDate || "",
+    soinActif: item?.soinActif === true,
+    soinDerniereDate: item?.soinDerniereDate || "",
+    soinHistorique: safeArray(item?.soinHistorique)
   }));
 }
 
@@ -576,17 +583,24 @@ function buildUserPayload() {
       remarques: n.remarques || ""
     })),
     veterinaire: appData.veterinaire.map((v) => ({
-      id: v.id || makeId(),
-      oiseau: v.oiseau || "",
-      date: v.date || "",
-      veterinaire: v.veterinaire || "",
-      motif: v.motif || "",
-      diagnostic: v.diagnostic || "",
-      traitement: v.traitement || "",
-      protocole: v.protocole || "",
-      observations: v.observations || "",
-      fichiers: normalizeDocuments(v.fichiers)
-    })),
+  id: v.id || makeId(),
+  oiseau: v.oiseau || "",
+  date: v.date || "",
+  veterinaire: v.veterinaire || "",
+  motif: v.motif || "",
+  diagnostic: v.diagnostic || "",
+  traitement: v.traitement || "",
+  protocole: v.protocole || "",
+  observations: v.observations || "",
+  fichiers: normalizeDocuments(v.fichiers),
+
+  soinType: v.soinType || "",
+  soinFrequence: toNumber(v.soinFrequence),
+  soinProchaineDate: v.soinProchaineDate || "",
+  soinActif: v.soinActif === true,
+  soinDerniereDate: v.soinDerniereDate || "",
+  soinHistorique: safeArray(v.soinHistorique)
+})),
     entretien: safeArray(appData.entretien)
   };
 }
