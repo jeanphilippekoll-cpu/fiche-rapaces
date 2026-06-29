@@ -6370,27 +6370,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   showSection("accueil");
 
-setTimeout(() => {
-  document.getElementById("dashboardDate").textContent = "dashboard actif";
-
-  document.getElementById("dashboardToWeigh").innerHTML =
-    `<p class="muted-line">⚖️ Pesées à vérifier aujourd’hui.</p>`;
-
-  document.getElementById("dashboardToFly").innerHTML =
-    `<p class="muted-line">🦅 Poids de vol à vérifier.</p>`;
-
-  document.getElementById("dashboardComplements").innerHTML =
-    `<p class="muted-line">💊 Aucun complément prévu aujourd’hui.</p>`;
-
-  document.getElementById("dashboardSurveillance").innerHTML =
-    `<p class="muted-line">❤️ Aucun soin actif renseigné.</p>`;
-
-  document.getElementById("dashboardTasks").innerHTML =
-    `<p class="muted-line">✅ Contrôle eau, fientes, comportement et stock.</p>`;
-
-  document.getElementById("dashboardAlerts").innerHTML =
-    `<p class="muted-line">⚠️ Aucune alerte active.</p>`;
-}, 500);
 });
 
 function openBirdDocuments(id) {
