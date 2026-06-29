@@ -838,3 +838,27 @@ color:#666;
   font-weight: 700;
   background: #fffdf8;
 }
+
+.bird-status-ready{
+
+border-left:8px solid #3cb371;
+
+}
+
+.bird-status-heavy{
+
+border-left:8px solid #d9534f;
+
+}
+
+.bird-status-care{
+
+border-left:8px solid #ff9800;
+
+}
+
+.bird-status-normal{
+
+border-left:8px solid #9e9e9e;
+
+}

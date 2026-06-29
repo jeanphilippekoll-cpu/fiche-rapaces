@@ -1236,7 +1236,7 @@ if (tasksEl) {
     <div id="dashboardBirdCards">
       ${birds.length
         ? birds.map(b => `
-          <div class="dashboard-bird-card-pro" data-bird-search="${safeAttr((b.nom + ' ' + (b.espece || '')).toLowerCase())}" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+          <div class="dashboard-bird-card-pro ${getBirdStatusClass(b)}" data-bird-search="${safeAttr((b.nom + ' ' + (b.espece || '')).toLowerCase())}" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
             <div class="dashboard-bird-info-pro">
               <div>
                 <strong>${safe(b.nom)}</strong>
@@ -1271,6 +1271,29 @@ function filterDashboardBirds() {
 }
 
 window.filterDashboardBirds = filterDashboardBirds;
+
+function getBirdStatusClass(bird) {
+
+    const poids = getLatestBirdWeight(bird);
+    const poidsVol = toNumber(bird.poidsVol);
+
+    if (bird.enSoin) return "bird-status-care";
+
+    if (poidsVol > 0) {
+
+        if (poids > poidsVol + 20)
+            return "bird-status-heavy";
+
+        if (Math.abs(poids - poidsVol) <= 20)
+            return "bird-status-ready";
+
+    }
+
+    return "bird-status-normal";
+
+}
+
+window.getBirdStatusClass = getBirdStatusClass;
 
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
