@@ -4973,6 +4973,7 @@ async function loadData() {
     if (pesDateEl) pesDateEl.value = todayStr();
 
     renderAll();
+    renderDashboardIntelligent();
 
     if (statusEl) statusEl.textContent = "Données chargées";
   } catch (e) {
