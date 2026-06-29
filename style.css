@@ -615,3 +615,58 @@ font-size:14px;
 color:#666;
 
 }
+
+.dashboard-bird-card {
+  background: #fffaf2;
+  border: 1px solid rgba(90, 70, 40, 0.18);
+  border-radius: 18px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.dashboard-bird-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dashboard-bird-main strong {
+  display: block;
+  font-size: 1rem;
+}
+
+.dashboard-bird-main small {
+  display: block;
+  opacity: 0.75;
+  margin-top: 3px;
+}
+
+.dashboard-bird-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dashboard-bird-actions button {
+  min-height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: #6f8f52;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 520px) {
+  .dashboard-bird-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-bird-actions button {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+}
