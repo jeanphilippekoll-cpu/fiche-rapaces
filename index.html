@@ -1585,6 +1585,14 @@ bird-card .bird-badges {
             <input id="oiseauEditId" type="hidden">
 
             <div id="birdTab-general" class="bird-tab-content">
+              
+              <div class="bird-quick-actions">
+  <button class="bird-action-btn" onclick="quickOpenWeight(document.getElementById('oiseauEditId').value)">⚖️ Pesée</button>
+  <button class="bird-action-btn" onclick="quickOpenFeed(document.getElementById('oiseauEditId').value)">🍗 Nourrir</button>
+  <button class="bird-action-btn" onclick="quickOpenVet(document.getElementById('oiseauEditId').value)">❤️ Soin</button>
+  <button class="bird-action-btn" onclick="showBirdTab('reproduction')">🥚 Reproduction</button>
+  <button class="bird-action-btn" onclick="showBirdTab('documents')">📄 Documents</button>
+</div>
 
             <div class="form-grid">
               <div>

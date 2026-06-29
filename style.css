@@ -670,3 +670,37 @@ color:#666;
     font-size: 1rem;
   }
 }
+
+.bird-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin: 0 0 18px 0;
+}
+
+.bird-action-btn {
+  border: none;
+  border-radius: 16px;
+  padding: 18px 12px;
+  min-height: 70px;
+  background: #6f8f52;
+  color: white;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.bird-action-btn:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 520px) {
+  .bird-quick-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .bird-action-btn {
+    min-height: 56px;
+    font-size: 1rem;
+  }
+}
