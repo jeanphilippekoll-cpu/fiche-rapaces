@@ -1224,27 +1224,53 @@ if (tasksEl) {
     }
 
  if (birdQuickListEl) {
-  birdQuickListEl.innerHTML = birds.length
-    ? birds.map(b => `
-        <div class="dashboard-bird-card-pro" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
-          <div class="dashboard-bird-info-pro">
-            <div>
-              <strong>${safe(b.nom)}</strong>
-              <small>${safe(b.espece || "")}</small>
-            </div>
-            <span class="dashboard-bird-fiche-pro">Fiche</span>
-          </div>
+  birdQuickListEl.innerHTML = `
+    <input
+      id="dashboardBirdSearch"
+      class="dashboard-bird-search"
+      type="search"
+      placeholder="🔍 Rechercher un oiseau..."
+      oninput="filterDashboardBirds()"
+    >
 
-          <div class="dashboard-bird-actions-pro">
-            <button onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
-            <button onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
-            <button onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+    <div id="dashboardBirdCards">
+      ${birds.length
+        ? birds.map(b => `
+          <div class="dashboard-bird-card-pro" data-bird-search="${safeAttr((b.nom + ' ' + (b.espece || '')).toLowerCase())}" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+            <div class="dashboard-bird-info-pro">
+              <div>
+                <strong>${safe(b.nom)}</strong>
+                <small>${safe(b.espece || "")}</small>
+              </div>
+              <span class="dashboard-bird-fiche-pro">Fiche</span>
+            </div>
+
+            <div class="dashboard-bird-actions-pro">
+              <button onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
+              <button onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
+              <button onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+            </div>
           </div>
-        </div>
-      `).join("")
-    : `<p class="muted-line">Aucun oiseau actif.</p>`;
+        `).join("")
+        : `<p class="muted-line">Aucun oiseau actif.</p>`
+      }
+    </div>
+  `;
 }
 }
+
+function filterDashboardBirds() {
+  const input = document.getElementById("dashboardBirdSearch");
+  const cards = document.querySelectorAll(".dashboard-bird-card-pro");
+  const search = (input?.value || "").trim().toLowerCase();
+
+  cards.forEach(card => {
+    const text = card.dataset.birdSearch || "";
+    card.style.display = text.includes(search) ? "" : "none";
+  });
+}
+
+window.filterDashboardBirds = filterDashboardBirds;
 
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
