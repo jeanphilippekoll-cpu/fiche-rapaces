@@ -1206,19 +1206,19 @@ if (tasksEl) {
  if (birdQuickListEl) {
   birdQuickListEl.innerHTML = birds.length
     ? birds.map(b => `
-        <div class="dashboard-bird-card">
-          <div class="dashboard-bird-main" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+        <div class="dashboard-bird-card-pro" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+          <div class="dashboard-bird-info-pro">
             <div>
               <strong>${safe(b.nom)}</strong>
               <small>${safe(b.espece || "")}</small>
             </div>
-            <span class="dashboard-badge info">Fiche</span>
+            <span class="dashboard-bird-fiche-pro">Fiche</span>
           </div>
 
-          <div class="dashboard-bird-actions">
-            <button onclick="quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
-            <button onclick="quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
-            <button onclick="quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+          <div class="dashboard-bird-actions-pro">
+            <button onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
+            <button onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
+            <button onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
           </div>
         </div>
       `).join("")
