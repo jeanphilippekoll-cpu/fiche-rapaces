@@ -1202,15 +1202,23 @@ if (tasksEl) {
       : `<p class="muted-line">Aucune information reproduction à venir.</p>`;
     }
 
-    if (birdQuickListEl) {
+ if (birdQuickListEl) {
   birdQuickListEl.innerHTML = birds.length
     ? birds.map(b => `
-        <div class="dashboard-row" onclick="openBirdFromDashboard('${safeAttr(b.nom)}')">
-          <div>
-            <strong>${safe(b.nom)}</strong>
-            <small>${safe(b.espece || "")}</small>
+        <div class="dashboard-bird-card">
+          <div class="dashboard-bird-main" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+            <div>
+              <strong>${safe(b.nom)}</strong>
+              <small>${safe(b.espece || "")}</small>
+            </div>
+            <span class="dashboard-badge info">Fiche</span>
           </div>
-          <span class="dashboard-badge info">Ouvrir</span>
+
+          <div class="dashboard-bird-actions">
+            <button onclick="quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
+            <button onclick="quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
+            <button onclick="quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+          </div>
         </div>
       `).join("")
     : `<p class="muted-line">Aucun oiseau actif.</p>`;
@@ -5089,6 +5097,67 @@ function openBirdFromDashboard(nom) {
 
   openBirdSheetInline(bird.id);
 }
+
+function quickOpenWeight(birdId) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird) return;
+
+  showSection("pesee");
+
+  setTimeout(() => {
+    const pesNom = document.getElementById("pesNom");
+    const pesEspece = document.getElementById("pesEspece");
+    const pesDate = document.getElementById("pesDate");
+
+    if (pesNom) pesNom.value = bird.nom || "";
+    if (pesEspece) pesEspece.value = bird.espece || "";
+    if (pesDate) pesDate.value = todayStr();
+
+    document.getElementById("pesPoids")?.focus();
+  }, 100);
+}
+
+function quickOpenFeed(birdId) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird) return;
+
+  showSection("nourrissage");
+
+  setTimeout(() => {
+    const food1 = document.getElementById(`feedFood1_${bird.id}`);
+    const qty1 = document.getElementById(`feedQty1_${bird.id}`);
+    const food2 = document.getElementById(`feedFood2_${bird.id}`);
+    const qty2 = document.getElementById(`feedQty2_${bird.id}`);
+
+    if (food1) food1.value = bird.nourritureHabituelle || "Poussin";
+    if (qty1) qty1.value = toNumber(bird.quantiteHabituelle) > 0 ? bird.quantiteHabituelle : "";
+    if (food2) food2.value = bird.nourritureHabituelle2 || "";
+    if (qty2) qty2.value = toNumber(bird.quantiteHabituelle2) > 0 ? bird.quantiteHabituelle2 : "";
+
+    qty1?.focus();
+  }, 100);
+}
+
+function quickOpenVet(birdId) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird) return;
+
+  showSection("veterinaire");
+
+  setTimeout(() => {
+    const vetBird = document.getElementById("vetBird");
+    const vetDate = document.getElementById("vetDate");
+
+    if (vetBird) vetBird.value = bird.nom || "";
+    if (vetDate) vetDate.value = todayStr();
+
+    document.getElementById("vetMotif")?.focus();
+  }, 100);
+}
+
+window.quickOpenWeight = quickOpenWeight;
+window.quickOpenFeed = quickOpenFeed;
+window.quickOpenVet = quickOpenVet;
 
 window.openBirdFromDashboard = openBirdFromDashboard;
 
