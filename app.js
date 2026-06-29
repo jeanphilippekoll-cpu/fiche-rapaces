@@ -782,6 +782,7 @@ function renderDashboardIntelligent() {
   const complementsEl = document.getElementById("dashboardComplements");
   const surveillanceEl = document.getElementById("dashboardSurveillance");
   const tasksEl = document.getElementById("dashboardTasks");
+  const birdQuickListEl = document.getElementById("dashboardBirdQuickList");
   
   const alertsEl = document.getElementById("dashboardAlerts"); // ← AJOUTER
   const reproAlertsEl = document.getElementById("dashboardReproAlerts");
@@ -1199,7 +1200,21 @@ if (tasksEl) {
     reproInfosEl.innerHTML = reproTasks.length
       ? reproTasks.join("")
       : `<p class="muted-line">Aucune information reproduction à venir.</p>`;
-  }
+    }
+
+    if (birdQuickListEl) {
+  birdQuickListEl.innerHTML = birds.length
+    ? birds.map(b => `
+        <div class="dashboard-row" onclick="openBirdFromDashboard('${safeAttr(b.nom)}')">
+          <div>
+            <strong>${safe(b.nom)}</strong>
+            <small>${safe(b.espece || "")}</small>
+          </div>
+          <span class="dashboard-badge info">Ouvrir</span>
+        </div>
+      `).join("")
+    : `<p class="muted-line">Aucun oiseau actif.</p>`;
+}
 }
 
 function refreshBirdSelects() {
