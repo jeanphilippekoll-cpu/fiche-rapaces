@@ -1030,19 +1030,39 @@ birds.forEach(b => {
       : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
   }
 
-  if (toFlyEl) {
-    toFlyEl.innerHTML = toFly.length
-      ? toFly.map(b =>
-          dashboardRow(
-            b.nom,
-            `${getLatestBirdWeight(b)} g / point de vol ${toNumber(b.poidsVol)} g`,
-            "Prêt",
-            "ok",
-            b.nom
-          )
-        ).join("")
-      : `<p class="muted-line">Aucun oiseau dans sa plage de vol.</p>`;
-  }
+ if (toFlyEl) {
+  toFlyEl.innerHTML = toFly.length
+    ? toFly.map(b => {
+        const poids = getLatestBirdWeight(b);
+        const poidsVol = toNumber(b.poidsVol);
+        const ecart = poids - poidsVol;
+        const ecartTxt = ecart > 0 ? `+${ecart} g` : `${ecart} g`;
+
+        return `
+          <div class="fly-card" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
+            <div class="fly-card-head">
+              <div>
+                <strong>🟢 ${safe(b.nom)}</strong>
+                <small>${safe(b.espece || "")}</small>
+              </div>
+              <span class="dashboard-badge ok">Prêt</span>
+            </div>
+
+            <div class="fly-card-info">
+              <span>⚖️ ${safe(poids)} g</span>
+              <span>🎯 ${safe(poidsVol)} g</span>
+              <span>Écart : ${safe(ecartTxt)}</span>
+            </div>
+
+            <div class="fly-card-actions">
+              <button onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
+              <button onclick="event.stopPropagation(); openBirdSheetInline('${safeAttr(b.id)}')">🦅 Fiche</button>
+            </div>
+          </div>
+        `;
+      }).join("")
+    : `<p class="muted-line">Aucun oiseau dans sa plage de vol.</p>`;
+}
 
  if (complementsEl) {
   const todayComplements = complements.length

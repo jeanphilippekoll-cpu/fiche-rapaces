@@ -754,3 +754,75 @@ color:#666;
 }
 
 }
+
+.fly-card {
+  background: #fffdf8;
+  border: 1px solid #eadfce;
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.fly-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.fly-card-head strong {
+  display: block;
+  font-size: 1.15rem;
+  color: #2f2419;
+}
+
+.fly-card-head small {
+  display: block;
+  margin-top: 3px;
+  color: #6f6254;
+  font-style: italic;
+}
+
+.fly-card-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  color: #4b3d2d;
+}
+
+.fly-card-info span {
+  background: #f6efe2;
+  border-radius: 12px;
+  padding: 8px;
+  text-align: center;
+}
+
+.fly-card-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.fly-card-actions button {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid #eadfce;
+  background: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .fly-card-info {
+    grid-template-columns: 1fr;
+  }
+
+  .fly-card-actions button {
+    min-height: 54px;
+    font-size: 1rem;
+  }
+}
