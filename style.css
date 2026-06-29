@@ -878,3 +878,76 @@ border-left:8px solid #9e9e9e;
 .dashboard-bird-card-pro.bird-status-normal {
   border-left: 10px solid #9e9e9e !important;
 }
+
+#dashboardBirdCards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+#dashboardBirdCards > div {
+  background: #fffdf8 !important;
+  border: 1px solid #eadfce !important;
+  border-left: 10px solid #9e9e9e !important;
+  border-radius: 18px !important;
+  padding: 16px !important;
+  margin-bottom: 0 !important;
+}
+
+#dashboardBirdCards > div.bird-status-ready {
+  border-left-color: #3cb371 !important;
+}
+
+#dashboardBirdCards > div.bird-status-heavy {
+  border-left-color: #d9534f !important;
+}
+
+#dashboardBirdCards > div.bird-status-care {
+  border-left-color: #ff9800 !important;
+}
+
+.dashboard-bird-info-pro {
+  display: flex !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+  margin-bottom: 12px !important;
+}
+
+.dashboard-bird-info-pro strong {
+  display: block !important;
+  font-size: 1.25rem !important;
+}
+
+.dashboard-bird-info-pro small {
+  display: block !important;
+  margin-top: 4px !important;
+  font-style: italic !important;
+  color: #6f6254 !important;
+}
+
+.dashboard-bird-fiche-pro {
+  background: #d9f0ec !important;
+  color: #14615d !important;
+  border-radius: 999px !important;
+  padding: 7px 14px !important;
+  font-weight: 800 !important;
+}
+
+.dashboard-bird-actions-pro {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 10px !important;
+}
+
+.dashboard-bird-actions-pro button {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+  font-weight: 800 !important;
+}
+
+@media(max-width:700px) {
+  .dashboard-bird-actions-pro {
+    grid-template-columns: 1fr !important;
+  }
+}
