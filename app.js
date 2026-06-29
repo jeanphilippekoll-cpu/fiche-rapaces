@@ -1260,6 +1260,7 @@ if (tasksEl) {
     <div>
       <strong style="display:block;font-size:20px;margin-bottom:4px;">${safe(b.nom)}</strong>
       <small style="display:block;color:#6f6254;font-style:italic;">${safe(b.espece || "")}</small>
+      ${getBirdCareBadge(b)}
     </div>
     <span style="background:#d9f0ec;color:#14615d;border-radius:999px;padding:7px 14px;font-weight:800;">Fiche</span>
   </div>
@@ -1329,6 +1330,27 @@ function getBirdStatusColor(bird) {
 }
 
 window.getBirdStatusColor = getBirdStatusColor;
+
+function getBirdCareBadge(bird) {
+  const soin = appData.veterinaire.find(v =>
+    (v.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
+    && v.soinActif
+  );
+
+  if (!soin) return "";
+
+  const dateTxt = soin.soinProchaineDate
+    ? ` — ${formatReste(soin.soinProchaineDate)}`
+    : "";
+
+  return `
+    <small style="display:block;margin-top:6px;color:#d97706;font-weight:800;font-style:normal;">
+      🩹 ${safe(soin.soinType || "Soin actif")}${safe(dateTxt)}
+    </small>
+  `;
+}
+
+window.getBirdCareBadge = getBirdCareBadge;
 
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
