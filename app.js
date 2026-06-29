@@ -1259,8 +1259,13 @@ if (tasksEl) {
   <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;">
     <div>
       <strong style="display:block;font-size:20px;margin-bottom:4px;">${safe(b.nom)}</strong>
-      <small style="display:block;color:#6f6254;font-style:italic;">${safe(b.espece || "")}</small>
-      ${getBirdCareBadge(b)}
+     <small style="display:block;color:#6f6254;font-style:italic;">
+  ${safe(b.espece || "")}
+</small>
+
+${getBirdQuickInfo(b)}
+
+${getBirdCareBadge(b)}
     </div>
     <span style="background:#d9f0ec;color:#14615d;border-radius:999px;padding:7px 14px;font-weight:800;">Fiche</span>
   </div>
@@ -1351,6 +1356,43 @@ function getBirdCareBadge(bird) {
 }
 
 window.getBirdCareBadge = getBirdCareBadge;
+
+function getBirdQuickInfo(bird) {
+
+    const poids = getLatestBirdWeight(bird);
+    const poidsVol = toNumber(bird.poidsVol);
+
+    if (!poidsVol) return "";
+
+    const ecart = poids - poidsVol;
+
+    const couleur =
+        ecart > 20 ? "#d9534f" :
+        Math.abs(ecart) <= 20 ? "#3cb371" :
+        "#666";
+
+    return `
+        <div style="
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:8px;
+            margin-bottom:8px;
+            font-size:13px;
+            font-weight:700;
+        ">
+            <span>⚖️ ${poids} g</span>
+
+            <span>🎯 ${poidsVol} g</span>
+
+            <span style="color:${couleur}">
+                📊 ${ecart > 0 ? "+" : ""}${ecart} g
+            </span>
+        </div>
+    `;
+}
+
+window.getBirdQuickInfo = getBirdQuickInfo;
 
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
