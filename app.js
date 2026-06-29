@@ -1330,6 +1330,37 @@ function refreshBirdPremiumTabs(bird) {
     if (last) last.textContent = latestWeightDate() ? formatDateFR(latestWeightDate()) : "-";
   }, 0);
 
+  setTimeout(() => {
+  const poidsTab = document.getElementById("birdTab-poids");
+
+  if (poidsTab && !document.getElementById("quickWeightValue")) {
+    poidsTab.querySelector(".card-section")?.insertAdjacentHTML("beforeend", `
+      <h4>Ajouter une pesée</h4>
+
+      <div class="form-grid">
+        <div>
+          <label>Date</label>
+          <input id="quickWeightDate" type="date" value="${todayStr()}">
+        </div>
+
+        <div>
+          <label>Poids</label>
+          <input id="quickWeightValue" type="number" placeholder="Poids en grammes">
+        </div>
+
+        <div>
+          <label>Observation</label>
+          <input id="quickWeightObs" placeholder="Observation">
+        </div>
+      </div>
+
+      <button class="btn" onclick="ajouterPeseeDepuisFiche('${safeAttr(bird.id)}')">
+        Ajouter la pesée
+      </button>
+    `);
+  }
+}, 0);
+
   const setText = (id, value) => {
     const el = document.getElementById(id);
     if (el) el.textContent = value || "-";
@@ -1382,6 +1413,47 @@ if (healthEl) {
       `).join("")
     : `<p class="muted-line">Aucun suivi vétérinaire pour cet oiseau.</p>`;
 }
+}
+
+async function ajouterPeseeDepuisFiche(birdId) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird) return;
+
+  const date = document.getElementById("quickWeightDate")?.value || todayStr();
+  const poids = document.getElementById("quickWeightValue")?.value || "";
+  const observation = document.getElementById("quickWeightObs")?.value || "";
+
+  if (!poids) {
+    alert("Indique le poids.");
+    return;
+  }
+
+  if (!Array.isArray(bird.historiquePoids)) bird.historiquePoids = [];
+
+  bird.poidsActuel = poids;
+
+  bird.historiquePoids.unshift({
+    date,
+    poids
+  });
+
+  appData.pesees.unshift({
+    id: makeId(),
+    date,
+    nom: bird.nom || "",
+    espece: bird.espece || "",
+    poids,
+    nourriture: "",
+    etat: "",
+    lieu: "",
+    observations: observation
+  });
+
+  await saveData();
+  renderAll();
+  refreshBirdPremiumTabs(bird);
+
+  if (statusEl) statusEl.textContent = "Pesée ajoutée depuis la fiche.";
 }
 function partagerFicheOiseau(id) {
   const bird = appData.oiseaux.find((o) => o.id === id);
@@ -6062,6 +6134,7 @@ window.getActiveBirds = getActiveBirds;
 window.getSortedBirds = getSortedBirds;
 window.statusEl = statusEl;
 window.marquerSoinVeterinaireEffectue = marquerSoinVeterinaireEffectue;
+window.ajouterPeseeDepuisFiche = ajouterPeseeDepuisFiche;
 
 
 document.addEventListener("DOMContentLoaded", async () => {
