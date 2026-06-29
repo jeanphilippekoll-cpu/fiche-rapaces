@@ -1282,7 +1282,13 @@ function getBirdStatusClass(bird) {
     const poids = getLatestBirdWeight(bird);
     const poidsVol = toNumber(bird.poidsVol);
 
-    if (bird.enSoin) return "bird-status-care";
+    const soinActif = appData.veterinaire.some(v =>
+        (v.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
+        && v.soinActif
+    );
+
+    if (soinActif)
+        return "bird-status-care";
 
     if (poidsVol > 0) {
 
@@ -1291,11 +1297,9 @@ function getBirdStatusClass(bird) {
 
         if (Math.abs(poids - poidsVol) <= 20)
             return "bird-status-ready";
-
     }
 
     return "bird-status-normal";
-
 }
 
 window.getBirdStatusClass = getBirdStatusClass;
