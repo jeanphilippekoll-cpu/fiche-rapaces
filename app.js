@@ -1236,21 +1236,26 @@ if (tasksEl) {
     <div id="dashboardBirdCards">
       ${birds.length
         ? birds.map(b => `
-          <div class="dashboard-bird-card-pro ${getBirdStatusClass(b)}" data-bird-search="${safeAttr((b.nom + ' ' + (b.espece || '')).toLowerCase())}" onclick="openBirdSheetInline('${safeAttr(b.id)}')">
-            <div class="dashboard-bird-info-pro">
-              <div>
-                <strong>${safe(b.nom)}</strong>
-                <small>${safe(b.espece || "")}</small>
-              </div>
-              <span class="dashboard-bird-fiche-pro">Fiche</span>
-            </div>
+         <div
+  class="dashboard-bird-card-pro ${getBirdStatusClass(b)}"
+  data-bird-search="${safeAttr((b.nom + ' ' + (b.espece || '')).toLowerCase())}"
+  onclick="openBirdSheetInline('${safeAttr(b.id)}')"
+  style="background:#fffdf8;border:1px solid #eadfce;border-left:10px solid ${getBirdStatusColor(b)};border-radius:18px;padding:16px;margin-bottom:14px;cursor:pointer;"
+>
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;">
+    <div>
+      <strong style="display:block;font-size:20px;margin-bottom:4px;">${safe(b.nom)}</strong>
+      <small style="display:block;color:#6f6254;font-style:italic;">${safe(b.espece || "")}</small>
+    </div>
+    <span style="background:#d9f0ec;color:#14615d;border-radius:999px;padding:7px 14px;font-weight:800;">Fiche</span>
+  </div>
 
-            <div class="dashboard-bird-actions-pro">
-              <button onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
-              <button onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
-              <button onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
-            </div>
-          </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+    <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
+    <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
+    <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+  </div>
+</div>
         `).join("")
         : `<p class="muted-line">Aucun oiseau actif.</p>`
       }
@@ -1294,6 +1299,18 @@ function getBirdStatusClass(bird) {
 }
 
 window.getBirdStatusClass = getBirdStatusClass;
+
+function getBirdStatusColor(bird) {
+  const status = getBirdStatusClass(bird);
+
+  if (status === "bird-status-ready") return "#3cb371";
+  if (status === "bird-status-heavy") return "#d9534f";
+  if (status === "bird-status-care") return "#ff9800";
+
+  return "#9e9e9e";
+}
+
+window.getBirdStatusColor = getBirdStatusColor;
 
 function refreshBirdSelects() {
   const birds = getSortedBirds(getActiveBirds())
