@@ -1025,11 +1025,11 @@ safeArray(appData.veterinaire).forEach(soin => {
   const alerts = [];
 
 birds.forEach(b => {
-  const poids = getLatestBirdWeight(b);
+ const poids = toNumber(b.poidsActuel) > 0 ? toNumber(b.poidsActuel) : getLatestBirdWeight(b);
   const poidsVol = toNumber(b.poidsVol);
   const tolerance = toNumber(b.toleranceVol) || 20;
 
-  if (poidsVol > 0 && poids > 0 && poids > poidsVol + tolerance) {
+ if (poidsVol > 0 && poids > 0 && poids >= poidsVol + tolerance) {
       alerts.push(
         dashboardRow(
           b.nom,
