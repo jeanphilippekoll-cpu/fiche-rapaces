@@ -1383,41 +1383,6 @@ function getBirdQuickInfo(bird) {
             font-weight:700;
         ">
             <span>⚖️ ${poids} g</span>
-            <span>🎯 ${poidsVol} g</span>
-            <span style="color:${couleur}">
-                📊 ${ecart > 0 ? "+" : ""}${ecart} g
-            </span>
-        </div>
-    `;
-}
-
-window.getBirdQuickInfo = getBirdQuickInfo;
-
-function getBirdQuickInfo(bird) {
-
-    const poids = getLatestBirdWeight(bird);
-    const poidsVol = toNumber(bird.poidsVol);
-
-    if (!poidsVol) return "";
-
-    const ecart = poids - poidsVol;
-
-    const couleur =
-        ecart >= 20 ? "#d9534f" :
-        Math.abs(ecart) <= 20 ? "#3cb371" :
-        "#666";
-
-    return `
-        <div style="
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin-top:8px;
-            margin-bottom:8px;
-            font-size:13px;
-            font-weight:700;
-        ">
-            <span>⚖️ ${poids} g</span>
 
             <span>🎯 ${poidsVol} g</span>
 
