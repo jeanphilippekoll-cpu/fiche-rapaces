@@ -546,6 +546,8 @@ function ouvrirCoupleReproduction(coupleId) {
                 ? safeArray(saison.pontes).map(ponte => `
                   <div class="item" style="margin-top:16px;">
                     <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
+                    
+                    ${renderAvancementPonte(ponte)}
 
                     <div class="form-grid">
                       <div><label>Premier œuf</label><input type="date" id="ponte_${safeAttr(ponte.id)}_premier" value="${safeAttr(ponte.premierOeuf || "")}"></div>
@@ -979,6 +981,57 @@ window.ajouterJeuneDirect = ajouterJeuneDirect;
   function getEclosionDate(ponte) {
     return getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.dureeIncubation || 30);
   }
+
+  function renderAvancementPonte(ponte) {
+  const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
+  const duree = toNumber(ponte.dureeIncubation || ponte.dureeCouvaison || 30);
+  const mirage = getMirageDate(ponte);
+  const eclosion = getEclosionDate(ponte);
+
+  let jour = 0;
+  if (base) {
+    jour = progressionIncubation(ponte);
+  }
+
+  const restant = duree - jour;
+  const pct = duree > 0 ? Math.min(100, Math.max(0, Math.round((jour / duree) * 100))) : 0;
+
+  let couleur = "#7aa7a6";
+  let texte = `Jour ${jour} / ${duree}`;
+
+  if (!base) {
+    couleur = "#999";
+    texte = "Couvaison non commencée";
+  } else if (restant > 1) {
+    texte = `Jour ${jour} / ${duree} — éclosion dans ${restant} jours`;
+  } else if (restant === 1) {
+    couleur = "#d98c2f";
+    texte = `Jour ${jour} / ${duree} — éclosion demain`;
+  } else if (restant === 0) {
+    couleur = "#789a63";
+    texte = `Jour ${jour} / ${duree} — éclosion aujourd'hui`;
+  } else {
+    couleur = "#b85c5c";
+    texte = `Dépassé de ${Math.abs(restant)} jour(s)`;
+  }
+
+  return `
+    <div class="item" style="border-left:8px solid ${couleur};margin:12px 0;">
+      <strong>📊 Avancement incubation</strong>
+      <p>${safe(texte)}</p>
+
+      <div style="height:12px;background:#efe2d0;border-radius:999px;overflow:hidden;margin:8px 0;">
+        <div style="height:12px;width:${pct}%;background:${couleur};"></div>
+      </div>
+
+      <p class="muted-line">
+        🔦 Mirage : ${mirage ? formatDateBE(mirage) : "-"}
+        &nbsp; | &nbsp;
+        🐣 Éclosion prévue : ${eclosion ? formatDateBE(eclosion) : "-"}
+      </p>
+    </div>
+  `;
+}
 
   async function sauverSaisonReproduction(coupleId, saisonId) {
     const saison = getSaison(coupleId, saisonId);
