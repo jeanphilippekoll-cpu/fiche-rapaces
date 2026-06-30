@@ -1435,7 +1435,7 @@ function refreshBirdSelects() {
   if (vetFilterBird) vetFilterBird.innerHTML = `<option value="">Tous les oiseaux</option>${birds}`;
 }
 
-function renderHistoriquePoidsTable(historique) {
+function renderHistoriquePoidsTable(historique, birdId = "") {
   if (!historique.length) {
     return `<p class="muted-line">Aucun poids enregistré.</p>`;
   }
@@ -1447,13 +1447,19 @@ function renderHistoriquePoidsTable(historique) {
           <tr>
             <th>Date</th>
             <th>Poids (g)</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          ${historique.map((h) => `
+          ${historique.map((h, index) => `
             <tr>
               <td>${safe(formatDateFR(h.date))}</td>
               <td>${safe(h.poids)}</td>
+              <td>
+                <button onclick="deleteBirdWeight('${safeAttr(birdId)}', ${index})">
+                  🗑️ Supprimer
+                </button>
+              </td>
             </tr>
           `).join("")}
         </tbody>
@@ -1461,6 +1467,38 @@ function renderHistoriquePoidsTable(historique) {
     </div>
   `;
 }
+
+async function deleteBirdWeight(birdId, index) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird || !Array.isArray(bird.historiquePoids)) return;
+
+  const removed = bird.historiquePoids.splice(index, 1)[0];
+
+  if (removed) {
+    appData.pesees = safeArray(appData.pesees).filter(p =>
+      !(
+        (p.nom || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase() &&
+        p.date === removed.date &&
+        String(p.poids) === String(removed.poids)
+      )
+    );
+  }
+
+  const latest = safeArray(bird.historiquePoids)
+    .filter(p => p.date && p.poids)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0];
+
+  bird.poidsActuel = latest ? latest.poids : "";
+
+  await saveData();
+  renderAll();
+  openBirdSheetInline(bird.id);
+  showBirdTab("poids");
+
+  if (statusEl) statusEl.textContent = "Pesée supprimée";
+}
+
+window.deleteBirdWeight = deleteBirdWeight;
 
 function renderDocumentsList(documents) {
   if (!documents.length) {
@@ -1536,6 +1574,13 @@ function refreshBirdPremiumTabs(bird) {
 
   setTimeout(() => {
   const poidsTab = document.getElementById("birdTab-poids");
+  const poidsHistoryEl = document.getElementById("birdWeightHistory");
+if (poidsHistoryEl) {
+  poidsHistoryEl.innerHTML = renderHistoriquePoidsTable(
+    safeArray(bird.historiquePoids),
+    bird.id
+  );
+}
 
   if (poidsTab && !document.getElementById("quickWeightValue")) {
     poidsTab.querySelector(".card-section")?.insertAdjacentHTML("beforeend", `
