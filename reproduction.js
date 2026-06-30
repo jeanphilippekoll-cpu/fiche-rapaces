@@ -546,7 +546,7 @@ function ouvrirCoupleReproduction(coupleId) {
                 ? safeArray(saison.pontes).map(ponte => `
                   <div class="item" style="margin-top:16px;">
                     <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
-                    
+
                     ${renderAvancementPonte(ponte)}
 
                     <div class="form-grid">
@@ -981,6 +981,83 @@ window.ajouterJeuneDirect = ajouterJeuneDirect;
   function getEclosionDate(ponte) {
     return getDatePlusDays(ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf, ponte.dureeIncubation || 30);
   }
+
+  function getResumePonteDashboard(couple, saison, ponte) {
+  const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
+  if (!base) return "";
+
+  const duree = toNumber(ponte.dureeIncubation || ponte.dureeCouvaison || 30);
+  const jour = progressionIncubation(ponte);
+  const restant = duree - jour;
+
+  const mirage = getMirageDate(ponte);
+  const eclosion = getEclosionDate(ponte);
+
+  let badge = "Incubation";
+  let couleur = "#7aa7a6";
+  let detail = `Jour ${jour} / ${duree}`;
+
+  if (todayStr() === mirage) {
+    badge = "Mirage aujourd’hui";
+    couleur = "#d98c2f";
+  }
+
+  if (restant === 1) {
+    badge = "Éclosion demain";
+    couleur = "#d98c2f";
+  }
+
+  if (restant === 0) {
+    badge = "Éclosion aujourd’hui";
+    couleur = "#789a63";
+  }
+
+  if (restant < 0) {
+    badge = "Éclosion dépassée";
+    couleur = "#b85c5c";
+    detail = `Dépassé de ${Math.abs(restant)} jour(s)`;
+  }
+
+  return `
+    <div class="dashboard-row" style="border-left:8px solid ${couleur};cursor:pointer;"
+         onclick="ouvrirCoupleReproduction('${safeAttr(couple.id)}')">
+      <div>
+        <strong>🥚 ${safe(couple.espece || "Reproduction")} — Ponte ${safe(ponte.numero || "-")}</strong>
+        <small>
+          Saison ${safe(saison.annee || "-")} • ${safe(detail)}
+          • Mirage ${mirage ? formatDateBE(mirage) : "-"}
+          • Éclosion ${eclosion ? formatDateBE(eclosion) : "-"}
+        </small>
+      </div>
+      <span class="dashboard-badge warn">${safe(badge)}</span>
+    </div>
+  `;
+}
+
+function renderDashboardReproduction() {
+  const zone = document.getElementById("dashboardReproInfos")
+    || document.getElementById("dashboardReproAlerts")
+    || document.getElementById("dashboardReproduction");
+
+  if (!zone) return;
+
+  const lignes = [];
+
+  safeArray(data().reproduction).forEach(couple => {
+    safeArray(couple.saisons).forEach(saison => {
+      safeArray(saison.pontes).forEach(ponte => {
+        const html = getResumePonteDashboard(couple, saison, ponte);
+        if (html) lignes.push(html);
+      });
+    });
+  });
+
+  zone.innerHTML = lignes.length
+    ? lignes.join("")
+    : `<p class="muted-line">Aucune reproduction en cours.</p>`;
+}
+
+window.renderDashboardReproduction = renderDashboardReproduction;
 
   function renderAvancementPonte(ponte) {
   const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
