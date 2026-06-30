@@ -3201,8 +3201,8 @@ function renderInventaire() {
 
 function renderNourrissage() {
   renderNourrissageTable();
-  renderVitaminesNourrissage();
   renderNourrissageSummary();
+  renderVitaminesNourrissage();
   renderNourrissageHistory();
   renderFoodConsumptionHistory();
   renderTerrain();
