@@ -613,6 +613,11 @@ function ouvrirCoupleReproduction(coupleId) {
                                   <option value="${safeAttr(v)}" ${(jeune.destination || jeune.statut || "") === v ? "selected" : ""}>${safe(v || "À définir")}</option>
                                 `).join("")}
                               </select>
+                              <button
+  class="btn btn-danger small-btn"
+  onclick="supprimerJeuneDirect('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}','${safeAttr(jeune.id)}')">
+  🗑️ Supprimer ce jeune
+</button>
                             </div>
                           </div>
                         `).join("")
@@ -2219,6 +2224,19 @@ function calculerStatsElevage() {
   return stats;
 }
 
+async function supprimerJeuneDirect(coupleId, saisonId, ponteId, jeuneId) {
+  if (!confirm("Supprimer définitivement ce jeune ?")) return;
+
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  ponte.jeunes = safeArray(ponte.jeunes).filter(j => j.id !== jeuneId);
+
+  await persistAndRender("Jeune supprimé.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+window.supprimerJeuneDirect = supprimerJeuneDirect;
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
   window.ouvrirCoupleReproduction = ouvrirCoupleReproduction;
@@ -2248,4 +2266,5 @@ function calculerStatsElevage() {
 window.modifierLieuOeuf = modifierLieuOeuf;
 window.modifierNoteOeuf = modifierNoteOeuf;
 window.ajouterPeseeJeune = ajouterPeseeJeune;
+
 })();
