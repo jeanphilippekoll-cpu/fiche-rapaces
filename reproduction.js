@@ -580,6 +580,19 @@ function ouvrirCoupleReproduction(coupleId) {
                                 `).join("")}
                               </select>
                             </div>
+                            <div>
+    <div style="display:flex;align-items:flex-end;">
+    <button
+        class="btn btn-danger small-btn"
+        onclick="supprimerOeufDirect(
+            '${safeAttr(couple.id)}',
+            '${safeAttr(saison.id)}',
+            '${safeAttr(ponte.id)}',
+            '${safeAttr(oeuf.id)}'
+        )">
+        🗑️ Supprimer cet œuf
+    </button>
+</div>
                           </div>
                         `).join("")
                         : `<p class="muted-line">Aucun œuf encodé.</p>`
@@ -1064,52 +1077,94 @@ function renderDashboardReproduction() {
 
 window.renderDashboardReproduction = renderDashboardReproduction;
 
-  function renderAvancementPonte(ponte) {
+function getEtatPonteAuto(ponte) {
   const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
   const duree = toNumber(ponte.dureeIncubation || ponte.dureeCouvaison || 30);
+  const jour = base ? progressionIncubation(ponte) : 0;
+  const restant = duree - jour;
   const mirage = getMirageDate(ponte);
   const eclosion = getEclosionDate(ponte);
 
-  let jour = 0;
-  if (base) {
-    jour = progressionIncubation(ponte);
+  if (!base) {
+    return {
+      couleur: "#999",
+      badge: "En attente",
+      texte: "Couvaison non commencée",
+      mirage,
+      eclosion
+    };
   }
 
-  const restant = duree - jour;
+  if (todayStr() === mirage) {
+    return {
+      couleur: "#f0ad4e",
+      badge: "Mirage aujourd’hui",
+      texte: `Jour ${jour} / ${duree}`,
+      mirage,
+      eclosion
+    };
+  }
+
+  if (restant === 1) {
+    return {
+      couleur: "#f0ad4e",
+      badge: "Éclosion demain",
+      texte: `Jour ${jour} / ${duree}`,
+      mirage,
+      eclosion
+    };
+  }
+
+  if (restant === 0) {
+    return {
+      couleur: "#3cb371",
+      badge: "Éclosion aujourd’hui",
+      texte: `Jour ${jour} / ${duree}`,
+      mirage,
+      eclosion
+    };
+  }
+
+  if (restant < 0) {
+    return {
+      couleur: "#d9534f",
+      badge: "En retard",
+      texte: `Dépassé de ${Math.abs(restant)} jour(s)`,
+      mirage,
+      eclosion
+    };
+  }
+
+  return {
+    couleur: "#7aa7a6",
+    badge: "Incubation",
+    texte: `Jour ${jour} / ${duree} — éclosion dans ${restant} jours`,
+    mirage,
+    eclosion
+  };
+}
+
+ function renderAvancementPonte(ponte) {
+  const etat = getEtatPonteAuto(ponte);
+
+  const base = ponte.debutCouvaison || ponte.dernierOeuf || ponte.premierOeuf;
+  const duree = toNumber(ponte.dureeIncubation || ponte.dureeCouvaison || 30);
+  const jour = base ? progressionIncubation(ponte) : 0;
   const pct = duree > 0 ? Math.min(100, Math.max(0, Math.round((jour / duree) * 100))) : 0;
 
-  let couleur = "#7aa7a6";
-  let texte = `Jour ${jour} / ${duree}`;
-
-  if (!base) {
-    couleur = "#999";
-    texte = "Couvaison non commencée";
-  } else if (restant > 1) {
-    texte = `Jour ${jour} / ${duree} — éclosion dans ${restant} jours`;
-  } else if (restant === 1) {
-    couleur = "#d98c2f";
-    texte = `Jour ${jour} / ${duree} — éclosion demain`;
-  } else if (restant === 0) {
-    couleur = "#789a63";
-    texte = `Jour ${jour} / ${duree} — éclosion aujourd'hui`;
-  } else {
-    couleur = "#b85c5c";
-    texte = `Dépassé de ${Math.abs(restant)} jour(s)`;
-  }
-
   return `
-    <div class="item" style="border-left:8px solid ${couleur};margin:12px 0;">
-      <strong>📊 Avancement incubation</strong>
-      <p>${safe(texte)}</p>
+    <div class="item" style="border-left:8px solid ${etat.couleur};margin:12px 0;">
+      <strong>📊 ${safe(etat.badge)}</strong>
+      <p>${safe(etat.texte)}</p>
 
       <div style="height:12px;background:#efe2d0;border-radius:999px;overflow:hidden;margin:8px 0;">
-        <div style="height:12px;width:${pct}%;background:${couleur};"></div>
+        <div style="height:12px;width:${pct}%;background:${etat.couleur};"></div>
       </div>
 
       <p class="muted-line">
-        🔦 Mirage : ${mirage ? formatDateBE(mirage) : "-"}
+        🔦 Mirage : ${etat.mirage ? formatDateBE(etat.mirage) : "-"}
         &nbsp; | &nbsp;
-        🐣 Éclosion prévue : ${eclosion ? formatDateBE(eclosion) : "-"}
+        🐣 Éclosion : ${etat.eclosion ? formatDateBE(etat.eclosion) : "-"}
       </p>
     </div>
   `;
@@ -2236,7 +2291,34 @@ async function supprimerJeuneDirect(coupleId, saisonId, ponteId, jeuneId) {
   ouvrirCoupleReproduction(coupleId);
 }
 
+async function supprimerOeufDirect(coupleId, saisonId, ponteId, oeufId) {
+  if (!confirm("Supprimer définitivement cet œuf ?")) return;
+
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  ponte.oeufs = safeArray(ponte.oeufs).filter(o => o.id !== oeufId);
+  recalculerPonte(ponte);
+
+  await persistAndRender("Œuf supprimé.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+async function supprimerJeuneDirect(coupleId, saisonId, ponteId, jeuneId) {
+  if (!confirm("Supprimer définitivement ce jeune ?")) return;
+
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  ponte.jeunes = safeArray(ponte.jeunes).filter(j => j.id !== jeuneId);
+
+  await persistAndRender("Jeune supprimé.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+window.supprimerOeufDirect = supprimerOeufDirect;
 window.supprimerJeuneDirect = supprimerJeuneDirect;
+
   window.renderReproduction = renderReproduction;
   window.ajouterCoupleReproduction = ajouterCoupleReproduction;
   window.ouvrirCoupleReproduction = ouvrirCoupleReproduction;
