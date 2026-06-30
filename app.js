@@ -1029,20 +1029,21 @@ birds.forEach(b => {
     alerts.push(dashboardRow("Stock cailles", `${stock.caille} restantes`, "Faible", "warn"));
   }
 
-  if (toWeighEl) {
-    toWeighEl.innerHTML = toWeigh.length
-      ? toWeigh.map(b =>
-          dashboardRow(
-            b.nom,
-            `Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
-            "À peser",
-            "warn",
-"",
-"pesees"
-          )
-        ).join("")
-      : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
-  }
+ if (toWeighEl) {
+  toWeighEl.innerHTML = toWeigh.length
+    ? toWeigh.map(b => {
+        const poids = getLatestBirdWeight(b);
+
+        return dashboardRow(
+          b.nom,
+          `⚖️ ${poids ? poids + " g" : "-"} • Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
+          "À peser",
+          "warn",
+          b.nom
+        );
+      }).join("")
+    : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
+}
 
  if (toFlyEl) {
   toFlyEl.innerHTML = toFly.length
@@ -1356,6 +1357,41 @@ function getBirdCareBadge(bird) {
 }
 
 window.getBirdCareBadge = getBirdCareBadge;
+
+function getBirdQuickInfo(bird) {
+
+    const poids = getLatestBirdWeight(bird);
+    const poidsVol = toNumber(bird.poidsVol);
+
+    if (!poidsVol) return "";
+
+    const ecart = poids - poidsVol;
+
+    const couleur =
+        ecart >= 20 ? "#d9534f" :
+        Math.abs(ecart) <= 20 ? "#3cb371" :
+        "#666";
+
+    return `
+        <div style="
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-top:8px;
+            margin-bottom:8px;
+            font-size:13px;
+            font-weight:700;
+        ">
+            <span>⚖️ ${poids} g</span>
+            <span>🎯 ${poidsVol} g</span>
+            <span style="color:${couleur}">
+                📊 ${ecart > 0 ? "+" : ""}${ecart} g
+            </span>
+        </div>
+    `;
+}
+
+window.getBirdQuickInfo = getBirdQuickInfo;
 
 function getBirdQuickInfo(bird) {
 
