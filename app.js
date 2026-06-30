@@ -855,6 +855,21 @@ safeArray(appData.reproduction).forEach(couple => {
       const baguage = addDays(base, ponte.jourBaguage || 14);
       const sortieEleveuse = addDays(base, ponte.jourSortieEleveuse || 40);
 
+      if (base && eclosion) {
+  const resteEclosion = daysUntil(eclosion);
+
+  reproTasks.push(
+    dashboardRow(
+      `🥚 ${couple.espece || "Reproduction"} — Ponte ${ponte.numero || "-"}`,
+      `Jour ${Math.max(0, (ponte.dureeIncubation || 30) - resteEclosion)} / ${ponte.dureeIncubation || 30} — éclosion prévue le ${formatDateFR(eclosion)}`,
+      resteEclosion === 0 ? "Aujourd'hui" : resteEclosion > 0 ? `Dans ${resteEclosion} j` : `Retard ${Math.abs(resteEclosion)} j`,
+      resteEclosion < 0 ? "danger" : resteEclosion <= 3 ? "warn" : "info",
+      "",
+      "reproduction"
+    )
+  );
+}
+
       const items = [
         { date: mirage, titre: `Mirage ${couple.espece}`, badge: "Mirage", type: "warn" },
         { date: eclosion, titre: `Éclosion ${couple.espece}`, badge: "Éclosion", type: "danger" },
@@ -3186,11 +3201,82 @@ function renderInventaire() {
 
 function renderNourrissage() {
   renderNourrissageTable();
+  renderVitaminesNourrissage();
   renderNourrissageSummary();
   renderNourrissageHistory();
   renderFoodConsumptionHistory();
   renderTerrain();
 }
+
+function renderVitaminesNourrissage() {
+  const zone = document.getElementById("feedSummaryZone");
+  if (!zone) return;
+
+  const today = todayStr();
+  const birds = getSortedBirds(getActiveBirds());
+
+  const vitamines = birds
+    .map(bird => {
+      const plan = getDashboardComplementPlan(new Date().getDay(), bird);
+      if (!plan) return "";
+
+      const dejaFait = appData.nourrissage.some(n =>
+        n.date === today &&
+        (n.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase() &&
+        (n.nourriture || "").includes("Vitamine")
+      );
+
+      return `
+        <div class="dashboard-row">
+          <div>
+            <strong>${safe(bird.nom)}</strong>
+            <small>${safe(plan)}</small>
+          </div>
+          <button class="btn ${dejaFait ? "secondary-btn" : "info-btn"}"
+            onclick="cocherVitamineDonnee('${safeAttr(bird.nom)}','${safeAttr(plan)}')">
+            ${dejaFait ? "✅ Donné" : "À cocher"}
+          </button>
+        </div>
+      `;
+    })
+    .filter(Boolean)
+    .join("");
+
+  zone.insertAdjacentHTML("afterbegin", `
+    <div class="card-section">
+      <h3>💊 Vitamines du jour</h3>
+      ${vitamines || `<p class="muted-line">Aucune vitamine prévue aujourd’hui.</p>`}
+    </div>
+  `);
+}
+
+async function cocherVitamineDonnee(oiseau, plan) {
+  const today = todayStr();
+
+  const existe = appData.nourrissage.some(n =>
+    n.date === today &&
+    (n.oiseau || "").trim().toLowerCase() === oiseau.trim().toLowerCase() &&
+    (n.nourriture || "").includes("Vitamine")
+  );
+
+  if (existe) return;
+
+  appData.nourrissage.push({
+    id: makeId(),
+    date: today,
+    oiseau,
+    nourriture: `Vitamine — ${plan}`,
+    quantite: 1,
+    remarques: "Complément donné"
+  });
+
+  await saveData();
+  renderNourrissage();
+
+  if (statusEl) statusEl.textContent = "Vitamine cochée et enregistrée.";
+}
+
+window.cocherVitamineDonnee = cocherVitamineDonnee;
 
 function fillStockForm() {
   syncBoitesFromPoussins();
