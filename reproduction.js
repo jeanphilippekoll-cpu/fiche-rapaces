@@ -471,123 +471,275 @@ function getAlertesPonte(ponte) {
     await persistAndRender("Couple reproducteur créé.");
   }
 
-  function ouvrirCoupleReproduction(coupleId) {
-    const root = document.getElementById("reproductionContent")
-      || document.getElementById("section-reproduction");
+function ouvrirCoupleReproduction(coupleId) {
+  const root = document.getElementById("reproductionContent")
+    || document.getElementById("section-reproduction");
 
-    const couple = getCouple(coupleId);
-    if (!root || !couple) return;
+  const couple = getCouple(coupleId);
+  if (!root || !couple) return;
 
-    if (!Array.isArray(couple.saisons)) {
-      couple.saisons = [];
-    }
+  if (!Array.isArray(couple.saisons)) couple.saisons = [];
 
-    root.innerHTML = `
-      <div class="module-header">
+  root.innerHTML = `
+    <div class="module-header">
+      <div>
+        <h1>${safe(couple.espece || "Couple reproducteur")}</h1>
+        <p class="muted-line">${safe(couple.maleNom || "-")} × ${safe(couple.femelleNom || "-")}</p>
+      </div>
+      <button class="btn secondary-btn" onclick="renderReproduction()">← Retour</button>
+    </div>
+
+    <div class="card">
+      <h2>Informations du couple</h2>
+
+      <div class="form-grid">
         <div>
-          <h1>${safe(couple.espece || "Couple reproducteur")}</h1>
-          <p class="muted-line">
-            ${safe(couple.maleNom || "-")} × ${safe(couple.femelleNom || "-")}
-          </p>
+          <label>Saison principale</label>
+          <input id="coupleSaison" value="${safeAttr(couple.saison || "")}">
         </div>
 
-        <button class="btn secondary-btn" onclick="renderReproduction()">← Retour</button>
-      </div>
-
-      <div class="card">
-        <h2>Informations du couple</h2>
-
-        <div class="form-grid">
-          <div>
-            <label>Saison principale</label>
-            <input id="coupleSaison" value="${safeAttr(couple.saison || "")}">
-          </div>
-
-          <div>
-            <label>Espèce</label>
-            <input id="coupleEspece" value="${safeAttr(couple.espece || "")}">
-          </div>
-
-          <div>
-            <label>Notes</label>
-            <textarea id="coupleNotes">${safe(couple.notes || "")}</textarea>
-          </div>
+        <div>
+          <label>Espèce</label>
+          <input id="coupleEspece" value="${safeAttr(couple.espece || "")}">
         </div>
 
-        <div class="actions">
-          <button class="btn" onclick="sauverCoupleReproduction('${safeAttr(couple.id)}')">Enregistrer</button>
+        <div>
+          <label>Notes</label>
+          <textarea id="coupleNotes">${safe(couple.notes || "")}</textarea>
         </div>
       </div>
 
-      <div class="card">
-        <h2>Ajouter une saison</h2>
-
-        <div class="form-grid">
-          <div>
-            <label>Année</label>
-            <input id="nouvelleSaisonAnnee" type="number" value="${new Date().getFullYear()}">
-          </div>
-
-          <div>
-            <label>Notes</label>
-            <input id="nouvelleSaisonNotes" placeholder="Ex : première reproduction, couple formé...">
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn" onclick="ajouterSaisonReproduction('${safeAttr(couple.id)}')">+ Ajouter la saison</button>
-        </div>
+      <div class="actions">
+        <button class="btn" onclick="sauverCoupleReproduction('${safeAttr(couple.id)}')">
+          💾 Enregistrer toute la fiche
+        </button>
+        <button class="btn info-btn" onclick="ajouterSaisonReproduction('${safeAttr(couple.id)}')">
+          ➕ Ajouter une saison
+        </button>
       </div>
+    </div>
 
-      <div class="card">
-        <h2>Saisons</h2>
+    ${
+      safeArray(couple.saisons).length
+        ? safeArray(couple.saisons).map(saison => `
+          <div class="card">
+            <h2>📅 Saison ${safe(saison.annee || "-")}</h2>
 
-        ${
-          safeArray(couple.saisons).length
-            ? `
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Année</th>
-                      <th>Notes</th>
-                      <th>Pontes</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${safeArray(couple.saisons).map(s => `
-                      <tr>
-                        <td>${safe(s.annee || "-")}</td>
-                        <td>${safe(s.notes || "")}</td>
-                        <td>${safeArray(s.pontes).length}</td>
-                        <td>
-                          <button class="btn small-btn" onclick="ouvrirSaisonReproduction('${safeAttr(couple.id)}','${safeAttr(s.id)}')">Ouvrir</button>
-                          <button class="btn btn-danger small-btn" onclick="supprimerSaisonReproduction('${safeAttr(couple.id)}','${safeAttr(s.id)}')">Supprimer</button>
-                        </td>
-                      </tr>
-                    `).join("")}
-                  </tbody>
-                </table>
+            <div class="form-grid">
+              <div>
+                <label>Année</label>
+                <input id="saison_${safeAttr(saison.id)}_annee" value="${safeAttr(saison.annee || "")}">
               </div>
-            `
-            : `<p class="muted-line">Aucune saison créée.</p>`
-        }
-      </div>
-    `;
-  }
 
-  async function sauverCoupleReproduction(coupleId) {
-    const couple = getCouple(coupleId);
-    if (!couple) return;
+              <div>
+                <label>Notes saison</label>
+                <input id="saison_${safeAttr(saison.id)}_notes" value="${safeAttr(saison.notes || "")}">
+              </div>
+            </div>
 
-    couple.saison = document.getElementById("coupleSaison")?.value || "";
-    couple.espece = document.getElementById("coupleEspece")?.value || "";
-    couple.notes = document.getElementById("coupleNotes")?.value || "";
+            <button class="btn info-btn" onclick="ajouterPonteDirecte('${safeAttr(couple.id)}','${safeAttr(saison.id)}')">
+              ➕ Ajouter une ponte
+            </button>
 
-    await persistAndRender("Couple enregistré.");
-    ouvrirCoupleReproduction(coupleId);
-  }
+            ${
+              safeArray(saison.pontes).length
+                ? safeArray(saison.pontes).map(ponte => `
+                  <div class="item" style="margin-top:16px;">
+                    <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
+
+                    <div class="form-grid">
+                      <div><label>Premier œuf</label><input type="date" id="ponte_${safeAttr(ponte.id)}_premier" value="${safeAttr(ponte.premierOeuf || "")}"></div>
+                      <div><label>Dernier œuf</label><input type="date" id="ponte_${safeAttr(ponte.id)}_dernier" value="${safeAttr(ponte.dernierOeuf || "")}"></div>
+                      <div><label>Début couvaison</label><input type="date" id="ponte_${safeAttr(ponte.id)}_couvaison" value="${safeAttr(ponte.debutCouvaison || "")}"></div>
+                      <div><label>Durée incubation</label><input type="number" id="ponte_${safeAttr(ponte.id)}_duree" value="${safeAttr(ponte.dureeIncubation || ponte.dureeCouvaison || 30)}"></div>
+                      <div><label>Mirage après X jours</label><input type="number" id="ponte_${safeAttr(ponte.id)}_mirage" value="${safeAttr(ponte.joursMirage || ponte.mirageApresJours || 10)}"></div>
+                    </div>
+
+                    <h4>🥚 Œufs</h4>
+                    ${
+                      safeArray(ponte.oeufs).length
+                        ? safeArray(ponte.oeufs).map(oeuf => `
+                          <div class="form-grid">
+                            <div><label>Œuf</label><input value="Œuf ${safeAttr(oeuf.numero || "")}" disabled></div>
+                            <div><label>Date ponte</label><input type="date" id="oeuf_${safeAttr(oeuf.id)}_date" value="${safeAttr(oeuf.datePonte || oeuf.date || "")}"></div>
+                            <div>
+                              <label>Statut</label>
+                              <select id="oeuf_${safeAttr(oeuf.id)}_statut">
+                                ${["Inconnu","À mirer","Clair","Fécondé","Éclos","Mort dans l'œuf","Perdu"].map(v => `
+                                  <option value="${safeAttr(v)}" ${(oeuf.statut || "Inconnu") === v ? "selected" : ""}>${safe(v)}</option>
+                                `).join("")}
+                              </select>
+                            </div>
+                            <div>
+                              <label>Lieu</label>
+                              <select id="oeuf_${safeAttr(oeuf.id)}_lieu">
+                                ${["Sous mère","Couveuse","Éleveuse"].map(v => `
+                                  <option value="${safeAttr(v)}" ${(oeuf.lieu || oeuf.emplacement || "Sous mère") === v ? "selected" : ""}>${safe(v)}</option>
+                                `).join("")}
+                              </select>
+                            </div>
+                          </div>
+                        `).join("")
+                        : `<p class="muted-line">Aucun œuf encodé.</p>`
+                    }
+
+                    <button class="btn small-btn" onclick="ajouterOeufDirect('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                      ➕ Ajouter un œuf
+                    </button>
+
+                    <h4 style="margin-top:18px;">🐣 Jeunes</h4>
+                    ${
+                      safeArray(ponte.jeunes).length
+                        ? safeArray(ponte.jeunes).map(jeune => `
+                          <div class="form-grid">
+                            <div><label>Jeune</label><input value="Jeune ${safeAttr(jeune.numero || "")}" disabled></div>
+                            <div><label>Repère / couleur</label><input id="jeune_${safeAttr(jeune.id)}_couleur" value="${safeAttr(jeune.couleur || "")}"></div>
+                            <div><label>Bague</label><input id="jeune_${safeAttr(jeune.id)}_bague" value="${safeAttr(jeune.bague || "")}"></div>
+                            <div><label>Naissance</label><input type="date" id="jeune_${safeAttr(jeune.id)}_naissance" value="${safeAttr(jeune.dateNaissance || "")}"></div>
+                            <div>
+                              <label>Sexe</label>
+                              <select id="jeune_${safeAttr(jeune.id)}_sexe">
+                                ${["Inconnu","M","F","ADN en attente"].map(v => `
+                                  <option value="${safeAttr(v)}" ${(jeune.sexe || "Inconnu") === v ? "selected" : ""}>${safe(v)}</option>
+                                `).join("")}
+                              </select>
+                            </div>
+                            <div>
+                              <label>Destination</label>
+                              <select id="jeune_${safeAttr(jeune.id)}_destination">
+                                ${["","Gardé","Vendu","Échangé","Cédé","Décédé"].map(v => `
+                                  <option value="${safeAttr(v)}" ${(jeune.destination || jeune.statut || "") === v ? "selected" : ""}>${safe(v || "À définir")}</option>
+                                `).join("")}
+                              </select>
+                            </div>
+                          </div>
+                        `).join("")
+                        : `<p class="muted-line">Aucun jeune encodé.</p>`
+                    }
+
+                    <button class="btn small-btn" onclick="ajouterJeuneDirect('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                      ➕ Ajouter un jeune
+                    </button>
+                  </div>
+                `).join("")
+                : `<p class="muted-line">Aucune ponte enregistrée.</p>`
+            }
+          </div>
+        `).join("")
+        : `<div class="card"><p class="muted-line">Aucune saison créée.</p></div>`
+    }
+  `;
+}
+
+async function sauverCoupleReproduction(coupleId) {
+  const couple = getCouple(coupleId);
+  if (!couple) return;
+
+  couple.saison = document.getElementById("coupleSaison")?.value || "";
+  couple.espece = document.getElementById("coupleEspece")?.value || "";
+  couple.notes = document.getElementById("coupleNotes")?.value || "";
+
+  safeArray(couple.saisons).forEach(saison => {
+    saison.annee = document.getElementById(`saison_${saison.id}_annee`)?.value || saison.annee || "";
+    saison.notes = document.getElementById(`saison_${saison.id}_notes`)?.value || "";
+
+    safeArray(saison.pontes).forEach(ponte => {
+      ponte.premierOeuf = document.getElementById(`ponte_${ponte.id}_premier`)?.value || "";
+      ponte.dernierOeuf = document.getElementById(`ponte_${ponte.id}_dernier`)?.value || "";
+      ponte.debutCouvaison = document.getElementById(`ponte_${ponte.id}_couvaison`)?.value || "";
+      ponte.dureeIncubation = toNumber(document.getElementById(`ponte_${ponte.id}_duree`)?.value || 30);
+      ponte.joursMirage = toNumber(document.getElementById(`ponte_${ponte.id}_mirage`)?.value || 10);
+
+      safeArray(ponte.oeufs).forEach(oeuf => {
+        oeuf.datePonte = document.getElementById(`oeuf_${oeuf.id}_date`)?.value || "";
+        oeuf.statut = document.getElementById(`oeuf_${oeuf.id}_statut`)?.value || "Inconnu";
+        oeuf.lieu = document.getElementById(`oeuf_${oeuf.id}_lieu`)?.value || "Sous mère";
+        oeuf.emplacement = oeuf.lieu;
+      });
+
+      safeArray(ponte.jeunes).forEach(jeune => {
+        jeune.couleur = document.getElementById(`jeune_${jeune.id}_couleur`)?.value || "";
+        jeune.bague = document.getElementById(`jeune_${jeune.id}_bague`)?.value || "";
+        jeune.dateNaissance = document.getElementById(`jeune_${jeune.id}_naissance`)?.value || "";
+        jeune.sexe = document.getElementById(`jeune_${jeune.id}_sexe`)?.value || "Inconnu";
+        jeune.destination = document.getElementById(`jeune_${jeune.id}_destination`)?.value || "";
+      });
+
+      recalculerPonte(ponte);
+    });
+  });
+
+  await persistAndRender("Fiche reproduction enregistrée.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+async function ajouterPonteDirecte(coupleId, saisonId) {
+  const saison = getSaison(coupleId, saisonId);
+  if (!saison) return;
+
+  if (!Array.isArray(saison.pontes)) saison.pontes = [];
+
+  saison.pontes.push({
+    id: makeId(),
+    numero: saison.pontes.length + 1,
+    premierOeuf: "",
+    dernierOeuf: "",
+    debutCouvaison: "",
+    dureeIncubation: 30,
+    joursMirage: 10,
+    oeufs: [],
+    jeunes: []
+  });
+
+  await persistAndRender("Ponte ajoutée.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+async function ajouterOeufDirect(coupleId, saisonId, ponteId) {
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  if (!Array.isArray(ponte.oeufs)) ponte.oeufs = [];
+
+  ponte.oeufs.push({
+    id: makeId(),
+    numero: ponte.oeufs.length + 1,
+    datePonte: "",
+    statut: "À mirer",
+    lieu: "Sous mère",
+    emplacement: "Sous mère",
+    notes: ""
+  });
+
+  recalculerPonte(ponte);
+  await persistAndRender("Œuf ajouté.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+async function ajouterJeuneDirect(coupleId, saisonId, ponteId) {
+  const ponte = getPonte(coupleId, saisonId, ponteId);
+  if (!ponte) return;
+
+  if (!Array.isArray(ponte.jeunes)) ponte.jeunes = [];
+
+  ponte.jeunes.push({
+    id: makeId(),
+    numero: ponte.jeunes.length + 1,
+    couleur: "",
+    bague: "",
+    sexe: "Inconnu",
+    dateNaissance: todayStr(),
+    destination: "",
+    notes: ""
+  });
+
+  await persistAndRender("Jeune ajouté.");
+  ouvrirCoupleReproduction(coupleId);
+}
+
+window.ajouterPonteDirecte = ajouterPonteDirecte;
+window.ajouterOeufDirect = ajouterOeufDirect;
+window.ajouterJeuneDirect = ajouterJeuneDirect;
 
   async function supprimerCoupleReproduction(coupleId) {
     if (!confirm("Supprimer ce couple et toutes ses saisons/pontes ?")) return;
