@@ -4279,7 +4279,7 @@ function ouvrirFicheCoupleComplete(coupleId) {
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
 
-  const saisonsHtml = couple.saisons.map(saison => {
+  const rows = couple.saisons.map(saison => {
     if (!Array.isArray(saison.pontes)) saison.pontes = [];
 
     return `
@@ -4295,6 +4295,13 @@ function ouvrirFicheCoupleComplete(coupleId) {
             ? saison.pontes.map(ponte => `
               <div class="bird-card" style="margin-top:14px;">
                 <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
+
+                <div class="summary-grid">
+                  <div class="summary-card"><h3>Œufs</h3><p class="summary-total">${safe(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}</p></div>
+                  <div class="summary-card"><h3>Fécondés</h3><p class="summary-total">${safe(ponte.nbFecondes || 0)}</p></div>
+                  <div class="summary-card"><h3>Clairs</h3><p class="summary-total">${safe(ponte.nbClairs || 0)}</p></div>
+                  <div class="summary-card"><h3>Jeunes</h3><p class="summary-total">${safeArray(ponte.jeunes).length}</p></div>
+                </div>
 
                 <div class="form-grid">
                   <div>
@@ -4326,20 +4333,10 @@ function ouvrirFicheCoupleComplete(coupleId) {
                     <label>Nombre d'œufs</label>
                     <input type="number" id="fc_${safeAttr(ponte.id)}_nbOeufs" value="${safeAttr(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}">
                   </div>
-
-                  <div>
-                    <label>Fécondés</label>
-                    <input type="number" id="fc_${safeAttr(ponte.id)}_fecondes" value="${safeAttr(ponte.nbFecondes || 0)}">
-                  </div>
-
-                  <div>
-                    <label>Clairs</label>
-                    <input type="number" id="fc_${safeAttr(ponte.id)}_clairs" value="${safeAttr(ponte.nbClairs || 0)}">
-                  </div>
                 </div>
 
-                <div style="margin-top:10px;">
-                  <strong>🥚 Œufs :</strong>
+                <div style="margin-top:12px;">
+                  <strong>🥚 Œufs :</strong><br>
                   ${
                     safeArray(ponte.oeufs).length
                       ? safeArray(ponte.oeufs).map(o => `
@@ -4355,8 +4352,8 @@ function ouvrirFicheCoupleComplete(coupleId) {
                   </button>
                 </div>
 
-                <div style="margin-top:10px;">
-                  <strong>🐣 Jeunes :</strong>
+                <div style="margin-top:12px;">
+                  <strong>🐣 Jeunes :</strong><br>
                   ${
                     safeArray(ponte.jeunes).length
                       ? safeArray(ponte.jeunes).map(j => `
@@ -4370,7 +4367,7 @@ function ouvrirFicheCoupleComplete(coupleId) {
 
                 <div class="actions" style="margin-top:12px;">
                   <button class="btn info-btn" onclick="sauverFicheCoupleComplete('${safeAttr(couple.id)}')">
-                    Enregistrer
+                    💾 Enregistrer
                   </button>
 
                   <button class="btn secondary-btn" onclick="ouvrirDetailPonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
@@ -4399,10 +4396,12 @@ function ouvrirFicheCoupleComplete(coupleId) {
         <strong>♀</strong> ${safe(couple.femelleNom || "-")}
       </p>
 
-      ${saisonsHtml}
+      ${rows}
     </div>
   `;
 }
+
+window.ouvrirFicheCoupleComplete = ouvrirFicheCoupleComplete;
 
 window.ouvrirFicheCoupleComplete = ouvrirFicheCoupleComplete;
 
