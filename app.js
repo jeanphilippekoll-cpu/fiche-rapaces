@@ -1312,7 +1312,7 @@ function getBirdStatusClass(bird) {
 
     if (poidsVol > 0) {
 
-        if (poids > poidsVol + 20)
+        if (poids >= poidsVol + 20)
             return "bird-status-heavy";
 
         if (Math.abs(poids - poidsVol) <= 20)
@@ -1367,7 +1367,7 @@ function getBirdQuickInfo(bird) {
     const ecart = poids - poidsVol;
 
     const couleur =
-        ecart > 20 ? "#d9534f" :
+        ecart >= 20 ? "#d9534f" :
         Math.abs(ecart) <= 20 ? "#3cb371" :
         "#666";
 
