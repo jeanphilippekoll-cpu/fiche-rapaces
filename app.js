@@ -4127,7 +4127,7 @@ ${safe(o.nom)} — ${safe(o.espece)}
 <td>
     <button
         class="small-btn"
-        onclick="ouvrirFicheCoupleComplete('${c.id}');event.stopPropagation();"
+        onclick="ouvrirCoupleReproUnique('${c.id}');event.stopPropagation();"
         🥚 Pontes
     </button>
 </td>
@@ -4262,13 +4262,14 @@ if(couple.saisons.length===0){
 
 }
 
-function ouvrirFicheCoupleComplete(coupleId) {
+
+
+function ouvrirCoupleReproUnique(coupleId) {
   const couple = appData.reproduction.find(c => c.id === coupleId);
   if (!couple) return;
 
   if (!Array.isArray(couple.saisons)) couple.saisons = [];
-
-  if (couple.saisons.length === 0) {
+  if (!couple.saisons.length) {
     couple.saisons.push({
       id: makeId(),
       annee: couple.saison || new Date().getFullYear(),
@@ -4279,158 +4280,232 @@ function ouvrirFicheCoupleComplete(coupleId) {
   const zone = document.getElementById("reproductionZone");
   if (!zone) return;
 
-  const rows = couple.saisons.map(saison => {
+  const htmlSaisons = couple.saisons.map(saison => {
     if (!Array.isArray(saison.pontes)) saison.pontes = [];
 
     return `
-      <div class="card-section" style="margin-top:16px;">
-        <h3>📅 Saison ${safe(saison.annee || couple.saison || "-")}</h3>
+      <div class="card-section">
+        <h2>📅 Saison ${safe(saison.annee || couple.saison || "-")}</h2>
 
-        <button class="btn info-btn" onclick="nouvellePonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}')">
+        <button class="btn info-btn" onclick="ajouterPonteReproUnique('${safeAttr(couple.id)}','${safeAttr(saison.id)}')">
           ➕ Ajouter une ponte
         </button>
 
         ${
           saison.pontes.length
             ? saison.pontes.map(ponte => `
-              <div class="bird-card" style="margin-top:14px;">
+              <div class="bird-card" style="margin-top:16px;">
                 <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
 
-                <div class="summary-grid">
-                  <div class="summary-card"><h3>Œufs</h3><p class="summary-total">${safe(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}</p></div>
-                  <div class="summary-card"><h3>Fécondés</h3><p class="summary-total">${safe(ponte.nbFecondes || 0)}</p></div>
-                  <div class="summary-card"><h3>Clairs</h3><p class="summary-total">${safe(ponte.nbClairs || 0)}</p></div>
-                  <div class="summary-card"><h3>Jeunes</h3><p class="summary-total">${safeArray(ponte.jeunes).length}</p></div>
-                </div>
-
                 <div class="form-grid">
-                  <div>
-                    <label>Premier œuf</label>
-                    <input type="date" id="fc_${safeAttr(ponte.id)}_premierOeuf" value="${safeAttr(ponte.premierOeuf || "")}">
-                  </div>
-
-                  <div>
-                    <label>Dernier œuf</label>
-                    <input type="date" id="fc_${safeAttr(ponte.id)}_dernierOeuf" value="${safeAttr(ponte.dernierOeuf || "")}">
-                  </div>
-
-                  <div>
-                    <label>Début couvaison</label>
-                    <input type="date" id="fc_${safeAttr(ponte.id)}_debutCouvaison" value="${safeAttr(ponte.debutCouvaison || "")}">
-                  </div>
-
-                  <div>
-                    <label>Durée incubation</label>
-                    <input type="number" id="fc_${safeAttr(ponte.id)}_duree" value="${safeAttr(ponte.dureeIncubation || 30)}">
-                  </div>
-
-                  <div>
-                    <label>Mirage après X jours</label>
-                    <input type="number" id="fc_${safeAttr(ponte.id)}_mirage" value="${safeAttr(ponte.joursMirage || 10)}">
-                  </div>
-
-                  <div>
-                    <label>Nombre d'œufs</label>
-                    <input type="number" id="fc_${safeAttr(ponte.id)}_nbOeufs" value="${safeAttr(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}">
-                  </div>
+                  <div><label>Premier œuf</label><input type="date" id="ru_${ponte.id}_premier" value="${safeAttr(ponte.premierOeuf || "")}"></div>
+                  <div><label>Dernier œuf</label><input type="date" id="ru_${ponte.id}_dernier" value="${safeAttr(ponte.dernierOeuf || "")}"></div>
+                  <div><label>Début couvaison</label><input type="date" id="ru_${ponte.id}_couvaison" value="${safeAttr(ponte.debutCouvaison || "")}"></div>
+                  <div><label>Durée incubation</label><input type="number" id="ru_${ponte.id}_duree" value="${safeAttr(ponte.dureeIncubation || 30)}"></div>
+                  <div><label>Mirage après X jours</label><input type="number" id="ru_${ponte.id}_mirage" value="${safeAttr(ponte.joursMirage || 10)}"></div>
+                  <div><label>Nombre d'œufs</label><input type="number" id="ru_${ponte.id}_nb" value="${safeAttr(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}"></div>
                 </div>
 
-                <div style="margin-top:12px;">
-                  <strong>🥚 Œufs :</strong><br>
-                  ${
-                    safeArray(ponte.oeufs).length
-                      ? safeArray(ponte.oeufs).map(o => `
-                        <button class="small-btn" onclick="ouvrirOeuf('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}','${safeAttr(o.id)}')">
-                          Œuf ${safe(o.numero)} — ${safe(o.statut || "Inconnu")}
-                        </button>
-                      `).join(" ")
-                      : `<span class="muted-line">Aucun œuf</span>`
-                  }
+                <h4>🥚 Suivi des œufs</h4>
+                ${
+                  safeArray(ponte.oeufs).length
+                    ? safeArray(ponte.oeufs).map(o => `
+                      <div class="form-grid" style="margin-bottom:10px;">
+                        <div><label>Œuf</label><input value="${safeAttr(o.numero || "")}" disabled></div>
+                        <div><label>Date ponte</label><input type="date" id="ru_${o.id}_date" value="${safeAttr(o.datePonte || "")}"></div>
+                        <div>
+                          <label>Statut</label>
+                          <select id="ru_${o.id}_statut">
+                            ${["Inconnu", "À mirer", "Clair", "Fécondé", "Éclos", "Mort dans l'œuf"].map(v => `
+                              <option value="${safeAttr(v)}" ${(o.statut || "Inconnu") === v ? "selected" : ""}>${safe(v)}</option>
+                            `).join("")}
+                          </select>
+                        </div>
+                        <div>
+                          <label>Lieu</label>
+                          <select id="ru_${o.id}_lieu">
+                            ${["Sous mère", "Couveuse", "Éleveuse"].map(v => `
+                              <option value="${safeAttr(v)}" ${(o.emplacement || "Sous mère") === v ? "selected" : ""}>${safe(v)}</option>
+                            `).join("")}
+                          </select>
+                        </div>
+                      </div>
+                    `).join("")
+                    : `<p class="muted-line">Aucun œuf encodé.</p>`
+                }
 
-                  <button class="small-btn" onclick="ajouterOeufPonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
-                    ➕ Œuf
-                  </button>
-                </div>
+                <button class="small-btn" onclick="ajouterOeufReproUnique('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                  ➕ Ajouter un œuf
+                </button>
 
-                <div style="margin-top:12px;">
-                  <strong>🐣 Jeunes :</strong><br>
-                  ${
-                    safeArray(ponte.jeunes).length
-                      ? safeArray(ponte.jeunes).map(j => `
-                        <button class="small-btn" onclick="ouvrirJeune('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}','${safeAttr(j.id)}')">
-                          Jeune ${safe(j.numero)} ${j.bague ? "— " + safe(j.bague) : ""}
-                        </button>
-                      `).join(" ")
-                      : `<span class="muted-line">Aucun jeune</span>`
-                  }
-                </div>
+                <h4 style="margin-top:18px;">🐣 Jeunes</h4>
+                ${
+                  safeArray(ponte.jeunes).length
+                    ? safeArray(ponte.jeunes).map(j => `
+                      <div class="form-grid" style="margin-bottom:10px;">
+                        <div><label>Jeune</label><input value="${safeAttr(j.numero || "")}" disabled></div>
+                        <div><label>Nom / repère</label><input id="ru_${j.id}_couleur" value="${safeAttr(j.couleur || "")}"></div>
+                        <div><label>Bague</label><input id="ru_${j.id}_bague" value="${safeAttr(j.bague || "")}"></div>
+                        <div><label>Naissance</label><input type="date" id="ru_${j.id}_naissance" value="${safeAttr(j.dateNaissance || "")}"></div>
+                        <div>
+                          <label>Sexe</label>
+                          <select id="ru_${j.id}_sexe">
+                            ${["Inconnu", "M", "F", "ADN en attente"].map(v => `
+                              <option value="${safeAttr(v)}" ${(j.sexe || "Inconnu") === v ? "selected" : ""}>${safe(v)}</option>
+                            `).join("")}
+                          </select>
+                        </div>
+                        <div>
+                          <label>Destination</label>
+                          <select id="ru_${j.id}_destination">
+                            ${["", "Gardé", "Vendu", "Échangé", "Cédé", "Décédé"].map(v => `
+                              <option value="${safeAttr(v)}" ${(j.destination || "") === v ? "selected" : ""}>${safe(v || "À définir")}</option>
+                            `).join("")}
+                          </select>
+                        </div>
+                      </div>
+                    `).join("")
+                    : `<p class="muted-line">Aucun jeune encodé.</p>`
+                }
 
-                <div class="actions" style="margin-top:12px;">
-                  <button class="btn info-btn" onclick="sauverFicheCoupleComplete('${safeAttr(couple.id)}')">
-                    💾 Enregistrer
-                  </button>
+                <button class="small-btn" onclick="ajouterJeuneReproUnique('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                  ➕ Ajouter un jeune
+                </button>
 
-                  <button class="btn secondary-btn" onclick="ouvrirDetailPonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
-                    Détail complet
+                <div class="actions" style="margin-top:18px;">
+                  <button class="btn info-btn" onclick="sauverCoupleReproUnique('${safeAttr(couple.id)}')">
+                    💾 Enregistrer toute la fiche
                   </button>
                 </div>
               </div>
             `).join("")
-            : `<p class="muted-line">Aucune ponte pour cette saison.</p>`
+            : `<p class="muted-line">Aucune ponte enregistrée.</p>`
         }
       </div>
     `;
   }).join("");
 
   zone.innerHTML = `
-    <div class="card-section">
-      <button class="btn secondary-btn" onclick="renderReproduction()">
-        ⬅ Retour aux couples
-      </button>
+    <h1>${safe(couple.espece || "Couple reproducteur")}</h1>
+    <p>${safe(couple.maleNom || "-")} × ${safe(couple.femelleNom || "-")}</p>
 
-      <h2>📋 ${safe(couple.espece || "Couple reproducteur")}</h2>
+    <button class="btn secondary-btn" onclick="renderReproduction()">← Retour</button>
 
-      <p>
-        <strong>♂</strong> ${safe(couple.maleNom || "-")}
-        &nbsp;&nbsp;
-        <strong>♀</strong> ${safe(couple.femelleNom || "-")}
-      </p>
-
-      ${rows}
-    </div>
+    ${htmlSaisons}
   `;
 }
 
-window.ouvrirFicheCoupleComplete = ouvrirFicheCoupleComplete;
-
-window.ouvrirFicheCoupleComplete = ouvrirFicheCoupleComplete;
-
-async function sauverFicheCoupleComplete(coupleId) {
+async function sauverCoupleReproUnique(coupleId) {
   const couple = appData.reproduction.find(c => c.id === coupleId);
   if (!couple) return;
 
   safeArray(couple.saisons).forEach(saison => {
     safeArray(saison.pontes).forEach(ponte => {
-      const prefix = `fc_${ponte.id}_`;
+      ponte.premierOeuf = document.getElementById(`ru_${ponte.id}_premier`)?.value || "";
+      ponte.dernierOeuf = document.getElementById(`ru_${ponte.id}_dernier`)?.value || "";
+      ponte.debutCouvaison = document.getElementById(`ru_${ponte.id}_couvaison`)?.value || "";
+      ponte.dureeIncubation = toNumber(document.getElementById(`ru_${ponte.id}_duree`)?.value || 30);
+      ponte.joursMirage = toNumber(document.getElementById(`ru_${ponte.id}_mirage`)?.value || 10);
+      ponte.nbOeufs = toNumber(document.getElementById(`ru_${ponte.id}_nb`)?.value || 0);
 
-      ponte.premierOeuf = document.getElementById(prefix + "premierOeuf")?.value || "";
-      ponte.dernierOeuf = document.getElementById(prefix + "dernierOeuf")?.value || "";
-      ponte.debutCouvaison = document.getElementById(prefix + "debutCouvaison")?.value || "";
-      ponte.dureeIncubation = toNumber(document.getElementById(prefix + "duree")?.value || 30);
-      ponte.joursMirage = toNumber(document.getElementById(prefix + "mirage")?.value || 10);
-      ponte.nbOeufs = toNumber(document.getElementById(prefix + "nbOeufs")?.value || 0);
-      ponte.nbFecondes = toNumber(document.getElementById(prefix + "fecondes")?.value || 0);
-      ponte.nbClairs = toNumber(document.getElementById(prefix + "clairs")?.value || 0);
+      safeArray(ponte.oeufs).forEach(o => {
+        o.datePonte = document.getElementById(`ru_${o.id}_date`)?.value || "";
+        o.statut = document.getElementById(`ru_${o.id}_statut`)?.value || "Inconnu";
+        o.emplacement = document.getElementById(`ru_${o.id}_lieu`)?.value || "Sous mère";
+      });
+
+      safeArray(ponte.jeunes).forEach(j => {
+        j.couleur = document.getElementById(`ru_${j.id}_couleur`)?.value || "";
+        j.bague = document.getElementById(`ru_${j.id}_bague`)?.value || "";
+        j.dateNaissance = document.getElementById(`ru_${j.id}_naissance`)?.value || "";
+        j.sexe = document.getElementById(`ru_${j.id}_sexe`)?.value || "Inconnu";
+        j.destination = document.getElementById(`ru_${j.id}_destination`)?.value || "";
+      });
+
+      recalculerStatsPonte(ponte);
     });
   });
 
   await saveData();
-  ouvrirFicheCoupleComplete(coupleId);
-
-  if (statusEl) statusEl.textContent = "Fiche couple enregistrée.";
+  ouvrirCoupleReproUnique(coupleId);
+  if (statusEl) statusEl.textContent = "Fiche reproduction enregistrée.";
 }
 
-window.sauverFicheCoupleComplete = sauverFicheCoupleComplete;
+async function ajouterPonteReproUnique(coupleId, saisonId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  if (!saison) return;
+
+  if (!Array.isArray(saison.pontes)) saison.pontes = [];
+
+  saison.pontes.push({
+    id: makeId(),
+    numero: saison.pontes.length + 1,
+    premierOeuf: "",
+    dernierOeuf: "",
+    debutCouvaison: "",
+    dureeIncubation: 30,
+    joursMirage: 10,
+    nbOeufs: 0,
+    oeufs: [],
+    jeunes: []
+  });
+
+  await saveData();
+  ouvrirCoupleReproUnique(coupleId);
+}
+
+async function ajouterOeufReproUnique(coupleId, saisonId, ponteId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  if (!ponte) return;
+
+  if (!Array.isArray(ponte.oeufs)) ponte.oeufs = [];
+
+  ponte.oeufs.push({
+    id: makeId(),
+    numero: ponte.oeufs.length + 1,
+    datePonte: "",
+    statut: "À mirer",
+    emplacement: "Sous mère",
+    notes: ""
+  });
+
+  ponte.nbOeufs = ponte.oeufs.length;
+
+  await saveData();
+  ouvrirCoupleReproUnique(coupleId);
+}
+
+async function ajouterJeuneReproUnique(coupleId, saisonId, ponteId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  const saison = safeArray(couple?.saisons).find(s => s.id === saisonId);
+  const ponte = safeArray(saison?.pontes).find(p => p.id === ponteId);
+  if (!ponte) return;
+
+  if (!Array.isArray(ponte.jeunes)) ponte.jeunes = [];
+
+  ponte.jeunes.push({
+    id: makeId(),
+    numero: ponte.jeunes.length + 1,
+    couleur: "",
+    bague: "",
+    sexe: "Inconnu",
+    dateNaissance: todayStr(),
+    destination: "",
+    notes: ""
+  });
+
+  await saveData();
+  ouvrirCoupleReproUnique(coupleId);
+}
+
+window.ouvrirCoupleReproUnique = ouvrirCoupleReproUnique;
+window.sauverCoupleReproUnique = sauverCoupleReproUnique;
+window.ajouterPonteReproUnique = ajouterPonteReproUnique;
+window.ajouterOeufReproUnique = ajouterOeufReproUnique;
+window.ajouterJeuneReproUnique = ajouterJeuneReproUnique;
 
 const saison=couple.saisons[0];
 
