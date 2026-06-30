@@ -4127,7 +4127,7 @@ ${safe(o.nom)} — ${safe(o.espece)}
 <td>
     <button
         class="small-btn"
-        onclick="ouvrirPonte('${c.id}');event.stopPropagation();">
+        onclick="ouvrirFicheCoupleComplete('${c.id}');event.stopPropagation();"
         🥚 Pontes
     </button>
 </td>
@@ -4261,6 +4261,177 @@ if(couple.saisons.length===0){
     });
 
 }
+
+function ouvrirFicheCoupleComplete(coupleId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  if (!couple) return;
+
+  if (!Array.isArray(couple.saisons)) couple.saisons = [];
+
+  if (couple.saisons.length === 0) {
+    couple.saisons.push({
+      id: makeId(),
+      annee: couple.saison || new Date().getFullYear(),
+      pontes: []
+    });
+  }
+
+  const zone = document.getElementById("reproductionZone");
+  if (!zone) return;
+
+  const saisonsHtml = couple.saisons.map(saison => {
+    if (!Array.isArray(saison.pontes)) saison.pontes = [];
+
+    return `
+      <div class="card-section" style="margin-top:16px;">
+        <h3>📅 Saison ${safe(saison.annee || couple.saison || "-")}</h3>
+
+        <button class="btn info-btn" onclick="nouvellePonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}')">
+          ➕ Ajouter une ponte
+        </button>
+
+        ${
+          saison.pontes.length
+            ? saison.pontes.map(ponte => `
+              <div class="bird-card" style="margin-top:14px;">
+                <h3>🥚 Ponte ${safe(ponte.numero || "-")}</h3>
+
+                <div class="form-grid">
+                  <div>
+                    <label>Premier œuf</label>
+                    <input type="date" id="fc_${safeAttr(ponte.id)}_premierOeuf" value="${safeAttr(ponte.premierOeuf || "")}">
+                  </div>
+
+                  <div>
+                    <label>Dernier œuf</label>
+                    <input type="date" id="fc_${safeAttr(ponte.id)}_dernierOeuf" value="${safeAttr(ponte.dernierOeuf || "")}">
+                  </div>
+
+                  <div>
+                    <label>Début couvaison</label>
+                    <input type="date" id="fc_${safeAttr(ponte.id)}_debutCouvaison" value="${safeAttr(ponte.debutCouvaison || "")}">
+                  </div>
+
+                  <div>
+                    <label>Durée incubation</label>
+                    <input type="number" id="fc_${safeAttr(ponte.id)}_duree" value="${safeAttr(ponte.dureeIncubation || 30)}">
+                  </div>
+
+                  <div>
+                    <label>Mirage après X jours</label>
+                    <input type="number" id="fc_${safeAttr(ponte.id)}_mirage" value="${safeAttr(ponte.joursMirage || 10)}">
+                  </div>
+
+                  <div>
+                    <label>Nombre d'œufs</label>
+                    <input type="number" id="fc_${safeAttr(ponte.id)}_nbOeufs" value="${safeAttr(ponte.nbOeufs || safeArray(ponte.oeufs).length || 0)}">
+                  </div>
+
+                  <div>
+                    <label>Fécondés</label>
+                    <input type="number" id="fc_${safeAttr(ponte.id)}_fecondes" value="${safeAttr(ponte.nbFecondes || 0)}">
+                  </div>
+
+                  <div>
+                    <label>Clairs</label>
+                    <input type="number" id="fc_${safeAttr(ponte.id)}_clairs" value="${safeAttr(ponte.nbClairs || 0)}">
+                  </div>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <strong>🥚 Œufs :</strong>
+                  ${
+                    safeArray(ponte.oeufs).length
+                      ? safeArray(ponte.oeufs).map(o => `
+                        <button class="small-btn" onclick="ouvrirOeuf('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}','${safeAttr(o.id)}')">
+                          Œuf ${safe(o.numero)} — ${safe(o.statut || "Inconnu")}
+                        </button>
+                      `).join(" ")
+                      : `<span class="muted-line">Aucun œuf</span>`
+                  }
+
+                  <button class="small-btn" onclick="ajouterOeufPonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                    ➕ Œuf
+                  </button>
+                </div>
+
+                <div style="margin-top:10px;">
+                  <strong>🐣 Jeunes :</strong>
+                  ${
+                    safeArray(ponte.jeunes).length
+                      ? safeArray(ponte.jeunes).map(j => `
+                        <button class="small-btn" onclick="ouvrirJeune('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}','${safeAttr(j.id)}')">
+                          Jeune ${safe(j.numero)} ${j.bague ? "— " + safe(j.bague) : ""}
+                        </button>
+                      `).join(" ")
+                      : `<span class="muted-line">Aucun jeune</span>`
+                  }
+                </div>
+
+                <div class="actions" style="margin-top:12px;">
+                  <button class="btn info-btn" onclick="sauverFicheCoupleComplete('${safeAttr(couple.id)}')">
+                    Enregistrer
+                  </button>
+
+                  <button class="btn secondary-btn" onclick="ouvrirDetailPonte('${safeAttr(couple.id)}','${safeAttr(saison.id)}','${safeAttr(ponte.id)}')">
+                    Détail complet
+                  </button>
+                </div>
+              </div>
+            `).join("")
+            : `<p class="muted-line">Aucune ponte pour cette saison.</p>`
+        }
+      </div>
+    `;
+  }).join("");
+
+  zone.innerHTML = `
+    <div class="card-section">
+      <button class="btn secondary-btn" onclick="renderReproduction()">
+        ⬅ Retour aux couples
+      </button>
+
+      <h2>📋 ${safe(couple.espece || "Couple reproducteur")}</h2>
+
+      <p>
+        <strong>♂</strong> ${safe(couple.maleNom || "-")}
+        &nbsp;&nbsp;
+        <strong>♀</strong> ${safe(couple.femelleNom || "-")}
+      </p>
+
+      ${saisonsHtml}
+    </div>
+  `;
+}
+
+window.ouvrirFicheCoupleComplete = ouvrirFicheCoupleComplete;
+
+async function sauverFicheCoupleComplete(coupleId) {
+  const couple = appData.reproduction.find(c => c.id === coupleId);
+  if (!couple) return;
+
+  safeArray(couple.saisons).forEach(saison => {
+    safeArray(saison.pontes).forEach(ponte => {
+      const prefix = `fc_${ponte.id}_`;
+
+      ponte.premierOeuf = document.getElementById(prefix + "premierOeuf")?.value || "";
+      ponte.dernierOeuf = document.getElementById(prefix + "dernierOeuf")?.value || "";
+      ponte.debutCouvaison = document.getElementById(prefix + "debutCouvaison")?.value || "";
+      ponte.dureeIncubation = toNumber(document.getElementById(prefix + "duree")?.value || 30);
+      ponte.joursMirage = toNumber(document.getElementById(prefix + "mirage")?.value || 10);
+      ponte.nbOeufs = toNumber(document.getElementById(prefix + "nbOeufs")?.value || 0);
+      ponte.nbFecondes = toNumber(document.getElementById(prefix + "fecondes")?.value || 0);
+      ponte.nbClairs = toNumber(document.getElementById(prefix + "clairs")?.value || 0);
+    });
+  });
+
+  await saveData();
+  ouvrirFicheCoupleComplete(coupleId);
+
+  if (statusEl) statusEl.textContent = "Fiche couple enregistrée.";
+}
+
+window.sauverFicheCoupleComplete = sauverFicheCoupleComplete;
 
 const saison=couple.saisons[0];
 
