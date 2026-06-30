@@ -680,11 +680,27 @@ function dashboardRow(title, detail, badge, type = "info", birdName = "", target
 }
 
 function getLatestBirdWeight(bird) {
-  const historique = safeArray(bird.historiquePoids)
-    .filter((p) => p.date && p.poids)
+  const birdName = (bird?.nom || "").trim().toLowerCase();
+
+  const allWeights = [
+    ...safeArray(appData.pesees)
+      .filter(p => (p.nom || "").trim().toLowerCase() === birdName)
+      .map(p => ({
+        date: p.date || "",
+        poids: p.poids
+      })),
+
+    ...safeArray(bird.historiquePoids)
+      .map(p => ({
+        date: p.date || "",
+        poids: p.poids
+      }))
+  ]
+    .filter(p => p.date && p.poids)
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  if (historique.length) return toNumber(historique[0].poids);
+  if (allWeights.length) return toNumber(allWeights[0].poids);
+
   return toNumber(bird.poidsActuel);
 }
 
@@ -944,11 +960,21 @@ safeArray(appData.veterinaire).forEach(soin => {
   }
 
   const latestWeightDate = (bird) => {
-    const hist = safeArray(bird.historiquePoids)
-      .filter(p => p.date)
-      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-    return hist[0]?.date || "";
-  };
+  const birdName = (bird?.nom || "").trim().toLowerCase();
+
+  const allDates = [
+    ...safeArray(appData.pesees)
+      .filter(p => (p.nom || "").trim().toLowerCase() === birdName)
+      .map(p => p.date || ""),
+
+    ...safeArray(bird.historiquePoids)
+      .map(p => p.date || "")
+  ]
+    .filter(Boolean)
+    .sort((a, b) => (b || "").localeCompare(a || ""));
+
+  return allDates[0] || "";
+};
 
   const daysSince = (dateStr) => {
     if (!dateStr) return 999;
