@@ -1325,28 +1325,23 @@ function filterDashboardBirds() {
 window.filterDashboardBirds = filterDashboardBirds;
 
 function getBirdStatusClass(bird) {
+  const poidsActuelFiche = toNumber(bird.poidsActuel);
+  const poids = poidsActuelFiche > 0 ? poidsActuelFiche : getLatestBirdWeight(bird);
+  const poidsVol = toNumber(bird.poidsVol);
 
-    const poids = getLatestBirdWeight(bird);
-    const poidsVol = toNumber(bird.poidsVol);
+  const soinActif = appData.veterinaire.some(v =>
+    (v.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
+    && v.soinActif
+  );
 
-    const soinActif = appData.veterinaire.some(v =>
-        (v.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
-        && v.soinActif
-    );
+  if (soinActif) return "bird-status-care";
 
-    if (soinActif)
-        return "bird-status-care";
+  if (poidsVol > 0 && poids > 0) {
+    if (poids >= poidsVol + 20) return "bird-status-heavy";
+    if (Math.abs(poids - poidsVol) <= 20) return "bird-status-ready";
+  }
 
-    if (poidsVol > 0) {
-
-        if (poids >= poidsVol + 20)
-            return "bird-status-heavy";
-
-        if (Math.abs(poids - poidsVol) <= 20)
-            return "bird-status-ready";
-    }
-
-    return "bird-status-normal";
+  return "bird-status-normal";
 }
 
 window.getBirdStatusClass = getBirdStatusClass;
@@ -1385,38 +1380,26 @@ function getBirdCareBadge(bird) {
 window.getBirdCareBadge = getBirdCareBadge;
 
 function getBirdQuickInfo(bird) {
+  const poidsActuelFiche = toNumber(bird.poidsActuel);
+  const poids = poidsActuelFiche > 0 ? poidsActuelFiche : getLatestBirdWeight(bird);
+  const poidsVol = toNumber(bird.poidsVol);
 
-    const poids = getLatestBirdWeight(bird);
-    const poidsVol = toNumber(bird.poidsVol);
+  if (!poidsVol || !poids) return "";
 
-    if (!poidsVol) return "";
+  const ecart = poids - poidsVol;
 
-    const ecart = poids - poidsVol;
+  const couleur =
+    ecart >= 20 ? "#d9534f" :
+    Math.abs(ecart) <= 20 ? "#3cb371" :
+    "#666";
 
-    const couleur =
-        ecart >= 20 ? "#d9534f" :
-        Math.abs(ecart) <= 20 ? "#3cb371" :
-        "#666";
-
-    return `
-        <div style="
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin-top:8px;
-            margin-bottom:8px;
-            font-size:13px;
-            font-weight:700;
-        ">
-            <span>⚖️ ${poids} g</span>
-
-            <span>🎯 ${poidsVol} g</span>
-
-            <span style="color:${couleur}">
-                📊 ${ecart > 0 ? "+" : ""}${ecart} g
-            </span>
-        </div>
-    `;
+  return `
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;margin-bottom:8px;font-size:13px;font-weight:700;">
+      <span>⚖️ ${poids} g</span>
+      <span>🎯 ${poidsVol} g</span>
+      <span style="color:${couleur}">📊 ${ecart > 0 ? "+" : ""}${ecart} g</span>
+    </div>
+  `;
 }
 
 window.getBirdQuickInfo = getBirdQuickInfo;
