@@ -3362,74 +3362,236 @@ function renderNourrissage() {
 }
 
 function renderVitaminesNourrissage() {
-  const zone = document.getElementById("feedSummaryZone");
-  if (!zone) return;
+  const planningZone = document.getElementById("vitaminesPlanningZone");
+  const todayZone = document.getElementById("vitaminesTodayZone");
+  const historyZone = document.getElementById("vitaminesHistoryZone");
 
-  const today = todayStr();
+  if (!planningZone) return;
+
   const birds = getSortedBirds(getActiveBirds());
 
-  const vitamines = birds
-    .map(bird => {
-      const plan = getDashboardComplementPlan(new Date().getDay(), bird);
-      if (!plan) return "";
+  const jours = [
+    { index: 1, label: "Lundi" },
+    { index: 2, label: "Mardi" },
+    { index: 3, label: "Mercredi" },
+    { index: 4, label: "Jeudi" },
+    { index: 5, label: "Vendredi" },
+    { index: 6, label: "Samedi" },
+    { index: 0, label: "Dimanche" }
+  ];
 
-      const dejaFait = appData.nourrissage.some(n =>
-        n.date === today &&
-        (n.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase() &&
-        (n.nourriture || "").includes("Vitamine")
-      );
+  const plans = safeArray(appData.vitamines);
 
-      return `
-        <div class="dashboard-row">
-          <div>
-            <strong>${safe(bird.nom)}</strong>
-            <small>${safe(plan)}</small>
-          </div>
-          <button class="btn ${dejaFait ? "secondary-btn" : "info-btn"}"
-            onclick="cocherVitamineDonnee('${safeAttr(bird.nom)}','${safeAttr(plan)}')">
-            ${dejaFait ? "✅ Donné" : "À cocher"}
-          </button>
-        </div>
-      `;
-    })
-    .filter(Boolean)
-    .join("");
-
-  zone.insertAdjacentHTML("afterbegin", `
+  planningZone.innerHTML = `
     <div class="card-section">
-      <h3>💊 Vitamines du jour</h3>
-      ${vitamines || `<p class="muted-line">Aucune vitamine prévue aujourd’hui.</p>`}
+      <h3>➕ Ajouter un complément</h3>
+
+      <div class="form-grid">
+
+        <div>
+          <label for="vitamineProduit">Produit</label>
+          <input
+            id="vitamineProduit"
+            placeholder="Ex : Aminovital"
+          >
+        </div>
+
+        <div>
+          <label for="vitamineDose">Dose</label>
+          <input
+            id="vitamineDose"
+            placeholder="Ex : 0,5 ml"
+          >
+        </div>
+
+      </div>
+
+      <h4>Jours prévus</h4>
+
+      <div class="actions">
+        ${jours.map(jour => `
+          <label style="display:flex;align-items:center;gap:6px;margin-right:12px;">
+            <input
+              type="checkbox"
+              class="vitamineJour"
+              value="${jour.index}"
+              style="width:auto;margin:0;"
+            >
+            ${safe(jour.label)}
+          </label>
+        `).join("")}
+      </div>
+
+      <h4 style="margin-top:18px;">Oiseaux concernés</h4>
+
+      <div class="form-grid">
+        ${birds.map(bird => `
+          <label style="display:flex;align-items:center;gap:8px;">
+            <input
+              type="checkbox"
+              class="vitamineOiseau"
+              value="${safeAttr(bird.id)}"
+              style="width:auto;margin:0;"
+            >
+            <span>
+              <strong>${safe(bird.nom)}</strong>
+              ${bird.espece ? `<br><small>${safe(bird.espece)}</small>` : ""}
+            </span>
+          </label>
+        `).join("")}
+      </div>
+
+      <label for="vitamineNotes">Notes</label>
+      <textarea
+        id="vitamineNotes"
+        placeholder="Facultatif"
+      ></textarea>
+
+      <div class="actions">
+        <button
+          class="btn info-btn"
+          onclick="ajouterPlanningVitamine()">
+          Enregistrer le planning
+        </button>
+      </div>
     </div>
-  `);
+
+    <div class="card-section">
+      <h3>📅 Plannings enregistrés</h3>
+
+      ${
+        plans.length
+          ? plans.map(plan => {
+              const nomsOiseaux = safeArray(plan.oiseaux)
+                .map(id => appData.oiseaux.find(o => o.id === id)?.nom || "Oiseau inconnu")
+                .join(", ");
+
+              const nomsJours = safeArray(plan.jours)
+                .map(index => jours.find(j => j.index === toNumber(index))?.label || "")
+                .filter(Boolean)
+                .join(", ");
+
+              return `
+                <div class="dashboard-row">
+                  <div>
+                    <strong>${safe(plan.produit || "Produit")}</strong>
+
+                    <small>
+                      Dose : ${safe(plan.dose || "-")}<br>
+                      Jours : ${safe(nomsJours || "-")}<br>
+                      Oiseaux : ${safe(nomsOiseaux || "-")}
+                      ${plan.notes ? `<br>Notes : ${safe(plan.notes)}` : ""}
+                    </small>
+                  </div>
+
+                  <button
+                    class="btn btn-danger"
+                    onclick="supprimerPlanningVitamine('${safeAttr(plan.id)}')">
+                    Supprimer
+                  </button>
+                </div>
+              `;
+            }).join("")
+          : `<p class="muted-line">Aucun planning enregistré.</p>`
+      }
+    </div>
+  `;
+
+  if (todayZone) {
+    todayZone.innerHTML = `
+      <p class="muted-line">
+        Le tableau des compléments à donner aujourd’hui sera généré automatiquement à partir de ces plannings.
+      </p>
+    `;
+  }
+
+  if (historyZone) {
+    historyZone.innerHTML = safeArray(appData.vitaminesHistorique).length
+      ? `
+        <p>
+          ${safeArray(appData.vitaminesHistorique).length}
+          administration(s) enregistrée(s).
+        </p>
+      `
+      : `<p class="muted-line">Aucun historique enregistré.</p>`;
+  }
 }
 
-async function cocherVitamineDonnee(oiseau, plan) {
-  const today = todayStr();
+async function ajouterPlanningVitamine() {
+  const produit = document.getElementById("vitamineProduit")?.value.trim() || "";
+  const dose = document.getElementById("vitamineDose")?.value.trim() || "";
+  const notes = document.getElementById("vitamineNotes")?.value.trim() || "";
 
-  const existe = appData.nourrissage.some(n =>
-    n.date === today &&
-    (n.oiseau || "").trim().toLowerCase() === oiseau.trim().toLowerCase() &&
-    (n.nourriture || "").includes("Vitamine")
-  );
+  const jours = Array.from(
+    document.querySelectorAll(".vitamineJour:checked")
+  ).map(el => toNumber(el.value));
 
-  if (existe) return;
+  const oiseaux = Array.from(
+    document.querySelectorAll(".vitamineOiseau:checked")
+  ).map(el => el.value);
 
-  appData.nourrissage.push({
+  if (!produit) {
+    alert("Indique le nom du produit.");
+    return;
+  }
+
+  if (!dose) {
+    alert("Indique la dose.");
+    return;
+  }
+
+  if (!jours.length) {
+    alert("Choisis au moins un jour.");
+    return;
+  }
+
+  if (!oiseaux.length) {
+    alert("Choisis au moins un oiseau.");
+    return;
+  }
+
+  appData.vitamines.push({
     id: makeId(),
-    date: today,
-    oiseau,
-    nourriture: `Vitamine — ${plan}`,
-    quantite: 1,
-    remarques: "Complément donné"
+    produit,
+    dose,
+    oiseaux,
+    jours,
+    actif: true,
+    notes
   });
 
   await saveData();
-  renderNourrissage();
 
-  if (statusEl) statusEl.textContent = "Vitamine cochée et enregistrée.";
+  renderVitaminesNourrissage();
+  renderDashboardIntelligent();
+
+  if (statusEl) {
+    statusEl.textContent = "Planning vitamines enregistré.";
+  }
 }
 
-window.cocherVitamineDonnee = cocherVitamineDonnee;
+async function supprimerPlanningVitamine(id) {
+  const plan = appData.vitamines.find(v => v.id === id);
+  if (!plan) return;
+
+  if (!confirm(`Supprimer le planning "${plan.produit}" ?`)) {
+    return;
+  }
+
+  appData.vitamines = appData.vitamines.filter(v => v.id !== id);
+
+  await saveData();
+
+  renderVitaminesNourrissage();
+  renderDashboardIntelligent();
+
+  if (statusEl) {
+    statusEl.textContent = "Planning vitamines supprimé.";
+  }
+}
+
+window.ajouterPlanningVitamine = ajouterPlanningVitamine;
+window.supprimerPlanningVitamine = supprimerPlanningVitamine;
 
 function fillStockForm() {
   syncBoitesFromPoussins();
