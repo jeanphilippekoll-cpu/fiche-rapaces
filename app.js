@@ -738,8 +738,11 @@ document.getElementById(`btn-${realSection}`)?.classList.add("active");
 
 if (section === "nourrissage") {
   refreshBirdSelects();
+
   const feedDate = document.getElementById("feedDate");
   if (feedDate && !feedDate.value) feedDate.value = todayStr();
+
+  showFeedTab("nourrissage");
 }
 
 if (section === "veterinaire") {
@@ -3324,6 +3327,29 @@ function renderInventaire() {
       </table>
     </div>
   `;
+}
+
+function showFeedTab(tabName) {
+  const nourrissageTab = document.getElementById("feedTab-nourrissage");
+  const vitaminesTab = document.getElementById("feedTab-vitamines");
+
+  const btnNourrissage = document.getElementById("btnFeedTabNourrissage");
+  const btnVitamines = document.getElementById("btnFeedTabVitamines");
+
+  if (!nourrissageTab || !vitaminesTab) return;
+
+  const showVitamines = tabName === "vitamines";
+
+  nourrissageTab.classList.toggle("hidden", showVitamines);
+  vitaminesTab.classList.toggle("hidden", !showVitamines);
+
+  if (btnNourrissage) {
+    btnNourrissage.classList.toggle("secondary-btn", showVitamines);
+  }
+
+  if (btnVitamines) {
+    btnVitamines.classList.toggle("secondary-btn", !showVitamines);
+  }
 }
 
 function renderNourrissage() {
@@ -6810,6 +6836,7 @@ function showBirdTab(tabName, button) {
 
 
 window.showSection = showSection;
+window.showFeedTab = showFeedTab;
 window.showBirdTab = showBirdTab;
 window.saveData = saveData;
 window.ajouterOiseau = ajouterOiseau;
