@@ -1930,6 +1930,25 @@ bird-card .bird-badges {
 
         <section id="section-nourrissage" class="section hidden">
           <div class="card">
+  <div class="actions">
+    <button
+      id="btnFeedTabNourrissage"
+      class="btn"
+      onclick="showFeedTab('nourrissage')">
+      🍗 Nourrissage
+    </button>
+
+    <button
+      id="btnFeedTabVitamines"
+      class="btn secondary-btn"
+      onclick="showFeedTab('vitamines')">
+      💊 Vitamines
+    </button>
+  </div>
+</div>
+
+<div id="feedTab-nourrissage">
+          <div class="card">
             <h2>Nourrissage du jour</h2>
 
             <div class="form-grid">
@@ -1959,6 +1978,39 @@ bird-card .bird-badges {
             <h2>Historique des nourrissages</h2>
             <div id="listeNourrissage"></div>
           </div>
+          </div>
+
+<div id="feedTab-vitamines" class="hidden">
+
+  <div class="card">
+    <h2>💊 Vitamines & compléments</h2>
+
+    <p class="muted-line">
+      Gestion des vitamines et compléments donnés aux oiseaux.
+    </p>
+
+    <div id="vitaminesTodayZone">
+      Aucun complément prévu aujourd'hui.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>⚙️ Planning des compléments</h2>
+
+    <div id="vitaminesPlanningZone">
+      Aucun planning enregistré.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📋 Historique des vitamines</h2>
+
+    <div id="vitaminesHistoryZone">
+      Aucun historique enregistré.
+    </div>
+  </div>
+
+</div>
         </section>
 
         <section id="section-terrain" class="section hidden">
