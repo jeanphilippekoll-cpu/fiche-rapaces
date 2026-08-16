@@ -391,11 +391,15 @@ function normalizeData(rapacesData, userData) {
   dateSortie: o.dateSortie || "",
   registreSortie: o.registreSortie || "",
   motifSortie: o.motifSortie || "",
-  poidsActuel: o.poidsActuel ?? "",
+  poidsActuel: getLatestBirdWeight(o) || "",
   poidsVol: toNumber(o.poidsVol),
   toleranceVol: toNumber(o.toleranceVol),
   notes: o.notes || "",
   photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
+  historiquePoids: getBirdWeightHistory(o).map((p) => ({
+  date: p.date || "",
+  poids: p.poids ?? ""
+})),
   documents: normalizeDocuments(o.documents),
   historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
   nourritureHabituelle: o.nourritureHabituelle || "Poussin",
@@ -679,29 +683,70 @@ function dashboardRow(title, detail, badge, type = "info", birdName = "", target
   `;
 }
 
-function getLatestBirdWeight(bird) {
+function getBirdWeightHistory(bird) {
   const birdName = (bird?.nom || "").trim().toLowerCase();
 
-  const allWeights = [
-    ...safeArray(appData.pesees)
-      .filter(p => (p.nom || "").trim().toLowerCase() === birdName)
-      .map(p => ({
-        date: p.date || "",
-        poids: p.poids
-      })),
+  const globalWeights = safeArray(appData.pesees)
+    .filter(p => (p.nom || "").trim().toLowerCase() === birdName)
+    .map((p, index) => ({
+      id: p.id || "",
+      date: p.date || "",
+      poids: p.poids,
+      source: "pesees",
+      order: index
+    }));
 
-    ...safeArray(bird.historiquePoids)
-      .map(p => ({
-        date: p.date || "",
-        poids: p.poids
-      }))
-  ]
-    .filter(p => p.date && p.poids)
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const legacyWeights = safeArray(bird?.historiquePoids)
+    .map((p, index) => ({
+      id: p.id || "",
+      date: p.date || "",
+      poids: p.poids,
+      source: "historique",
+      order: index
+    }));
 
-  if (allWeights.length) return toNumber(allWeights[0].poids);
+  const merged = [...globalWeights, ...legacyWeights]
+    .filter(p => p.date && p.poids !== "" && p.poids !== null && p.poids !== undefined)
+    .sort((a, b) => {
+      const dateCompare = (b.date || "").localeCompare(a.date || "");
 
-  return toNumber(bird.poidsActuel);
+      if (dateCompare !== 0) return dateCompare;
+
+      if (a.source !== b.source) {
+        return a.source === "pesees" ? -1 : 1;
+      }
+
+      return a.order - b.order;
+    });
+
+  const seen = new Set();
+
+  return merged.filter(p => {
+    const key = `${p.date}|${p.poids}`;
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function getLatestBirdWeightEntry(bird) {
+  return getBirdWeightHistory(bird)[0] || null;
+}
+
+function getLatestBirdWeight(bird) {
+  const latest = getLatestBirdWeightEntry(bird);
+
+  if (latest) {
+    return toNumber(latest.poids);
+  }
+
+  return toNumber(bird?.poidsActuel);
+}
+
+function getLatestBirdWeightDate(bird) {
+  return getLatestBirdWeightEntry(bird)?.date || "";
 }
 
 function getComplementDoseMl(bird) {
@@ -974,22 +1019,7 @@ safeArray(appData.veterinaire).forEach(soin => {
     });
   }
 
-  const latestWeightDate = (bird) => {
-  const birdName = (bird?.nom || "").trim().toLowerCase();
-
-  const allDates = [
-    ...safeArray(appData.pesees)
-      .filter(p => (p.nom || "").trim().toLowerCase() === birdName)
-      .map(p => p.date || ""),
-
-    ...safeArray(bird.historiquePoids)
-      .map(p => p.date || "")
-  ]
-    .filter(Boolean)
-    .sort((a, b) => (b || "").localeCompare(a || ""));
-
-  return allDates[0] || "";
-};
+ const latestWeightDate = (bird) => getLatestBirdWeightDate(bird);
 
   const daysSince = (dateStr) => {
     if (!dateStr) return 999;
@@ -1040,7 +1070,7 @@ safeArray(appData.veterinaire).forEach(soin => {
   const alerts = [];
 
 birds.forEach(b => {
- const poids = toNumber(b.poidsActuel) > 0 ? toNumber(b.poidsActuel) : getLatestBirdWeight(b);
+ const poids = getLatestBirdWeight(b);
   const poidsVol = toNumber(b.poidsVol);
   const tolerance = toNumber(b.toleranceVol) || 20;
 
@@ -1340,8 +1370,7 @@ function filterDashboardBirds() {
 window.filterDashboardBirds = filterDashboardBirds;
 
 function getBirdStatusClass(bird) {
-  const poidsActuelFiche = toNumber(bird.poidsActuel);
-  const poids = poidsActuelFiche > 0 ? poidsActuelFiche : getLatestBirdWeight(bird);
+  const poids = getLatestBirdWeight(bird);
   const poidsVol = toNumber(bird.poidsVol);
 
   const soinActif = appData.veterinaire.some(v =>
@@ -1395,8 +1424,7 @@ function getBirdCareBadge(bird) {
 window.getBirdCareBadge = getBirdCareBadge;
 
 function getBirdQuickInfo(bird) {
-  const poidsActuelFiche = toNumber(bird.poidsActuel);
-  const poids = poidsActuelFiche > 0 ? poidsActuelFiche : getLatestBirdWeight(bird);
+const poids = getLatestBirdWeight(bird);
   const poidsVol = toNumber(bird.poidsVol);
 
   if (!poidsVol || !poids) return "";
@@ -2504,14 +2532,9 @@ function renderTableauPoidsGlobal() {
   if (!zone) return;
 
   const rows = getSortedBirds(getActiveBirds()).map((bird) => {
-    const poids = safeArray(bird.historiquePoids)
-      .slice()
-      .filter((p) => p.date && p.poids)
-      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-
-    const dernier = poids[0];
-
-    const poidsActuel = dernier ? toNumber(dernier.poids) : toNumber(bird.poidsActuel);
+    const poids = getBirdWeightHistory(bird);
+const dernier = getLatestBirdWeightEntry(bird);
+const poidsActuel = getLatestBirdWeight(bird);
     const poidsVol = toNumber(bird.poidsVol);
     const tolerance = toNumber(bird.toleranceVol);
 
@@ -5614,7 +5637,7 @@ function modifierOiseau(id) {
   set("oiseauEspece", bird.espece);
   set("oiseauSexe", bird.sexe);
   set("oiseauAge", bird.age);
-  set("oiseauPoids", bird.poidsActuel);
+  set("oiseauPoids", getLatestBirdWeight(bird));
   set("oiseauPoidsVol", bird.poidsVol);
   set("oiseauTolerance", bird.toleranceVol);
   set("oiseauNotes", bird.notes);
@@ -5729,7 +5752,7 @@ function cancelEditBird() {
   if (statusEl) statusEl.textContent = "Modification annulée";
 }
 
-function ajouterPesee() {
+async function ajouterPesee() {
   const nom = document.getElementById("pesNom")?.value || "";
   if (!nom) return;
 
@@ -5765,9 +5788,10 @@ function ajouterPesee() {
     if (el) el.value = "";
   });
 
-  renderAll();
-  triggerAutoSave();
-  if (statusEl) statusEl.textContent = "Pesée ajoutée";
+  await saveData();
+renderAll();
+
+if (statusEl) statusEl.textContent = "Pesée ajoutée et sauvegardée";
 }
 
 async function ajouterDocument() {
