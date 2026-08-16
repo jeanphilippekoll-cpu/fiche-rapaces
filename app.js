@@ -3643,6 +3643,7 @@ function renderVitaminesNourrissage() {
     `
     : `<p class="muted-line">Aucun historique enregistré.</p>`;
 }
+}
 
 async function cocherVitamineAutomatique(oiseauId, produit, dose) {
   const bird = appData.oiseaux.find(o => o.id === oiseauId);
