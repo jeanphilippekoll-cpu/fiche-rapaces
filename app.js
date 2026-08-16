@@ -3498,12 +3498,45 @@ function renderVitaminesNourrissage() {
   `;
 
   if (todayZone) {
-    todayZone.innerHTML = `
-      <p class="muted-line">
-        Le tableau des compléments à donner aujourd’hui sera généré automatiquement à partir de ces plannings.
-      </p>
-    `;
-  }
+  const today = todayStr();
+  const dayIndex = new Date(`${today}T12:00:00`).getDay();
+
+  const lignesAutomatiques = birds
+    .map(bird => {
+      const plan = getDashboardComplementPlan(dayIndex, bird);
+
+      if (!plan) return "";
+
+      const parts = plan.split(" — ");
+      const produit = parts[0] || plan;
+      const dose = parts[1] || "dose à définir";
+
+      return `
+        <div class="dashboard-row">
+          <div>
+            <strong>${safe(bird.nom)}</strong>
+            <small>
+              ${safe(produit)}<br>
+              Dose automatique : <strong>${safe(dose)}</strong><br>
+              Poids actuel : ${getLatestBirdWeight(bird) || "-"} g
+            </small>
+          </div>
+
+          <div>
+            ☐ À donner
+          </div>
+        </div>
+      `;
+    })
+    .filter(Boolean)
+    .join("");
+
+  todayZone.innerHTML = lignesAutomatiques || `
+    <p class="muted-line">
+      Aucun complément automatique prévu aujourd'hui.
+    </p>
+  `;
+}
 
   if (historyZone) {
     historyZone.innerHTML = safeArray(appData.vitaminesHistorique).length
