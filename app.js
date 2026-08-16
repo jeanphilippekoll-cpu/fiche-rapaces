@@ -3361,6 +3361,70 @@ function renderNourrissage() {
   renderTerrain();
 }
 
+function getHistoriqueVitaminesComplet() {
+  const nouveau = safeArray(appData.vitaminesHistorique).map(h => ({
+    id: h.id || "",
+    date: h.date || "",
+    oiseauId: h.oiseauId || "",
+    oiseau: h.oiseau || "",
+    produit: h.produit || "",
+    dose: h.dose || "",
+    donne: h.donne === true,
+    heure: h.heure || "",
+    source: "vitamines"
+  }));
+
+  const ancien = safeArray(appData.nourrissage)
+    .filter(n => /^vitamine\b/i.test((n.nourriture || "").trim()))
+    .map(n => {
+      const texte = (n.nourriture || "")
+        .replace(/^vitamine\s*[—-]\s*/i, "")
+        .trim();
+
+      const morceaux = texte.split(" — ");
+
+      return {
+        id: n.id || "",
+        date: n.date || "",
+        oiseauId: "",
+        oiseau: n.oiseau || "",
+        produit: morceaux[0] || texte || "Vitamine",
+        dose: morceaux.slice(1).join(" — ") || "",
+        donne: true,
+        heure: "",
+        source: "ancien"
+      };
+    });
+
+  const tous = [...nouveau, ...ancien];
+
+  const seen = new Set();
+
+  return tous
+    .filter(h => {
+      const key = [
+        h.date,
+        (h.oiseau || "").trim().toLowerCase(),
+        (h.produit || "").trim().toLowerCase()
+      ].join("|");
+
+      if (seen.has(key)) return false;
+
+      seen.add(key);
+      return true;
+    })
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+function vitamineDejaDonnee(date, bird, produit) {
+  return getHistoriqueVitaminesComplet().some(h =>
+    h.date === date &&
+    (h.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase() &&
+    (h.produit || "").trim().toLowerCase() === (produit || "").trim().toLowerCase() &&
+    h.donne === true
+  );
+}
+
 function renderVitaminesNourrissage() {
   const planningZone = document.getElementById("vitaminesPlanningZone");
   const todayZone = document.getElementById("vitaminesTodayZone");
@@ -3510,6 +3574,7 @@ function renderVitaminesNourrissage() {
       const parts = plan.split(" — ");
       const produit = parts[0] || plan;
       const dose = parts[1] || "dose à définir";
+      const dejaDonne = vitamineDejaDonnee(today, bird, produit);
 
       return `
         <div class="dashboard-row">
@@ -3522,9 +3587,16 @@ function renderVitaminesNourrissage() {
             </small>
           </div>
 
-          <div>
-            ☐ À donner
-          </div>
+          <button
+  class="btn ${dejaDonne ? "secondary-btn" : "info-btn"}"
+  ${dejaDonne ? "disabled" : ""}
+  onclick="cocherVitamineAutomatique(
+    '${safeAttr(bird.id)}',
+    '${safeAttr(produit)}',
+    '${safeAttr(dose)}'
+  )">
+  ${dejaDonne ? "☑ Donné" : "☐ À donner"}
+</button>
         </div>
       `;
     })
@@ -3539,16 +3611,77 @@ function renderVitaminesNourrissage() {
 }
 
   if (historyZone) {
-    historyZone.innerHTML = safeArray(appData.vitaminesHistorique).length
-      ? `
-        <p>
-          ${safeArray(appData.vitaminesHistorique).length}
-          administration(s) enregistrée(s).
-        </p>
-      `
-      : `<p class="muted-line">Aucun historique enregistré.</p>`;
+  const historique = getHistoriqueVitaminesComplet();
+
+  historyZone.innerHTML = historique.length
+    ? `
+      <div class="feed-table-wrap">
+        <table class="feed-table simple-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Oiseau</th>
+              <th>Produit</th>
+              <th>Dose</th>
+              <th>État</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${historique.map(h => `
+              <tr>
+                <td>${safe(formatDateFR(h.date) || "-")}</td>
+                <td><strong>${safe(h.oiseau || "-")}</strong></td>
+                <td>${safe(h.produit || "-")}</td>
+                <td>${safe(h.dose || "-")}</td>
+                <td>☑ Donné${h.heure ? ` à ${safe(h.heure)}` : ""}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `
+    : `<p class="muted-line">Aucun historique enregistré.</p>`;
+}
+
+async function cocherVitamineAutomatique(oiseauId, produit, dose) {
+  const bird = appData.oiseaux.find(o => o.id === oiseauId);
+  if (!bird) return;
+
+  const date = todayStr();
+
+  if (vitamineDejaDonnee(date, bird, produit)) {
+    return;
+  }
+
+  const now = new Date();
+
+  appData.vitaminesHistorique.push({
+    id: makeId(),
+    date,
+    oiseauId: bird.id,
+    oiseau: bird.nom || "",
+    vitamineId: "automatique",
+    produit: produit || "",
+    dose: dose || "",
+    donne: true,
+    heure: now.toLocaleTimeString("fr-BE", {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  });
+
+  await saveData();
+
+  renderVitaminesNourrissage();
+  renderDashboardIntelligent();
+
+  if (statusEl) {
+    statusEl.textContent = `${bird.nom} — ${produit} donné et sauvegardé.`;
   }
 }
+
+window.cocherVitamineAutomatique = cocherVitamineAutomatique;
 
 async function ajouterPlanningVitamine() {
   const produit = document.getElementById("vitamineProduit")?.value.trim() || "";
