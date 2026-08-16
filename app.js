@@ -373,6 +373,10 @@ function normalizeData(rapacesData, userData) {
   const documentsGenerauxSource = safeArray(rapacesData?.documentsGeneraux);
   const nourrissageSource = safeArray(userData?.nourrissage || rapacesData?.nourrissage || []);
   const veterinaireSource = safeArray(userData?.veterinaire || rapacesData?.veterinaire || []);
+  const vitaminesSource = safeArray(userData?.vitamines || rapacesData?.vitamines || []);
+const vitaminesHistoriqueSource = safeArray(
+  userData?.vitaminesHistorique || rapacesData?.vitaminesHistorique || []
+);
 
   const oiseaux = oiseauxSource.map((o, index) => ({
   id: o.id || `oiseau_${index}_${makeId()}`,
@@ -659,7 +663,29 @@ function buildUserPayload() {
   soinDerniereDate: v.soinDerniereDate || "",
   soinHistorique: safeArray(v.soinHistorique)
 })),
-    entretien: safeArray(appData.entretien)
+   entretien: safeArray(appData.entretien),
+
+vitamines: safeArray(appData.vitamines).map((v) => ({
+  id: v.id || makeId(),
+  produit: v.produit || "",
+  dose: v.dose || "",
+  oiseaux: safeArray(v.oiseaux),
+  jours: safeArray(v.jours),
+  actif: v.actif !== false,
+  notes: v.notes || ""
+})),
+
+vitaminesHistorique: safeArray(appData.vitaminesHistorique).map((h) => ({
+  id: h.id || makeId(),
+  date: h.date || "",
+  oiseauId: h.oiseauId || "",
+  oiseau: h.oiseau || "",
+  vitamineId: h.vitamineId || "",
+  produit: h.produit || "",
+  dose: h.dose || "",
+  donne: h.donne === true,
+  heure: h.heure || ""
+}))
   };
 }
 
