@@ -421,6 +421,58 @@ function normalizeData(rapacesData, userData) {
     observations: e.observations || ""
   }));
 
+  oiseaux.forEach((bird) => {
+  const birdName = (bird.nom || "").trim().toLowerCase();
+
+  const poidsDepuisPesees = pesees
+    .filter((p) =>
+      (p.nom || "").trim().toLowerCase() === birdName &&
+      p.date &&
+      p.poids !== "" &&
+      p.poids !== null &&
+      p.poids !== undefined
+    )
+    .map((p) => ({
+      date: p.date,
+      poids: p.poids
+    }));
+
+  const historiqueExistant = safeArray(bird.historiquePoids)
+    .filter((p) =>
+      p.date &&
+      p.poids !== "" &&
+      p.poids !== null &&
+      p.poids !== undefined
+    )
+    .map((p) => ({
+      date: p.date,
+      poids: p.poids
+    }));
+
+  const historiqueComplet = [
+    ...poidsDepuisPesees,
+    ...historiqueExistant
+  ]
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  const seen = new Set();
+
+  bird.historiquePoids = historiqueComplet.filter((p) => {
+    const key = `${p.date}|${p.poids}`;
+
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+
+  const dernierePesee = bird.historiquePoids[0];
+
+  if (dernierePesee) {
+    bird.poidsActuel = dernierePesee.poids;
+  }
+});
+
   const documents = [
     ...documentsSource.map((d) => ({
       id: d.id || makeId(),
@@ -516,6 +568,12 @@ function buildRapacesPayload() {
   url: o.photoUrl || getSafeUrl(ancien?.photo) || getSafeUrl(ancien?.photoUrl) || ""
 },
 photoUrl: o.photoUrl || getSafeUrl(ancien?.photo) || getSafeUrl(ancien?.photoUrl) || "",
+
+historiquePoids: safeArray(o.historiquePoids).map((p) => ({
+  date: p.date || "",
+  poids: p.poids ?? ""
+})),
+
       documents: normalizeDocuments(o.documents).map((d) => ({
   name: d.name || "Document",
   url: d.url || ""
