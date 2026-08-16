@@ -396,10 +396,6 @@ function normalizeData(rapacesData, userData) {
   toleranceVol: toNumber(o.toleranceVol),
   notes: o.notes || "",
   photoUrl: getSafeUrl(o?.photo) || getSafeUrl(o?.photoUrl) || "",
-  historiquePoids: getBirdWeightHistory(o).map((p) => ({
-  date: p.date || "",
-  poids: p.poids ?? ""
-})),
   documents: normalizeDocuments(o.documents),
   historiquePoids: normalizeHistoriquePoids(o.historiquePoids),
   nourritureHabituelle: o.nourritureHabituelle || "Poussin",
