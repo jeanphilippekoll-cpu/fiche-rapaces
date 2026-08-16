@@ -56,6 +56,8 @@ let appData = {
   veterinaire: [],
   entretien: [],
   reproduction: [],
+  vitamines: [],
+vitaminesHistorique: [],
 
   prixNourriture: {
     "Poussin": 0,
@@ -516,6 +518,28 @@ const vitaminesHistoriqueSource = safeArray(
     veterinaire: normalizeVeterinaire(veterinaireSource),
    entretien: safeArray(userData?.entretien || rapacesData?.entretien),
    reproduction: normalizeReproductionModule(rapacesData?.reproduction || userData?.reproduction),
+   
+   vitamines: vitaminesSource.map((v, index) => ({
+  id: v?.id || `vitamine_${index}_${makeId()}`,
+  produit: v?.produit || "",
+  dose: v?.dose || "",
+  oiseaux: safeArray(v?.oiseaux),
+  jours: safeArray(v?.jours).map(j => toNumber(j)),
+  actif: v?.actif !== false,
+  notes: v?.notes || ""
+})),
+
+vitaminesHistorique: vitaminesHistoriqueSource.map((h, index) => ({
+  id: h?.id || `vit_hist_${index}_${makeId()}`,
+  date: h?.date || "",
+  oiseauId: h?.oiseauId || "",
+  oiseau: h?.oiseau || "",
+  vitamineId: h?.vitamineId || "",
+  produit: h?.produit || "",
+  dose: h?.dose || "",
+  donne: h?.donne === true,
+  heure: h?.heure || ""
+})),
    stock,
    prixNourriture: {
     "Poussin": toNumber(rapacesData?.prixNourriture?.["Poussin"]),
