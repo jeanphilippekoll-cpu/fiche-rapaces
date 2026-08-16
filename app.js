@@ -1957,7 +1957,7 @@ function getBirdFoodCostSummary(birdName) {
 }
 
 function openBirdSheetInline(id) {
-  modifierOiseau(id);
+  openBirdSheet(id);
 }
 
 function openBirdSheet(id) {
