@@ -532,6 +532,7 @@ const vitaminesHistoriqueSource = safeArray(
 vitaminesHistorique: vitaminesHistoriqueSource.map((h, index) => ({
   id: h?.id || `vit_hist_${index}_${makeId()}`,
   date: h?.date || "",
+  datePrevue: h?.datePrevue || h?.date || "",
   oiseauId: h?.oiseauId || "",
   oiseau: h?.oiseau || "",
   vitamineId: h?.vitamineId || "",
@@ -702,6 +703,7 @@ vitamines: safeArray(appData.vitamines).map((v) => ({
 vitaminesHistorique: safeArray(appData.vitaminesHistorique).map((h) => ({
   id: h.id || makeId(),
   date: h.date || "",
+  datePrevue: h.datePrevue || h.date || "",
   oiseauId: h.oiseauId || "",
   oiseau: h.oiseau || "",
   vitamineId: h.vitamineId || "",
@@ -3365,6 +3367,7 @@ function getHistoriqueVitaminesComplet() {
   const nouveau = safeArray(appData.vitaminesHistorique).map(h => ({
     id: h.id || "",
     date: h.date || "",
+    datePrevue: h.datePrevue || h.date || "",
     oiseauId: h.oiseauId || "",
     oiseau: h.oiseau || "",
     produit: h.produit || "",
@@ -3386,6 +3389,7 @@ function getHistoriqueVitaminesComplet() {
       return {
         id: n.id || "",
         date: n.date || "",
+        datePrevue: n.date || "",
         oiseauId: "",
         oiseau: n.oiseau || "",
         produit: morceaux[0] || texte || "Vitamine",
@@ -3416,9 +3420,9 @@ function getHistoriqueVitaminesComplet() {
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 }
 
-function vitamineDejaDonnee(date, bird, produit) {
+function vitamineDejaDonnee(datePrevue, bird, produit) {
   return getHistoriqueVitaminesComplet().some(h =>
-    h.date === date &&
+    (h.datePrevue || h.date) === datePrevue &&
     (h.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase() &&
     (h.produit || "").trim().toLowerCase() === (produit || "").trim().toLowerCase() &&
     h.donne === true
@@ -3656,8 +3660,9 @@ function renderVitaminesNourrissage() {
         <table class="feed-table simple-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Oiseau</th>
+              <th>Donné le</th>
+<th>Prévu le</th>
+<th>Oiseau</th>
               <th>Produit</th>
               <th>Dose</th>
               <th>État</th>
@@ -3668,7 +3673,8 @@ function renderVitaminesNourrissage() {
             ${historique.map(h => `
               <tr>
                 <td>${safe(formatDateFR(h.date) || "-")}</td>
-                <td><strong>${safe(h.oiseau || "-")}</strong></td>
+<td>${safe(formatDateFR(h.datePrevue || h.date) || "-")}</td>
+<td><strong>${safe(h.oiseau || "-")}</strong></td>
                 <td>${safe(h.produit || "-")}</td>
                 <td>${safe(h.dose || "-")}</td>
                 <td>☑ Donné${h.heure ? ` à ${safe(h.heure)}` : ""}</td>
@@ -3686,9 +3692,10 @@ async function cocherVitamineAutomatique(oiseauId, produit, dose, datePrevue) {
   const bird = appData.oiseaux.find(o => o.id === oiseauId);
   if (!bird) return;
 
-  const date = datePrevue || todayStr();
+  const date = todayStr();
+const datePlanifiee = datePrevue || date;
 
-  if (vitamineDejaDonnee(date, bird, produit)) {
+  if (vitamineDejaDonnee(datePlanifiee, bird, produit)) {
     return;
   }
 
@@ -3697,6 +3704,7 @@ async function cocherVitamineAutomatique(oiseauId, produit, dose, datePrevue) {
   appData.vitaminesHistorique.push({
     id: makeId(),
     date,
+    datePrevue: datePlanifiee,
     oiseauId: bird.id,
     oiseau: bird.nom || "",
     vitamineId: "automatique",
