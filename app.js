@@ -3561,53 +3561,90 @@ function renderVitaminesNourrissage() {
     </div>
   `;
 
-  if (todayZone) {
+ if (todayZone) {
   const today = todayStr();
-  const dayIndex = new Date(`${today}T12:00:00`).getDay();
+  const todayDate = new Date(`${today}T12:00:00`);
 
-  const lignesAutomatiques = birds
-    .map(bird => {
-      const plan = getDashboardComplementPlan(dayIndex, bird);
+  const nomsJours = [
+    "Dimanche",
+    "Lundi",
+    "Mardi",
+    "Mercredi",
+    "Jeudi",
+    "Vendredi",
+    "Samedi"
+  ];
 
-      if (!plan) return "";
+  const blocsJours = [];
 
-      const parts = plan.split(" — ");
-      const produit = parts[0] || plan;
-      const dose = parts[1] || "dose à définir";
-      const dejaDonne = vitamineDejaDonnee(today, bird, produit);
+  for (let i = 0; i < 7; i++) {
+    const dateObj = new Date(todayDate);
+    dateObj.setDate(todayDate.getDate() - i);
 
-      return `
-        <div class="dashboard-row">
-          <div>
-            <strong>${safe(bird.nom)}</strong>
-            <small>
-              ${safe(produit)}<br>
-              Dose automatique : <strong>${safe(dose)}</strong><br>
-              Poids actuel : ${getLatestBirdWeight(bird) || "-"} g
-            </small>
+    const dateStr = [
+      dateObj.getFullYear(),
+      String(dateObj.getMonth() + 1).padStart(2, "0"),
+      String(dateObj.getDate()).padStart(2, "0")
+    ].join("-");
+
+    const dayIndex = dateObj.getDay();
+
+    const lignes = birds
+      .map(bird => {
+        const plan = getDashboardComplementPlan(dayIndex, bird);
+
+        if (!plan) return "";
+
+        const parts = plan.split(" — ");
+        const produit = parts[0] || plan;
+        const dose = parts[1] || "dose à définir";
+
+        const dejaDonne = vitamineDejaDonnee(dateStr, bird, produit);
+
+        return `
+          <div class="dashboard-row">
+            <div>
+              <strong>${safe(bird.nom)}</strong>
+              <small>
+                ${safe(produit)}<br>
+                Dose automatique : <strong>${safe(dose)}</strong><br>
+                Poids actuel : ${getLatestBirdWeight(bird) || "-"} g
+              </small>
+            </div>
+
+            <button
+              class="btn ${dejaDonne ? "secondary-btn" : "info-btn"}"
+              ${dejaDonne ? "disabled" : ""}
+              onclick="cocherVitamineAutomatique(
+                '${safeAttr(bird.id)}',
+                '${safeAttr(produit)}',
+                '${safeAttr(dose)}',
+                '${safeAttr(dateStr)}'
+              )">
+              ${dejaDonne ? "☑ Donné" : "☐ À donner"}
+            </button>
           </div>
+        `;
+      })
+      .filter(Boolean)
+      .join("");
 
-          <button
-  class="btn ${dejaDonne ? "secondary-btn" : "info-btn"}"
-  ${dejaDonne ? "disabled" : ""}
-  onclick="cocherVitamineAutomatique(
-    '${safeAttr(bird.id)}',
-    '${safeAttr(produit)}',
-    '${safeAttr(dose)}'
-  )">
-  ${dejaDonne ? "☑ Donné" : "☐ À donner"}
-</button>
-        </div>
-      `;
-    })
-    .filter(Boolean)
-    .join("");
+    blocsJours.push(`
+      <div class="card-section" style="margin-bottom:16px;">
+        <h3 style="margin-bottom:10px;">
+          ${i === 0 ? "📍 " : ""}
+          ${safe(nomsJours[dayIndex])} — ${safe(formatDateFR(dateStr))}
+        </h3>
 
-  todayZone.innerHTML = lignesAutomatiques || `
-    <p class="muted-line">
-      Aucun complément automatique prévu aujourd'hui.
-    </p>
-  `;
+        ${
+          lignes ||
+          `<p class="muted-line">Aucun complément prévu ce jour-là.</p>`
+        }
+      </div>
+    `);
+  }
+
+  todayZone.innerHTML = blocsJours.join("");
 }
 
   if (historyZone) {
@@ -3645,11 +3682,11 @@ function renderVitaminesNourrissage() {
 }
 }
 
-async function cocherVitamineAutomatique(oiseauId, produit, dose) {
+async function cocherVitamineAutomatique(oiseauId, produit, dose, datePrevue) {
   const bird = appData.oiseaux.find(o => o.id === oiseauId);
   if (!bird) return;
 
-  const date = todayStr();
+  const date = datePrevue || todayStr();
 
   if (vitamineDejaDonnee(date, bird, produit)) {
     return;
