@@ -2961,6 +2961,13 @@ function renderNourrissageHistory() {
                Imprimer ce jour
               </button>
 
+              <button
+  class="btn btn-danger"
+  onclick="supprimerJourNourrissage('${safeAttr(date)}')"
+>
+  🗑️ Supprimer toute la journée
+</button>
+
               <div id="detailNourrissage_${safeAttr(date)}" class="hidden" style="margin-top:12px;">
                 <div class="feed-table-wrap">
                   <table class="feed-table">
@@ -2970,7 +2977,6 @@ function renderNourrissageHistory() {
                         <th>Nourriture</th>
                         <th>Quantité</th>
                         <th>Remarque</th>
-                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2983,14 +2989,7 @@ function renderNourrissageHistory() {
                             <td>${safe(item.nourriture || "")}</td>
                             <td>${safe(item.quantite || 0)}</td>
                             <td>${safe(item.remarques || "")}</td>
-                            <td>
-  <button
-    class="btn btn-danger"
-    onclick="if(confirm('Supprimer cette ligne de nourrissage ?')) supprimerNourrissage('${safeAttr(item.id)}')"
-  >
-    Supprimer
-  </button>
-</td>
+    
                           </tr>
                         `).join("")}
                     </tbody>
@@ -3004,6 +3003,46 @@ function renderNourrissageHistory() {
     </div>
   `;
 }
+
+function supprimerJourNourrissage(date) {
+  const items = safeArray(appData.nourrissage).filter(
+    (n) => (n.date || "") === date
+  );
+
+  if (!items.length) return;
+
+  const total = items.reduce(
+    (sum, item) => sum + toNumber(item.quantite),
+    0
+  );
+
+  const ok = confirm(
+    `Supprimer TOUT le nourrissage du ${formatDateFR(date)} ?\n\n` +
+    `${items.length} ligne(s) seront supprimées.\n` +
+    `${total} pièce(s) seront remises dans le stock.\n\n` +
+    `Cette action permet ensuite de réencoder toute la journée proprement.`
+  );
+
+  if (!ok) return;
+
+  items.forEach((item) => {
+    restoreStockFromDeletedFeed(item);
+  });
+
+  appData.nourrissage = appData.nourrissage.filter(
+    (n) => (n.date || "") !== date
+  );
+
+  renderAll();
+  triggerAutoSave();
+
+  if (statusEl) {
+    statusEl.textContent =
+      `Nourrissage du ${formatDateFR(date)} supprimé — ${total} pièce(s) remises au stock`;
+  }
+}
+
+window.supprimerJourNourrissage = supprimerJourNourrissage;
 
 function toggleNourrissageDate(date) {
   const el = document.getElementById(`detailNourrissage_${date}`);
