@@ -6398,17 +6398,73 @@ function ajouterNourrissage() {
   const date = document.getElementById("feedDate")?.value || todayStr();
   const remarques = document.getElementById("feedNote")?.value.trim() || "";
 
+  const animationFood = document.getElementById("animationFood")?.value || "";
+  const animationQty = toNumber(
+    document.getElementById("animationQty")?.value || 0
+  );
+
   const oiseauxActifs = getSortedBirds(getActiveBirds());
 
   if (!oiseauxActifs.length) return;
 
+  if (animationQty > 0 && !animationFood) {
+    alert("Choisis la nourriture sortie pour l'animation.");
+    return;
+  }
+
+  if (animationFood && animationQty <= 0) {
+    alert("Indique la quantité sortie pour l'animation.");
+    return;
+  }
+
   const lignes = [];
 
   oiseauxActifs.forEach((oiseau) => {
-    const f1 = document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
-    const q1 = toNumber(document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0);
-    const f2 = document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
-    const q2 = toNumber(document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0);
+    const animation =
+      document.getElementById(`feedAnimation_${oiseau.id}`)?.checked || false;
+
+    const jeune =
+      document.getElementById(`feedJeune_${oiseau.id}`)?.checked || false;
+
+    if (animation) {
+      lignes.push({
+        id: makeId(),
+        date,
+        oiseau: oiseau.nom || "",
+        nourriture: "🎪 Animation",
+        quantite: 0,
+        remarques: remarques || "Oiseau en animation"
+      });
+
+      return;
+    }
+
+    if (jeune) {
+      lignes.push({
+        id: makeId(),
+        date,
+        oiseau: oiseau.nom || "",
+        nourriture: "⏸️ Jeûne",
+        quantite: 0,
+        remarques: remarques || "Jour de jeûne"
+      });
+
+      return;
+    }
+
+    const f1 =
+      document.getElementById(`feedFood1_${oiseau.id}`)?.value || "Poussin";
+
+    const q1 = toNumber(
+      document.getElementById(`feedQty1_${oiseau.id}`)?.value || 0
+    );
+
+    const f2 =
+      document.getElementById(`feedFood2_${oiseau.id}`)?.value || "";
+
+    const q2 = toNumber(
+      document.getElementById(`feedQty2_${oiseau.id}`)?.value || 0
+    );
 
     if (f1 && q1 > 0) {
       lignes.push({
@@ -6433,16 +6489,37 @@ function ajouterNourrissage() {
     }
   });
 
+  if (animationFood && animationQty > 0) {
+    lignes.push({
+      id: makeId(),
+      date,
+      oiseau: "🎪 Sortie animation",
+      nourriture: animationFood,
+      quantite: animationQty,
+      remarques: "Nourriture préparée pour l'animation"
+    });
+  }
+
   if (!lignes.length) {
-    alert("Choisis au moins une nourriture et une quantité pour un oiseau.");
+    alert(
+      "Encode au moins un nourrissage, un oiseau en animation, un jour de jeûne ou une sortie animation."
+    );
     return;
   }
 
   if (editingFeedId) {
-    const ancien = appData.nourrissage.find((n) => n.id === editingFeedId);
-    if (ancien) restoreStockFromDeletedFeed(ancien);
+    const ancien = appData.nourrissage.find(
+      (n) => n.id === editingFeedId
+    );
 
-    appData.nourrissage = appData.nourrissage.filter((n) => n.id !== editingFeedId);
+    if (ancien) {
+      restoreStockFromDeletedFeed(ancien);
+    }
+
+    appData.nourrissage = appData.nourrissage.filter(
+      (n) => n.id !== editingFeedId
+    );
+
     editingFeedId = null;
   }
 
@@ -6453,19 +6530,30 @@ function ajouterNourrissage() {
 
   viderTableNourrissage(false);
 
- const noteEl = document.getElementById("feedNote");
-if (noteEl) noteEl.value = "";
+  const animationFoodEl = document.getElementById("animationFood");
+  const animationQtyEl = document.getElementById("animationQty");
 
-const feedDateEl = document.getElementById("feedDate");
-if (feedDateEl) feedDateEl.value = todayStr();
+  if (animationFoodEl) animationFoodEl.value = "";
+  if (animationQtyEl) animationQtyEl.value = "";
 
-renderAll();
+  const noteEl = document.getElementById("feedNote");
+  if (noteEl) noteEl.value = "";
 
-const feedDateElAfterRender = document.getElementById("feedDate");
-if (feedDateElAfterRender) feedDateElAfterRender.value = todayStr();
+  const feedDateEl = document.getElementById("feedDate");
+  if (feedDateEl) feedDateEl.value = todayStr();
 
-triggerAutoSave();
-if (statusEl) statusEl.textContent = `${lignes.length} nourrissage(s) enregistré(s)`;
+  renderAll();
+
+  const feedDateElAfterRender = document.getElementById("feedDate");
+  if (feedDateElAfterRender) {
+    feedDateElAfterRender.value = todayStr();
+  }
+
+  triggerAutoSave();
+
+  if (statusEl) {
+    statusEl.textContent = `${lignes.length} ligne(s) de nourrissage enregistrée(s)`;
+  }
 }
 
 function getFoodOptionsHtml(selected = "", includeEmpty = true) {
@@ -6507,6 +6595,8 @@ function renderNourrissageTable() {
             <th>Espèce</th>
             <th>Nourriture 1</th>
             <th>Qté 1</th>
+            <th>🎪 Animation</th>
+<th>⏸️ Jeûne</th>
             <th>Nourriture 2</th>
             <th>Qté 2</th>
           </tr>
@@ -6522,6 +6612,23 @@ function renderNourrissageTable() {
               <td>
                 <input id="feedQty1_${safeAttr(oiseau.id)}" type="number" min="0" step="1" placeholder="0">
               </td>
+              <td style="text-align:center;">
+  <input
+    id="feedAnimation_${safeAttr(oiseau.id)}"
+    type="checkbox"
+    style="width:auto;margin:0;"
+    onchange="toggleFeedSpecialMode('${safeAttr(oiseau.id)}', 'animation')"
+  >
+</td>
+
+<td style="text-align:center;">
+  <input
+    id="feedJeune_${safeAttr(oiseau.id)}"
+    type="checkbox"
+    style="width:auto;margin:0;"
+    onchange="toggleFeedSpecialMode('${safeAttr(oiseau.id)}', 'jeune')"
+  >
+</td>
               <td>
                 <select id="feedFood2_${safeAttr(oiseau.id)}">${getFoodOptionsHtml("", true)}</select>
               </td>
@@ -6535,6 +6642,39 @@ function renderNourrissageTable() {
     </div>
   `;
 }
+
+function toggleFeedSpecialMode(oiseauId, mode) {
+  const animation = document.getElementById(`feedAnimation_${oiseauId}`);
+  const jeune = document.getElementById(`feedJeune_${oiseauId}`);
+
+  const food1 = document.getElementById(`feedFood1_${oiseauId}`);
+  const qty1 = document.getElementById(`feedQty1_${oiseauId}`);
+  const food2 = document.getElementById(`feedFood2_${oiseauId}`);
+  const qty2 = document.getElementById(`feedQty2_${oiseauId}`);
+
+  if (mode === "animation" && animation?.checked) {
+    if (jeune) jeune.checked = false;
+
+    if (qty1) qty1.value = "";
+    if (qty2) qty2.value = "";
+  }
+
+  if (mode === "jeune" && jeune?.checked) {
+    if (animation) animation.checked = false;
+
+    if (qty1) qty1.value = "";
+    if (qty2) qty2.value = "";
+  }
+
+  const special = animation?.checked || jeune?.checked;
+
+  if (food1) food1.disabled = special;
+  if (qty1) qty1.disabled = special;
+  if (food2) food2.disabled = special;
+  if (qty2) qty2.disabled = special;
+}
+
+window.toggleFeedSpecialMode = toggleFeedSpecialMode;
 
 function appliquerNourritureHabituelle() {
   getActiveBirds().forEach((oiseau) => {
@@ -6558,6 +6698,8 @@ function viderTableNourrissage(showMessage = true) {
     const f2 = document.getElementById(`feedFood2_${oiseau.id}`);
     const q1 = document.getElementById(`feedQty1_${oiseau.id}`);
     const q2 = document.getElementById(`feedQty2_${oiseau.id}`);
+    const animation = document.getElementById(`feedAnimation_${oiseau.id}`);
+const jeune = document.getElementById(`feedJeune_${oiseau.id}`);
 
     if (f1) f1.value = "Poussin";
     if (f2) f2.value = "";

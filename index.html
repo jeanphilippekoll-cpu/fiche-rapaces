@@ -1962,7 +1962,45 @@ bird-card .bird-badges {
             <textarea id="feedNote" placeholder="Remarques du nourrissage"></textarea>
 
             <div id="feedTableZone"></div>
-            <div id="foodConsumptionHistoryZone"></div>
+
+<div class="card-section">
+  <h3>🎪 Nourriture sortie pour animation</h3>
+
+  <p class="muted-line">
+    Indique ici la nourriture préparée pour les oiseaux qui partent en animation.
+    Ces quantités seront retirées du stock.
+  </p>
+
+  <div class="form-grid">
+    <div>
+      <label for="animationFood">Nourriture</label>
+      <select id="animationFood">
+        <option value="">Choisir</option>
+        <option value="Poussin">Poussin</option>
+        <option value="Caille">Caille</option>
+        <option value="Pigeon">Pigeon</option>
+        <option value="Lapin">Lapin</option>
+        <option value="Poisson">Poisson</option>
+        <option value="Souris">Souris</option>
+        <option value="Rat">Rat</option>
+        <option value="Cailleteau 30gr">Cailleteau 30gr</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="animationQty">Quantité sortie</label>
+      <input
+        id="animationQty"
+        type="number"
+        min="0"
+        step="1"
+        placeholder="Ex : 20"
+      >
+    </div>
+  </div>
+</div>
+
+<div id="foodConsumptionHistoryZone"></div>
 
            <div class="actions">
             <button class="btn" onclick="ajouterNourrissage()">Enregistrer le nourrissage</button>
