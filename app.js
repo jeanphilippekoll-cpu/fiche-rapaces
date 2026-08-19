@@ -6705,6 +6705,13 @@ const jeune = document.getElementById(`feedJeune_${oiseau.id}`);
     if (f2) f2.value = "";
     if (q1) q1.value = "";
     if (q2) q2.value = "";
+    if (animation) animation.checked = false;
+if (jeune) jeune.checked = false;
+
+if (f1) f1.disabled = false;
+if (q1) q1.disabled = false;
+if (f2) f2.disabled = false;
+if (q2) q2.disabled = false;
   });
 
   if (showMessage && statusEl) statusEl.textContent = "Tableau vidé";
