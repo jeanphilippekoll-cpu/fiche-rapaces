@@ -2760,14 +2760,38 @@ function aggregateFeeds(items) {
 }
 
 function renderAggregateBlock(title, items) {
-  const agg = aggregateFeeds(items);
+  const itemsQuantites = safeArray(items).filter(item =>
+    item.nourriture !== "🎪 Animation" &&
+    item.nourriture !== "⏸️ Jeûne"
+  );
+
+  const agg = aggregateFeeds(itemsQuantites);
   const foods = Object.entries(agg.byFood);
+
+  const nbAnimation = safeArray(items).filter(
+    item => item.nourriture === "🎪 Animation"
+  ).length;
+
+  const nbJeune = safeArray(items).filter(
+    item => item.nourriture === "⏸️ Jeûne"
+  ).length;
 
   return `
     <div class="summary-card">
       <h3>${safe(title)}</h3>
+
       <p class="summary-total">${agg.total} pièce(s)</p>
-      ${foods.length ? foods.map(([food, qty]) => `<p>${safe(food)} : ${safe(qty)}</p>`).join("") : `<p>Aucun nourrissage.</p>`}
+
+      ${
+        foods.length
+          ? foods.map(([food, qty]) =>
+              `<p>${safe(food)} : ${safe(qty)}</p>`
+            ).join("")
+          : `<p>Aucun nourrissage en quantité.</p>`
+      }
+
+      <p>🎪 Animation : <strong>${nbAnimation} oiseau(x)</strong></p>
+      <p>⏸️ Jeûne : <strong>${nbJeune} oiseau(x)</strong></p>
     </div>
   `;
 }
@@ -2946,6 +2970,7 @@ function renderNourrissageHistory() {
                         <th>Nourriture</th>
                         <th>Quantité</th>
                         <th>Remarque</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2958,6 +2983,14 @@ function renderNourrissageHistory() {
                             <td>${safe(item.nourriture || "")}</td>
                             <td>${safe(item.quantite || 0)}</td>
                             <td>${safe(item.remarques || "")}</td>
+                            <td>
+  <button
+    class="btn btn-danger"
+    onclick="if(confirm('Supprimer cette ligne de nourrissage ?')) supprimerNourrissage('${safeAttr(item.id)}')"
+  >
+    Supprimer
+  </button>
+</td>
                           </tr>
                         `).join("")}
                     </tbody>
