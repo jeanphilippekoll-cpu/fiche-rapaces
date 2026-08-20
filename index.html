@@ -1578,6 +1578,7 @@ bird-card .bird-badges {
   </div>
 </div>
   <button class="bird-tab" onclick="showBirdTab('nourrissage',this)">🍗 Nourrissage</button>
+  <button class="bird-tab" onclick="showBirdTab('activite',this)">🎯 Activité</button>
   <button class="bird-tab" onclick="showBirdTab('sante',this)">💊 Santé</button>
   <button class="bird-tab" onclick="showBirdTab('documents',this)">📄 Documents</button>
   <button class="bird-tab" onclick="showBirdTab('reproduction',this)">🥚 Reproduction</button>
@@ -1774,6 +1775,98 @@ bird-card .bird-badges {
         <p id="birdPremiumLastWeightDate">Non renseignée</p>
       </div>
     </div>
+  </div>
+</div>
+
+<div id="birdTab-activite" class="bird-tab-content hidden">
+  <div class="card-section">
+
+    <h3>🎯 Activité de l'oiseau</h3>
+    <p class="muted-line">
+      Entraînement, animation, repos, manipulation et sociabilisation.
+    </p>
+
+    <div class="form-grid">
+
+      <div>
+        <label for="birdActivityDate">Date</label>
+        <input id="birdActivityDate" type="date">
+      </div>
+
+      <div>
+        <label for="birdActivityType">Activité</label>
+        <select id="birdActivityType">
+          <option value="">Choisir</option>
+          <option value="animation">🎪 Animation</option>
+          <option value="vol">🦅 Entraînement / Vol</option>
+          <option value="repos">😴 Repos</option>
+          <option value="autre">✋ Autre</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="birdActivityOther">Précision si « Autre »</label>
+        <input
+          id="birdActivityOther"
+          placeholder="Manipulation, petit rappel, sociabilisation..."
+        >
+      </div>
+
+      <div>
+        <label for="birdActivityEvaluation">Attitude / réaction</label>
+        <select id="birdActivityEvaluation">
+          <option value="">Non évaluée</option>
+          <option value="aucune">☆☆☆ Aucune réaction</option>
+          <option value="bon">⭐ Bon</option>
+          <option value="tres-bon">⭐⭐ Très bon</option>
+          <option value="top">⭐⭐⭐ Top</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="birdActivityDuration">Durée du travail (minutes)</label>
+        <input
+          id="birdActivityDuration"
+          type="number"
+          min="0"
+          placeholder="Ex : 15"
+        >
+      </div>
+
+      <div>
+        <label for="birdActivityRappels">Nombre de rappels</label>
+        <input
+          id="birdActivityRappels"
+          type="number"
+          min="0"
+          placeholder="Ex : 4"
+        >
+      </div>
+
+    </div>
+
+    <label for="birdActivityRemark">Remarque / attitude de l'oiseau</label>
+    <textarea
+      id="birdActivityRemark"
+      placeholder="Ex : très motivé, départ rapide, excellent retour au gant..."
+    ></textarea>
+
+    <div class="actions">
+      <button class="btn" type="button">
+        💾 Enregistrer l'activité
+      </button>
+    </div>
+
+    <div style="margin-top:20px;">
+      <h3>📅 Historique mensuel</h3>
+      <p class="muted-line">
+        L'historique des activités de cet oiseau apparaîtra ici.
+      </p>
+      <div id="birdActivityHistory">
+        Aucune activité enregistrée.
+      </div>
+    </div>
+
   </div>
 </div>
 
