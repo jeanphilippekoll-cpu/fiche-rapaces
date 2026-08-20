@@ -729,6 +729,7 @@ document.getElementById(`btn-${realSection}`)?.classList.add("active");
 
 if (section === "activites") {
   renderActivityTable();
+  renderActivityHistory();
 }
 
   if (section === "vacances") renderVacances();
@@ -852,16 +853,34 @@ function renderActivityTable() {
 
 window.renderActivityTable = renderActivityTable;
 
-function previsualiserActivitesDuJour() {
+function getActivityTypeLabel(type, autreType = "") {
+  if (type === "animation") return "🎪 Animation";
+  if (type === "vol") return "🦅 Entraînement / Vol";
+  if (type === "repos") return "😴 Repos";
+  if (type === "autre") return `✋ ${autreType || "Autre"}`;
+  return type || "—";
+}
+
+function getActivityEvaluationLabel(evaluation) {
+  if (evaluation === "aucune") return "☆☆☆ Aucune réaction";
+  if (evaluation === "bon") return "⭐ Bon";
+  if (evaluation === "tres-bon") return "⭐⭐ Très bon";
+  if (evaluation === "top") return "⭐⭐⭐ Top";
+  return "—";
+}
+
+async function enregistrerActivitesDuJour() {
   const date = document.getElementById("activityDate")?.value || todayStr();
   const birds = getSortedBirds(getActiveBirds());
 
-  const activites = [];
+  const nouvellesActivites = [];
 
   birds.forEach((bird) => {
     const type = document.querySelector(
       `.activity-type[data-bird-id="${bird.id}"]`
     )?.value || "";
+
+    if (!type) return;
 
     const autreType = document.querySelector(
       `.activity-other[data-bird-id="${bird.id}"]`
@@ -887,9 +906,8 @@ function previsualiserActivitesDuJour() {
       `.activity-remark[data-bird-id="${bird.id}"]`
     )?.value.trim() || "";
 
-    if (!type) return;
-
-    activites.push({
+    nouvellesActivites.push({
+      id: makeId(),
       date,
       oiseauId: bird.id,
       oiseau: bird.nom || "",
@@ -902,37 +920,96 @@ function previsualiserActivitesDuJour() {
     });
   });
 
-  if (!activites.length) {
+  if (!nouvellesActivites.length) {
     alert("Choisis au moins une activité pour un oiseau.");
     return;
   }
 
+  try {
+    if (statusEl) {
+      statusEl.textContent = "Sauvegarde des activités…";
+    }
+
+    const historiqueExistant = safeArray(rawUserData?.activites);
+
+    // Si on réencode le même oiseau à la même date,
+    // on remplace son ancienne activité au lieu de créer un doublon.
+    const clesRemplacees = new Set(
+      nouvellesActivites.map(
+        (a) => `${a.date}|${a.oiseauId}`
+      )
+    );
+
+    const historiqueConserve = historiqueExistant.filter(
+      (a) => !clesRemplacees.has(`${a.date}|${a.oiseauId}`)
+    );
+
+    const activitesCompletes = [
+      ...historiqueConserve,
+      ...nouvellesActivites
+    ];
+
+    await setDoc(
+      userRef,
+      {
+        activites: activitesCompletes
+      },
+      {
+        merge: true
+      }
+    );
+
+    rawUserData.activites = activitesCompletes;
+
+    renderActivityHistory();
+
+    if (statusEl) {
+      statusEl.textContent =
+        `${nouvellesActivites.length} activité(s) enregistrée(s)`;
+    }
+
+    alert("Activités enregistrées.");
+  } catch (e) {
+    console.error("Erreur sauvegarde activités :", e);
+
+    if (statusEl) {
+      statusEl.textContent = "Erreur sauvegarde activités";
+    }
+
+    alert("Erreur pendant la sauvegarde des activités.");
+  }
+}
+
+window.enregistrerActivitesDuJour = enregistrerActivitesDuJour;
+
+function renderActivityHistory() {
   const zone = document.getElementById("activityHistoryZone");
+  const dateInput = document.getElementById("activityDate");
+
   if (!zone) return;
 
-  const typeLabel = (type, autreType) => {
-    if (type === "animation") return "🎪 Animation";
-    if (type === "vol") return "🦅 Entraînement / Vol";
-    if (type === "repos") return "😴 Repos";
-    if (type === "autre") return `✋ ${autreType || "Autre"}`;
-    return type;
-  };
+  const dateReference = dateInput?.value || todayStr();
+  const mois = dateReference.slice(0, 7);
 
-  const evaluationLabel = (evaluation) => {
-    if (evaluation === "aucune") return "☆☆☆ Aucune réaction";
-    if (evaluation === "bon") return "⭐ Bon";
-    if (evaluation === "tres-bon") return "⭐⭐ Très bon";
-    if (evaluation === "top") return "⭐⭐⭐ Top";
-    return "—";
-  };
+  const activites = safeArray(rawUserData?.activites)
+    .filter((a) => (a.date || "").slice(0, 7) === mois)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  if (!activites.length) {
+    zone.innerHTML = `
+      <p class="muted-line">
+        Aucune activité enregistrée pour ${mois}.
+      </p>
+    `;
+    return;
+  }
 
   zone.innerHTML = `
-    <h3>📅 Aperçu du ${formatDateFR(date)}</h3>
-
     <div class="feed-table-wrap">
       <table class="feed-table simple-table">
         <thead>
           <tr>
+            <th>Date</th>
             <th>Oiseau</th>
             <th>Activité</th>
             <th>Attitude</th>
@@ -945,25 +1022,22 @@ function previsualiserActivitesDuJour() {
         <tbody>
           ${activites.map((a) => `
             <tr>
-              <td><strong>${safe(a.oiseau)}</strong></td>
-              <td>${safe(typeLabel(a.type, a.autreType))}</td>
-              <td>${safe(evaluationLabel(a.evaluation))}</td>
-              <td>${a.duree > 0 ? `${a.duree} min` : "—"}</td>
-              <td>${a.rappels > 0 ? a.rappels : "—"}</td>
+              <td>${formatDateFR(a.date)}</td>
+              <td><strong>${safe(a.oiseau || "")}</strong></td>
+              <td>${safe(getActivityTypeLabel(a.type, a.autreType))}</td>
+              <td>${safe(getActivityEvaluationLabel(a.evaluation))}</td>
+              <td>${toNumber(a.duree) > 0 ? `${toNumber(a.duree)} min` : "—"}</td>
+              <td>${toNumber(a.rappels) > 0 ? toNumber(a.rappels) : "—"}</td>
               <td>${safe(a.remarque || "—")}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
     </div>
-
-    <p class="muted-line" style="margin-top:12px;">
-      ⚠️ Aperçu uniquement — aucune donnée n'est encore sauvegardée.
-    </p>
   `;
-
-  console.log("Activités prêtes à enregistrer :", activites);
 }
+
+window.renderActivityHistory = renderActivityHistory;
 
 window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
 
