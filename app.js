@@ -2128,7 +2128,7 @@ function partagerFicheOiseau(id) {
     </tr>
   `).join("");
   const birdVet = getVetForBird(bird.nom);
-
+ 
   let texte = `Fiche oiseau : ${bird.nom}\n`;
   texte += `Espèce : ${bird.espece || "-"}\n`;
   texte += `Sexe : ${bird.sexe || "-"}\n`;
@@ -2279,6 +2279,146 @@ function getBirdFoodCostSummary(birdName) {
   return result;
 }
 
+function openBirdActivities(id) {
+  const bird = appData.oiseaux.find((o) => o.id === id);
+  if (!bird) return;
+
+  const activities = safeArray(appData.activites)
+    .filter((a) =>
+      a.oiseauId === bird.id ||
+      (a.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
+    )
+    .slice()
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  const rows = activities.length
+    ? activities.map((a) => `
+        <tr>
+          <td>${safe(formatDateFR(a.date || ""))}</td>
+          <td>${safe(getActivityTypeLabel(a.type, a.autreType))}</td>
+          <td>${safe(getActivityEvaluationLabel(a.evaluation))}</td>
+          <td>${toNumber(a.duree) > 0 ? `${toNumber(a.duree)} min` : "—"}</td>
+          <td>${toNumber(a.rappels) > 0 ? toNumber(a.rappels) : "—"}</td>
+          <td>${safe(a.remarque || "—")}</td>
+        </tr>
+      `).join("")
+    : `
+      <tr>
+        <td colspan="6">Aucune activité enregistrée.</td>
+      </tr>
+    `;
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert("Le navigateur bloque la fenêtre Activité.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head>
+      <meta charset="UTF-8">
+      <title>Activité - ${safe(bird.nom)}</title>
+
+      <style>
+        body {
+          font-family: Arial, Helvetica, sans-serif;
+          padding: 20px;
+          color: #222;
+          background: #fff;
+        }
+
+        h1 {
+          margin-bottom: 4px;
+        }
+
+        .subtitle {
+          color: #666;
+          margin-bottom: 20px;
+        }
+
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+        }
+
+        th,
+        td {
+          border: 1px solid #bbb;
+          padding: 8px;
+          text-align: left;
+        }
+
+        th {
+          background: #e8f0e8;
+        }
+
+        .actions {
+          margin-bottom: 20px;
+        }
+
+        button {
+          padding: 10px 14px;
+          border: none;
+          border-radius: 8px;
+          background: #333;
+          color: white;
+          font-weight: bold;
+          cursor: pointer;
+        }
+
+        @media print {
+          .actions {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <div class="actions">
+        <button onclick="window.print()">
+          🖨️ Imprimer l'activité
+        </button>
+      </div>
+
+      <h1>🎯 Activité de ${safe(bird.nom)}</h1>
+
+      <p class="subtitle">
+        ${safe(bird.espece || "")}
+        ${bird.bague ? ` — Bague ${safe(bird.bague)}` : ""}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Activité</th>
+            <th>Attitude</th>
+            <th>Durée</th>
+            <th>Rappels</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
+}
+
+window.openBirdActivities = openBirdActivities;
+
 function openBirdSheetInline(id) {
   openBirdSheet(id);
 }
@@ -2289,6 +2429,13 @@ function openBirdSheet(id) {
 
   const birdFeeds = getFeedsForBird(bird.nom);
   const birdVet = getVetForBird(bird.nom);
+  const birdActivities = safeArray(appData.activites)
+  .filter((a) =>
+    a.oiseauId === bird.id ||
+    (a.oiseau || "").trim().toLowerCase() === (bird.nom || "").trim().toLowerCase()
+  )
+  .slice()
+  .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const birdCost = getBirdFoodCostSummary(bird.nom);
   const birdStats = getBirdFeedStats(bird.nom);
 
@@ -2812,6 +2959,15 @@ function renderOiseaux() {
 
 <button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdWeights('${oiseau.id}')">
   ⚖️ Poids (${safeArray(oiseau.historiquePoids).length})
+</button>
+
+<button class="bird-badge-btn" onclick="event.stopPropagation(); openBirdActivities('${oiseau.id}')">
+  🎯 Activité (${
+    safeArray(appData.activites).filter((a) =>
+      a.oiseauId === oiseau.id ||
+      (a.oiseau || "").trim().toLowerCase() === (oiseau.nom || "").trim().toLowerCase()
+    ).length
+  })
 </button>
 </div> 
 
