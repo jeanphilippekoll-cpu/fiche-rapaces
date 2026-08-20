@@ -1029,6 +1029,97 @@ window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
 
 window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
 
+function ouvrirFichesQuotidiennes() {
+  showSection("fiches-quotidiennes");
+  renderFichesQuotidiennesOiseaux();
+}
+
+function renderFichesQuotidiennesOiseaux() {
+  const zone = document.getElementById("fichesQuotidiennesOiseaux");
+  if (!zone) return;
+
+  const oiseaux = getSortedBirds(getActiveBirds());
+
+  if (!oiseaux.length) {
+    zone.innerHTML = `<p>Aucun oiseau actif.</p>`;
+    return;
+  }
+
+  zone.innerHTML = `
+    <div class="birds-grid">
+      ${oiseaux.map((bird) => `
+        <article
+          class="bird-card"
+          style="cursor:pointer;"
+          onclick="ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}')"
+        >
+
+          <div class="bird-card-head">
+            <div>
+              <h3>${safe(bird.nom || "")}</h3>
+              <p class="bird-species">${safe(bird.espece || "")}</p>
+            </div>
+
+            <div class="weight-pill">
+              📋
+            </div>
+          </div>
+
+          ${bird.photoUrl ? `
+            <img
+              src="${safeAttr(bird.photoUrl)}"
+              alt="${safeAttr(bird.nom || "")}"
+              class="bird-photo"
+            >
+          ` : `
+            <div class="bird-photo-placeholder">
+              Pas de photo
+            </div>
+          `}
+
+          <div class="bird-meta">
+            <div>
+              <span>Bague</span>
+              <strong>${safe(bird.bague || "-")}</strong>
+            </div>
+
+            <div>
+              <span>Poids actuel</span>
+              <strong>
+                ${toNumber(bird.poidsActuel) > 0
+                  ? `${toNumber(bird.poidsActuel)} g`
+                  : "-"}
+              </strong>
+            </div>
+          </div>
+
+          <div class="small-actions">
+            <button
+              class="btn info-btn"
+              type="button"
+              onclick="event.stopPropagation(); ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}')"
+            >
+              📋 Ouvrir la fiche
+            </button>
+          </div>
+
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function ouvrirFicheQuotidienneOiseau(id) {
+  const bird = appData.oiseaux.find((o) => o.id === id);
+  if (!bird) return;
+
+  alert(`La fiche quotidienne de ${bird.nom} sera créée à l'étape suivante.`);
+}
+
+window.ouvrirFichesQuotidiennes = ouvrirFichesQuotidiennes;
+window.renderFichesQuotidiennesOiseaux = renderFichesQuotidiennesOiseaux;
+window.ouvrirFicheQuotidienneOiseau = ouvrirFicheQuotidienneOiseau;
+
 function refreshStats() {
   const setCounter = (ids, value) => {
     ids.forEach((id) => {
@@ -1041,6 +1132,10 @@ function refreshStats() {
   setCounter(["statPesees", "statpesees", "stat-pesees"], appData.pesees.length);
   setCounter(["statDocuments", "statdocuments", "stat-documents"], appData.documents.length);
   setCounter(["statNourrissages", "statnourrissages", "stat-nourrissages"], appData.nourrissage.length);
+  setCounter(
+  ["statFichesQuotidiennes"],
+  getActiveBirds().length
+);
 }
 
 
