@@ -727,6 +727,10 @@ const realSection = section === "pesees" ? "pesee" : section;
 document.getElementById(`section-${realSection}`)?.classList.remove("hidden");
 document.getElementById(`btn-${realSection}`)?.classList.add("active");
 
+if (section === "activites") {
+  renderActivityTable();
+}
+
   if (section === "vacances") renderVacances();
 
   if (section === "dashboard" || section === "accueil") {
@@ -756,6 +760,97 @@ if (section === "veterinaire") {
   renderVeterinaire();
 }
 }
+
+function renderActivityTable() {
+  const tbody = document.getElementById("activityTableBody");
+  const dateInput = document.getElementById("activityDate");
+
+  if (!tbody) return;
+
+  if (dateInput && !dateInput.value) {
+    dateInput.value = todayStr();
+  }
+
+  const birds = getSortedBirds(getActiveBirds());
+
+  if (!birds.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">Aucun oiseau actif.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = birds.map((bird) => `
+    <tr>
+
+      <td>
+        <strong>${safe(bird.nom)}</strong><br>
+        <small>${safe(bird.espece || "")}</small>
+      </td>
+
+      <td>
+        <select class="activity-type" data-bird-id="${safeAttr(bird.id)}">
+          <option value="">—</option>
+          <option value="animation">🎪 Animation</option>
+          <option value="vol">🦅 Entraînement / Vol</option>
+          <option value="repos">😴 Repos</option>
+          <option value="autre">✋ Autre</option>
+        </select>
+      </td>
+
+      <td>
+        <input
+          class="activity-other"
+          data-bird-id="${safeAttr(bird.id)}"
+          placeholder="Manipulation..."
+        >
+      </td>
+
+      <td>
+        <select class="activity-evaluation" data-bird-id="${safeAttr(bird.id)}">
+          <option value="">—</option>
+          <option value="aucune">☆☆☆ Aucune réaction</option>
+          <option value="bon">⭐ Bon</option>
+          <option value="tres-bon">⭐⭐ Très bon</option>
+          <option value="top">⭐⭐⭐ Top</option>
+        </select>
+      </td>
+
+      <td>
+        <input
+          class="activity-duration"
+          data-bird-id="${safeAttr(bird.id)}"
+          type="number"
+          min="0"
+          placeholder="min"
+        >
+      </td>
+
+      <td>
+        <input
+          class="activity-rappels"
+          data-bird-id="${safeAttr(bird.id)}"
+          type="number"
+          min="0"
+          placeholder="0"
+        >
+      </td>
+
+      <td>
+        <input
+          class="activity-remark"
+          data-bird-id="${safeAttr(bird.id)}"
+          placeholder="Attitude..."
+        >
+      </td>
+
+    </tr>
+  `).join("");
+}
+
+window.renderActivityTable = renderActivityTable;
 
 function refreshStats() {
   const setCounter = (ids, value) => {
