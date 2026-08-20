@@ -58,6 +58,7 @@ let appData = {
   reproduction: [],
   vitamines: [],
 vitaminesHistorique: [],
+  activites: [],
 
   prixNourriture: {
     "Poussin": 0,
@@ -380,6 +381,10 @@ const vitaminesHistoriqueSource = safeArray(
   userData?.vitaminesHistorique || rapacesData?.vitaminesHistorique || []
 );
 
+const activitesSource = safeArray(
+  userData?.activites || rapacesData?.activites || []
+);
+
   const oiseaux = oiseauxSource.map((o, index) => ({
   id: o.id || `oiseau_${index}_${makeId()}`,
   nom: o.nom || "",
@@ -540,6 +545,19 @@ vitaminesHistorique: vitaminesHistoriqueSource.map((h, index) => ({
   dose: h?.dose || "",
   donne: h?.donne === true,
   heure: h?.heure || ""
+})),
+
+activites: activitesSource.map((a, index) => ({
+  id: a?.id || `activite_${index}_${makeId()}`,
+  date: a?.date || "",
+  oiseauId: a?.oiseauId || "",
+  oiseau: a?.oiseau || "",
+  type: a?.type || "",
+  autreType: a?.autreType || "",
+  evaluation: a?.evaluation || "",
+  duree: toNumber(a?.duree),
+  rappels: toNumber(a?.rappels),
+  remarque: a?.remarque || ""
 })),
    stock,
    prixNourriture: {
@@ -711,6 +729,19 @@ vitaminesHistorique: safeArray(appData.vitaminesHistorique).map((h) => ({
   dose: h.dose || "",
   donne: h.donne === true,
   heure: h.heure || ""
+})),
+
+activites: safeArray(appData.activites).map((a) => ({
+  id: a.id || makeId(),
+  date: a.date || "",
+  oiseauId: a.oiseauId || "",
+  oiseau: a.oiseau || "",
+  type: a.type || "",
+  autreType: a.autreType || "",
+  evaluation: a.evaluation || "",
+  duree: toNumber(a.duree),
+  rappels: toNumber(a.rappels),
+  remarque: a.remarque || ""
 }))
   };
 }
@@ -729,6 +760,7 @@ document.getElementById(`btn-${realSection}`)?.classList.add("active");
 
 if (section === "activites") {
   renderActivityTable();
+  renderActivityHistory();
 }
 
   if (section === "vacances") renderVacances();
@@ -852,87 +884,48 @@ function renderActivityTable() {
 
 window.renderActivityTable = renderActivityTable;
 
-function previsualiserActivitesDuJour() {
-  const date = document.getElementById("activityDate")?.value || todayStr();
-  const birds = getSortedBirds(getActiveBirds());
+function getActivityTypeLabel(type, autreType = "") {
+  if (type === "animation") return "🎪 Animation";
+  if (type === "vol") return "🦅 Entraînement / Vol";
+  if (type === "repos") return "😴 Repos";
+  if (type === "autre") return `✋ ${autreType || "Autre"}`;
+  return type || "—";
+}
 
-  const activites = [];
+function getActivityEvaluationLabel(evaluation) {
+  if (evaluation === "aucune") return "☆☆☆ Aucune réaction";
+  if (evaluation === "bon") return "⭐ Bon";
+  if (evaluation === "tres-bon") return "⭐⭐ Très bon";
+  if (evaluation === "top") return "⭐⭐⭐ Top";
+  return "—";
+}
 
-  birds.forEach((bird) => {
-    const type = document.querySelector(
-      `.activity-type[data-bird-id="${bird.id}"]`
-    )?.value || "";
-
-    const autreType = document.querySelector(
-      `.activity-other[data-bird-id="${bird.id}"]`
-    )?.value.trim() || "";
-
-    const evaluation = document.querySelector(
-      `.activity-evaluation[data-bird-id="${bird.id}"]`
-    )?.value || "";
-
-    const duree = toNumber(
-      document.querySelector(
-        `.activity-duration[data-bird-id="${bird.id}"]`
-      )?.value || 0
-    );
-
-    const rappels = toNumber(
-      document.querySelector(
-        `.activity-rappels[data-bird-id="${bird.id}"]`
-      )?.value || 0
-    );
-
-    const remarque = document.querySelector(
-      `.activity-remark[data-bird-id="${bird.id}"]`
-    )?.value.trim() || "";
-
-    if (!type) return;
-
-    activites.push({
-      date,
-      oiseauId: bird.id,
-      oiseau: bird.nom || "",
-      type,
-      autreType,
-      evaluation,
-      duree,
-      rappels,
-      remarque
-    });
-  });
-
-  if (!activites.length) {
-    alert("Choisis au moins une activité pour un oiseau.");
-    return;
-  }
-
+function renderActivityHistory() {
   const zone = document.getElementById("activityHistoryZone");
   if (!zone) return;
 
-  const typeLabel = (type, autreType) => {
-    if (type === "animation") return "🎪 Animation";
-    if (type === "vol") return "🦅 Entraînement / Vol";
-    if (type === "repos") return "😴 Repos";
-    if (type === "autre") return `✋ ${autreType || "Autre"}`;
-    return type;
-  };
+  const date = document.getElementById("activityDate")?.value || todayStr();
+  const mois = date.slice(0, 7);
 
-  const evaluationLabel = (evaluation) => {
-    if (evaluation === "aucune") return "☆☆☆ Aucune réaction";
-    if (evaluation === "bon") return "⭐ Bon";
-    if (evaluation === "tres-bon") return "⭐⭐ Très bon";
-    if (evaluation === "top") return "⭐⭐⭐ Top";
-    return "—";
-  };
+  const items = safeArray(appData.activites)
+    .filter((a) => (a.date || "").slice(0, 7) === mois)
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  if (!items.length) {
+    zone.innerHTML = `
+      <p class="muted-line">
+        Aucune activité enregistrée pour ce mois.
+      </p>
+    `;
+    return;
+  }
 
   zone.innerHTML = `
-    <h3>📅 Aperçu du ${formatDateFR(date)}</h3>
-
     <div class="feed-table-wrap">
       <table class="feed-table simple-table">
         <thead>
           <tr>
+            <th>Date</th>
             <th>Oiseau</th>
             <th>Activité</th>
             <th>Attitude</th>
@@ -943,27 +936,96 @@ function previsualiserActivitesDuJour() {
         </thead>
 
         <tbody>
-          ${activites.map((a) => `
+          ${items.map((a) => `
             <tr>
+              <td>${formatDateFR(a.date)}</td>
               <td><strong>${safe(a.oiseau)}</strong></td>
-              <td>${safe(typeLabel(a.type, a.autreType))}</td>
-              <td>${safe(evaluationLabel(a.evaluation))}</td>
-              <td>${a.duree > 0 ? `${a.duree} min` : "—"}</td>
-              <td>${a.rappels > 0 ? a.rappels : "—"}</td>
+              <td>${safe(getActivityTypeLabel(a.type, a.autreType))}</td>
+              <td>${safe(getActivityEvaluationLabel(a.evaluation))}</td>
+              <td>${toNumber(a.duree) > 0 ? `${toNumber(a.duree)} min` : "—"}</td>
+              <td>${toNumber(a.rappels) > 0 ? toNumber(a.rappels) : "—"}</td>
               <td>${safe(a.remarque || "—")}</td>
             </tr>
           `).join("")}
         </tbody>
       </table>
     </div>
-
-    <p class="muted-line" style="margin-top:12px;">
-      ⚠️ Aperçu uniquement — aucune donnée n'est encore sauvegardée.
-    </p>
   `;
-
-  console.log("Activités prêtes à enregistrer :", activites);
 }
+
+async function previsualiserActivitesDuJour() {
+  const date = document.getElementById("activityDate")?.value || todayStr();
+  const birds = getSortedBirds(getActiveBirds());
+
+  const nouvelles = [];
+
+  birds.forEach((bird) => {
+    const type = document.querySelector(
+      `.activity-type[data-bird-id="${bird.id}"]`
+    )?.value || "";
+
+    if (!type) return;
+
+    nouvelles.push({
+      id: makeId(),
+      date,
+      oiseauId: bird.id,
+      oiseau: bird.nom || "",
+      type,
+
+      autreType: document.querySelector(
+        `.activity-other[data-bird-id="${bird.id}"]`
+      )?.value.trim() || "",
+
+      evaluation: document.querySelector(
+        `.activity-evaluation[data-bird-id="${bird.id}"]`
+      )?.value || "",
+
+      duree: toNumber(
+        document.querySelector(
+          `.activity-duration[data-bird-id="${bird.id}"]`
+        )?.value || 0
+      ),
+
+      rappels: toNumber(
+        document.querySelector(
+          `.activity-rappels[data-bird-id="${bird.id}"]`
+        )?.value || 0
+      ),
+
+      remarque: document.querySelector(
+        `.activity-remark[data-bird-id="${bird.id}"]`
+      )?.value.trim() || ""
+    });
+  });
+
+  if (!nouvelles.length) {
+    alert("Choisis au moins une activité pour un oiseau.");
+    return;
+  }
+
+  const remplacements = new Set(
+    nouvelles.map((a) => `${a.date}|${a.oiseauId}`)
+  );
+
+  const anciennes = safeArray(appData.activites).filter(
+    (a) => !remplacements.has(`${a.date}|${a.oiseauId}`)
+  );
+
+  appData.activites = [
+    ...anciennes,
+    ...nouvelles
+  ];
+
+  await saveData();
+
+  renderActivityHistory();
+
+  alert("Activités enregistrées.");
+}
+
+window.renderActivityHistory = renderActivityHistory;
+window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
 
 window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
 
