@@ -1109,11 +1109,396 @@ function renderFichesQuotidiennesOiseaux() {
   `;
 }
 
-function ouvrirFicheQuotidienneOiseau(id) {
+function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "") {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
 
-  alert(`La fiche quotidienne de ${bird.nom} sera créée à l'étape suivante.`);
+  const date = dateChoisie || todayStr();
+  const birdName = (bird.nom || "").trim().toLowerCase();
+
+  // ⚖️ PESÉE DU JOUR
+  const pesee = safeArray(appData.pesees)
+    .filter((p) =>
+      (p.nom || "").trim().toLowerCase() === birdName &&
+      p.date === date
+    )
+    .sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0] || null;
+
+  // 🍗 NOURRISSAGE DU JOUR
+  const nourrissages = safeArray(appData.nourrissage)
+    .filter((n) =>
+      (n.oiseau || "").trim().toLowerCase() === birdName &&
+      n.date === date
+    );
+
+  // 💊 VITAMINES RÉELLEMENT DONNÉES CE JOUR-LÀ
+  const vitamines = safeArray(appData.vitaminesHistorique)
+    .filter((v) =>
+      v.date === date &&
+      v.donne === true &&
+      (
+        v.oiseauId === bird.id ||
+        (v.oiseau || "").trim().toLowerCase() === birdName
+      )
+    );
+
+  // 🎯 ACTIVITÉ DU JOUR
+  const activites = safeArray(appData.activites)
+    .filter((a) =>
+      a.date === date &&
+      (
+        a.oiseauId === bird.id ||
+        (a.oiseau || "").trim().toLowerCase() === birdName
+      )
+    );
+
+  // 🏥 VÉTÉRINAIRE / SOINS DU JOUR
+  const soins = safeArray(appData.veterinaire)
+    .filter((v) =>
+      (v.oiseau || "").trim().toLowerCase() === birdName &&
+      (
+        v.date === date ||
+        v.soinDerniereDate === date ||
+        safeArray(v.soinHistorique).some((s) =>
+          (s?.date || "") === date
+        )
+      )
+    );
+
+  const nourritureHtml = nourrissages.length
+    ? nourrissages.map((n) => `
+        <div class="daily-line">
+          <strong>${safe(n.nourriture || "Nourriture")}</strong>
+          <span>
+            ${toNumber(n.quantite) > 0 ? safe(n.quantite) : "—"}
+          </span>
+          ${n.remarques
+            ? `<small>${safe(n.remarques)}</small>`
+            : ""}
+        </div>
+      `).join("")
+    : `<p class="empty-daily">Aucun nourrissage enregistré.</p>`;
+
+  const vitaminesHtml = vitamines.length
+    ? vitamines.map((v) => `
+        <div class="daily-line">
+          <strong>✓ ${safe(v.produit || "Complément")}</strong>
+          <span>${safe(v.dose || "Dose non précisée")}</span>
+          ${v.heure
+            ? `<small>Donné à ${safe(v.heure)}</small>`
+            : ""}
+        </div>
+      `).join("")
+    : `<p class="empty-daily">Aucune vitamine donnée ce jour.</p>`;
+
+  const activitesHtml = activites.length
+    ? activites.map((a) => `
+        <div class="daily-line">
+          <strong>${safe(getActivityTypeLabel(a.type, a.autreType))}</strong>
+          <span>${safe(getActivityEvaluationLabel(a.evaluation))}</span>
+
+          <small>
+            ${toNumber(a.duree) > 0
+              ? `Durée : ${toNumber(a.duree)} min`
+              : ""}
+            ${toNumber(a.rappels) > 0
+              ? `${toNumber(a.duree) > 0 ? " — " : ""}${toNumber(a.rappels)} rappel(s)`
+              : ""}
+          </small>
+
+          ${a.remarque
+            ? `<small>Remarque : ${safe(a.remarque)}</small>`
+            : ""}
+        </div>
+      `).join("")
+    : `<p class="empty-daily">Aucune activité enregistrée.</p>`;
+
+  const soinsHtml = soins.length
+    ? soins.map((v) => `
+        <div class="daily-line">
+          <strong>${safe(v.soinType || v.motif || "Suivi vétérinaire")}</strong>
+
+          ${v.traitement
+            ? `<span>Traitement : ${safe(v.traitement)}</span>`
+            : ""}
+
+          ${v.diagnostic
+            ? `<small>Diagnostic : ${safe(v.diagnostic)}</small>`
+            : ""}
+
+          ${v.observations
+            ? `<small>${safe(v.observations)}</small>`
+            : ""}
+        </div>
+      `).join("")
+    : `<p class="empty-daily">Aucun soin enregistré ce jour.</p>`;
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert("Le navigateur bloque l'ouverture de la fiche.");
+    return;
+  }
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html lang="fr">
+
+    <head>
+      <meta charset="UTF-8">
+
+      <title>
+        Fiche quotidienne - ${safe(bird.nom)} - ${formatDateFR(date)}
+      </title>
+
+      <style>
+        body {
+          font-family: Arial, Helvetica, sans-serif;
+          margin: 0;
+          padding: 25px;
+          color: #222;
+          background: #f5f7f5;
+        }
+
+        .sheet {
+          max-width: 950px;
+          margin: auto;
+          background: white;
+          padding: 25px;
+          border-radius: 14px;
+          box-shadow: 0 3px 15px rgba(0,0,0,.08);
+        }
+
+        .top-actions {
+          display: flex;
+          gap: 10px;
+          align-items: center;
+          flex-wrap: wrap;
+          margin-bottom: 20px;
+        }
+
+        button {
+          border: 0;
+          padding: 10px 15px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+
+        .print-btn {
+          background: #294d36;
+          color: white;
+        }
+
+        input[type="date"] {
+          padding: 9px;
+          border: 1px solid #bbb;
+          border-radius: 8px;
+        }
+
+        .bird-head {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          border-bottom: 3px solid #294d36;
+          padding-bottom: 16px;
+          margin-bottom: 20px;
+        }
+
+        .bird-head img {
+          width: 105px;
+          height: 105px;
+          border-radius: 12px;
+          object-fit: cover;
+        }
+
+        h1 {
+          margin: 0 0 6px;
+        }
+
+        .date-title {
+          color: #555;
+          font-weight: bold;
+        }
+
+        .daily-section {
+          margin-top: 16px;
+          border: 1px solid #d9dfda;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+
+        .daily-section h2 {
+          margin: 0;
+          padding: 10px 14px;
+          background: #edf3ee;
+          font-size: 18px;
+        }
+
+        .daily-content {
+          padding: 12px 14px;
+        }
+
+        .daily-line {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 8px 0;
+          border-bottom: 1px solid #eee;
+        }
+
+        .daily-line:last-child {
+          border-bottom: 0;
+        }
+
+        .daily-line small {
+          color: #666;
+        }
+
+        .empty-daily {
+          margin: 4px 0;
+          color: #777;
+          font-style: italic;
+        }
+
+        .weight-big {
+          font-size: 24px;
+          font-weight: bold;
+        }
+
+        @media print {
+          body {
+            background: white;
+            padding: 0;
+          }
+
+          .sheet {
+            box-shadow: none;
+            max-width: none;
+          }
+
+          .top-actions {
+            display: none;
+          }
+        }
+      </style>
+    </head>
+
+    <body>
+
+      <div class="sheet">
+
+        <div class="top-actions">
+
+          <label>
+            📅 Date :
+            <input
+              type="date"
+              value="${safeAttr(date)}"
+              onchange="window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value); window.close();"
+            >
+          </label>
+
+          <button
+            class="print-btn"
+            onclick="window.print()"
+          >
+            🖨️ Imprimer la fiche
+          </button>
+
+        </div>
+
+        <div class="bird-head">
+
+          ${bird.photoUrl ? `
+            <img
+              src="${safeAttr(bird.photoUrl)}"
+              alt="${safeAttr(bird.nom)}"
+            >
+          ` : ""}
+
+          <div>
+            <h1>📋 Fiche quotidienne — ${safe(bird.nom)}</h1>
+
+            <div>${safe(bird.espece || "")}</div>
+
+            <div>
+              Bague :
+              <strong>${safe(bird.bague || "—")}</strong>
+            </div>
+
+            <div class="date-title">
+              ${formatDateFR(date)}
+            </div>
+          </div>
+
+        </div>
+
+        <section class="daily-section">
+          <h2>⚖️ Poids</h2>
+
+          <div class="daily-content">
+
+            ${pesee ? `
+              <div class="weight-big">
+                ${safe(pesee.poids)} g
+              </div>
+
+              ${pesee.etat
+                ? `<div>État : ${safe(pesee.etat)}</div>`
+                : ""}
+
+              ${pesee.observations
+                ? `<small>${safe(pesee.observations)}</small>`
+                : ""}
+            ` : `
+              <p class="empty-daily">
+                Aucune pesée enregistrée ce jour.
+              </p>
+            `}
+
+          </div>
+        </section>
+
+        <section class="daily-section">
+          <h2>🍗 Nourrissage</h2>
+
+          <div class="daily-content">
+            ${nourritureHtml}
+          </div>
+        </section>
+
+        <section class="daily-section">
+          <h2>💊 Vitamines / compléments</h2>
+
+          <div class="daily-content">
+            ${vitaminesHtml}
+          </div>
+        </section>
+
+        <section class="daily-section">
+          <h2>🎯 Activité</h2>
+
+          <div class="daily-content">
+            ${activitesHtml}
+          </div>
+        </section>
+
+        <section class="daily-section">
+          <h2>🏥 Santé / soins</h2>
+
+          <div class="daily-content">
+            ${soinsHtml}
+          </div>
+        </section>
+
+      </div>
+
+    </body>
+    </html>
+  `);
+
+  win.document.close();
 }
 
 window.ouvrirFichesQuotidiennes = ouvrirFichesQuotidiennes;
