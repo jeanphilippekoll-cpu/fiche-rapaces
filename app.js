@@ -1109,7 +1109,7 @@ function renderFichesQuotidiennesOiseaux() {
   `;
 }
 
-function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "") {
+function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "", fenetreExistante = null) {
   const bird = appData.oiseaux.find((o) => o.id === id);
   if (!bird) return;
 
@@ -1233,7 +1233,10 @@ function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "") {
       `).join("")
     : `<p class="empty-daily">Aucun soin enregistré ce jour.</p>`;
 
-  const win = window.open("", "_blank");
+  const win =
+  fenetreExistante && !fenetreExistante.closed
+    ? fenetreExistante
+    : window.open("", "_blank");
 
   if (!win) {
     alert("Le navigateur bloque l'ouverture de la fiche.");
@@ -1395,7 +1398,7 @@ function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "") {
             <input
               type="date"
               value="${safeAttr(date)}"
-              onchange="window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value); window.close();"
+             onchange="window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value, window);" 
             >
           </label>
 
