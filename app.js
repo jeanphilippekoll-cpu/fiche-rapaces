@@ -58,6 +58,7 @@ let appData = {
   reproduction: [],
   vitamines: [],
 vitaminesHistorique: [],
+  activites: [],
 
   prixNourriture: {
     "Poussin": 0,
@@ -380,6 +381,10 @@ const vitaminesHistoriqueSource = safeArray(
   userData?.vitaminesHistorique || rapacesData?.vitaminesHistorique || []
 );
 
+const activitesSource = safeArray(
+  userData?.activites || rapacesData?.activites || []
+);
+
   const oiseaux = oiseauxSource.map((o, index) => ({
   id: o.id || `oiseau_${index}_${makeId()}`,
   nom: o.nom || "",
@@ -540,6 +545,18 @@ vitaminesHistorique: vitaminesHistoriqueSource.map((h, index) => ({
   dose: h?.dose || "",
   donne: h?.donne === true,
   heure: h?.heure || ""
+})),
+activites: activitesSource.map((a, index) => ({
+  id: a?.id || `activite_${index}_${makeId()}`,
+  date: a?.date || "",
+  oiseauId: a?.oiseauId || "",
+  oiseau: a?.oiseau || "",
+  type: a?.type || "",
+  autreType: a?.autreType || "",
+  evaluation: a?.evaluation || "",
+  remarque: a?.remarque || "",
+  duree: toNumber(a?.duree),
+  rappels: toNumber(a?.rappels)
 })),
    stock,
    prixNourriture: {
@@ -711,6 +728,19 @@ vitaminesHistorique: safeArray(appData.vitaminesHistorique).map((h) => ({
   dose: h.dose || "",
   donne: h.donne === true,
   heure: h.heure || ""
+}))
+,
+activites: safeArray(appData.activites).map((a) => ({
+  id: a.id || makeId(),
+  date: a.date || "",
+  oiseauId: a.oiseauId || "",
+  oiseau: a.oiseau || "",
+  type: a.type || "",
+  autreType: a.autreType || "",
+  evaluation: a.evaluation || "",
+  remarque: a.remarque || "",
+  duree: toNumber(a.duree),
+  rappels: toNumber(a.rappels)
 }))
   };
 }
