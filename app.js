@@ -852,6 +852,121 @@ function renderActivityTable() {
 
 window.renderActivityTable = renderActivityTable;
 
+function previsualiserActivitesDuJour() {
+  const date = document.getElementById("activityDate")?.value || todayStr();
+  const birds = getSortedBirds(getActiveBirds());
+
+  const activites = [];
+
+  birds.forEach((bird) => {
+    const type = document.querySelector(
+      `.activity-type[data-bird-id="${bird.id}"]`
+    )?.value || "";
+
+    const autreType = document.querySelector(
+      `.activity-other[data-bird-id="${bird.id}"]`
+    )?.value.trim() || "";
+
+    const evaluation = document.querySelector(
+      `.activity-evaluation[data-bird-id="${bird.id}"]`
+    )?.value || "";
+
+    const duree = toNumber(
+      document.querySelector(
+        `.activity-duration[data-bird-id="${bird.id}"]`
+      )?.value || 0
+    );
+
+    const rappels = toNumber(
+      document.querySelector(
+        `.activity-rappels[data-bird-id="${bird.id}"]`
+      )?.value || 0
+    );
+
+    const remarque = document.querySelector(
+      `.activity-remark[data-bird-id="${bird.id}"]`
+    )?.value.trim() || "";
+
+    if (!type) return;
+
+    activites.push({
+      date,
+      oiseauId: bird.id,
+      oiseau: bird.nom || "",
+      type,
+      autreType,
+      evaluation,
+      duree,
+      rappels,
+      remarque
+    });
+  });
+
+  if (!activites.length) {
+    alert("Choisis au moins une activité pour un oiseau.");
+    return;
+  }
+
+  const zone = document.getElementById("activityHistoryZone");
+  if (!zone) return;
+
+  const typeLabel = (type, autreType) => {
+    if (type === "animation") return "🎪 Animation";
+    if (type === "vol") return "🦅 Entraînement / Vol";
+    if (type === "repos") return "😴 Repos";
+    if (type === "autre") return `✋ ${autreType || "Autre"}`;
+    return type;
+  };
+
+  const evaluationLabel = (evaluation) => {
+    if (evaluation === "aucune") return "☆☆☆ Aucune réaction";
+    if (evaluation === "bon") return "⭐ Bon";
+    if (evaluation === "tres-bon") return "⭐⭐ Très bon";
+    if (evaluation === "top") return "⭐⭐⭐ Top";
+    return "—";
+  };
+
+  zone.innerHTML = `
+    <h3>📅 Aperçu du ${formatDateFR(date)}</h3>
+
+    <div class="feed-table-wrap">
+      <table class="feed-table simple-table">
+        <thead>
+          <tr>
+            <th>Oiseau</th>
+            <th>Activité</th>
+            <th>Attitude</th>
+            <th>Durée</th>
+            <th>Rappels</th>
+            <th>Remarque</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${activites.map((a) => `
+            <tr>
+              <td><strong>${safe(a.oiseau)}</strong></td>
+              <td>${safe(typeLabel(a.type, a.autreType))}</td>
+              <td>${safe(evaluationLabel(a.evaluation))}</td>
+              <td>${a.duree > 0 ? `${a.duree} min` : "—"}</td>
+              <td>${a.rappels > 0 ? a.rappels : "—"}</td>
+              <td>${safe(a.remarque || "—")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="muted-line" style="margin-top:12px;">
+      ⚠️ Aperçu uniquement — aucune donnée n'est encore sauvegardée.
+    </p>
+  `;
+
+  console.log("Activités prêtes à enregistrer :", activites);
+}
+
+window.previsualiserActivitesDuJour = previsualiserActivitesDuJour;
+
 function refreshStats() {
   const setCounter = (ids, value) => {
     ids.forEach((id) => {
