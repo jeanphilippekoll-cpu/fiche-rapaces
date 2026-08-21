@@ -7203,6 +7203,94 @@ function saveLocalBackup() {
   }
 }
 
+async function restaurerOiseauxBackup() {
+  if (!userRef) {
+    alert("Aucun utilisateur connecté.");
+    return;
+  }
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".json,application/json";
+
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const texte = await file.text();
+      const backup = JSON.parse(texte);
+
+      if (!Array.isArray(backup.oiseaux)) {
+        alert("Ce fichier ne contient pas de liste d'oiseaux.");
+        return;
+      }
+
+      const noms = backup.oiseaux
+        .map(o => o.nom || "Sans nom")
+        .join("\n");
+
+      const confirmation = confirm(
+        `Le fichier contient ${backup.oiseaux.length} oiseaux.\n\n${noms}\n\nRestaurer uniquement ces oiseaux ?`
+      );
+
+      if (!confirmation) return;
+
+      const oiseauxRestaures = structuredClone(backup.oiseaux);
+
+      /*
+        IMPORTANT :
+        on remplace UNIQUEMENT le champ oiseaux dans Firestore.
+        Les activités, pesées, nourrissages, soins, etc. restent intacts.
+      */
+      await setDoc(
+        userRef,
+        {
+          oiseaux: oiseauxRestaures
+        },
+        {
+          merge: true
+        }
+      );
+
+      /*
+        Mise à jour de l'application actuellement ouverte.
+      */
+      appData.oiseaux = oiseauxRestaures;
+
+      rawRapacesData = {
+        ...rawRapacesData,
+        oiseaux: oiseauxRestaures
+      };
+
+      rawUserData = {
+        ...rawUserData,
+        oiseaux: oiseauxRestaures
+      };
+
+      window.appData = appData;
+
+      renderAll();
+      renderDashboardIntelligent();
+
+      alert(
+        `${oiseauxRestaures.length} oiseaux enregistrés directement dans Firebase.`
+      );
+
+    } catch (error) {
+      console.error("Erreur restauration oiseaux :", error);
+
+      alert(
+        "Erreur pendant la restauration. Regarde la console avant de recharger."
+      );
+    }
+  };
+
+  input.click();
+}
+
+window.restaurerOiseauxBackup = restaurerOiseauxBackup;
+
 async function saveData() {
     if (!userRef) {
     console.warn("Sauvegarde annulée : aucun utilisateur connecté.");
@@ -7302,8 +7390,6 @@ rawUserData = userSnap.exists() ? userSnap.data() : {};
   sont chargées depuis le document de l'utilisateur connecté.
 */
 rawRapacesData = rawUserData;
-
-appData = normalizeData(rawRapacesData, rawUserData);
 
     appData = normalizeData(rawRapacesData, rawUserData);
     window.appData = appData;
