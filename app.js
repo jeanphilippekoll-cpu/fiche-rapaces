@@ -2063,12 +2063,13 @@ birds.forEach(b => {
         const poids = getLatestBirdWeight(b);
 
         return dashboardRow(
-          b.nom,
-          `⚖️ ${poids ? poids + " g" : "-"} • Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
-          "À peser",
-          "warn",
-          b.nom
-        );
+  b.nom,
+  `⚖️ ${poids ? poids + " g" : "-"} • Dernière pesée : ${formatDateFR(latestWeightDate(b)) || "inconnue"}`,
+  "À peser",
+  "warn",
+  "",
+  "pesees"
+);
       }).join("")
     : `<p class="muted-line">Aucun oiseau à peser aujourd’hui.</p>`;
 }
@@ -2110,13 +2111,15 @@ birds.forEach(b => {
  if (complementsEl) {
   const todayComplements = complements.length
     ? complements.map(x =>
-        dashboardRow(
-          x.bird.nom,
-          x.plan,
-          "Aujourd’hui",
-          "info",
-          x.bird.nom
-        )
+       `
+<div class="dashboard-row" onclick="ouvrirVitaminesDepuisDashboard()">
+  <div>
+    <strong>${safe(x.bird.nom)}</strong>
+    <small>${safe(x.plan)}</small>
+  </div>
+  <span class="dashboard-badge info">Aujourd’hui</span>
+</div>
+`
       ).join("")
     : `<p class="muted-line">Aucun complément prévu aujourd’hui.</p>`;
 
@@ -2167,16 +2170,15 @@ if (toWeigh.length) {
 }
 
 complements.forEach(x => {
-  todayTodo.push(
-    dashboardRow(
-      x.bird.nom,
-      x.plan,
-      "Complément",
-      "info",
-      "",
-      "nourrissage"
-    )
-  );
+ todayTodo.push(`
+  <div class="dashboard-row" onclick="ouvrirVitaminesDepuisDashboard()">
+    <div>
+      <strong>${safe(x.bird.nom)}</strong>
+      <small>${safe(x.plan)}</small>
+    </div>
+    <span class="dashboard-badge info">Complément</span>
+  </div>
+`);
 });
 
 todayTodo.unshift(
@@ -4502,6 +4504,17 @@ function showFeedTab(tabName) {
     btnVitamines.classList.toggle("secondary-btn", !showVitamines);
   }
 }
+
+function ouvrirVitaminesDepuisDashboard() {
+  showSection("nourrissage");
+
+  setTimeout(() => {
+    showFeedTab("vitamines");
+    renderVitaminesNourrissage();
+  }, 0);
+}
+
+window.ouvrirVitaminesDepuisDashboard = ouvrirVitaminesDepuisDashboard;
 
 function renderNourrissage() {
   renderNourrissageTable();
