@@ -3003,18 +3003,47 @@ function utiliserFicheInterne() {
 
 function ouvrirFicheMobile(html, retourSection = "accueil") {
   const zone = document.getElementById("mobileSheetContent");
-  if (!zone) return false;
+  const section = document.getElementById("section-fiche-mobile");
 
-  mobileSheetPreviousSection = retourSection || currentSection || "accueil";
+  if (!zone || !section) {
+    alert("La zone de fiche mobile est introuvable.");
+    return false;
+  }
 
-  zone.innerHTML = html;
+  mobileSheetPreviousSection =
+    retourSection || currentSection || "accueil";
 
-  showSection("fiche-mobile");
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, "text/html");
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
+  const styles = Array.from(
+    doc.querySelectorAll("style")
+  )
+    .map((style) => style.outerHTML)
+    .join("");
+
+  const contenu = doc.body
+    ? doc.body.innerHTML
+    : html;
+
+  zone.innerHTML = styles + contenu;
+
+  document.querySelectorAll(".section").forEach((el) => {
+    el.classList.add("hidden");
   });
+
+  section.classList.remove("hidden");
+
+  currentSection = "fiche-mobile";
+
+  const navigationBar =
+    document.getElementById("mobileNavigationBar");
+
+  if (navigationBar) {
+    navigationBar.classList.add("hidden");
+  }
+
+  window.scrollTo(0, 0);
 
   return true;
 }
