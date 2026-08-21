@@ -1346,6 +1346,39 @@ bird-card .bird-badges {
   }
 }
 
+/* TABLETTE PORTRAIT */
+@media (min-width:701px) and (max-width:1100px){
+
+  .dashboard-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .dashboard-grid > *{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  .dashboard-card{
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+
+  #dashboardToWeigh,
+  #dashboardToFly,
+  #dashboardComplements,
+  #dashboardSurveillance,
+  #dashboardTasks,
+  #dashboardBirdQuickList,
+  #dashboardAlerts,
+  #dashboardReproAlerts,
+  #dashboardReproInfos{
+    min-width:0 !important;
+    max-width:100% !important;
+  }
+}
+
 @media(max-width:700px){
   .stats-grid,
   .dashboard-grid{
