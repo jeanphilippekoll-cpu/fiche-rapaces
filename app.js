@@ -7216,8 +7216,15 @@ async function saveData() {
 const userPayload = buildUserPayload();
 
 const donneesUtilisateur = {
-  ...rapacesPayload,
-  ...userPayload
+  ...userPayload,
+
+  oiseaux: rapacesPayload.oiseaux,
+  stock: rapacesPayload.stock,
+  documents: rapacesPayload.documents,
+  documentsGeneraux: rapacesPayload.documentsGeneraux,
+  prixNourriture: rapacesPayload.prixNourriture,
+  coutOiseauxMasques: rapacesPayload.coutOiseauxMasques,
+  reproduction: rapacesPayload.reproduction
 };
 
 await setDoc(
