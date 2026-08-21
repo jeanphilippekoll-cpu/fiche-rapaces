@@ -833,11 +833,21 @@ function renderActivityTable() {
       </td>
 
       <td>
-        <input
-          class="activity-other"
-          data-bird-id="${safeAttr(bird.id)}"
-          placeholder="Manipulation..."
-        >
+      <select
+  class="activity-other"
+  data-bird-id="${safeAttr(bird.id)}"
+>
+  <option value="">—</option>
+  <option value="Manipulation / sociabilisation">Manipulation / sociabilisation</option>
+  <option value="Saut au gant">Saut au gant</option>
+  <option value="Nourri sur le gant">Nourri sur le gant</option>
+  <option value="Vol en longe">Vol en longe</option>
+  <option value="Vol court">Vol court</option>
+  <option value="Vol long">Vol long</option>
+  <option value="Changement des cuirs">Changement des cuirs</option>
+  <option value="Nourri à la main">Nourri à la main</option>
+  <option value="Autre">Autre…</option>
+</select>
       </td>
 
       <td>
