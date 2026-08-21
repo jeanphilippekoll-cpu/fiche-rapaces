@@ -1470,9 +1470,199 @@ bird-card .bird-badges {
   }
 }
 
+/* =========================================================
+   CONNEXION UTILISATEUR
+   ========================================================= */
+
+.auth-overlay{
+  position:fixed;
+  inset:0;
+  z-index:20000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(244,234,215,0.98),
+      rgba(252,248,242,0.98)
+    );
+}
+
+.auth-card{
+  width:100%;
+  max-width:440px;
+  background:#fffdf9;
+  border:1px solid rgba(96,76,46,0.15);
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 18px 45px rgba(75,57,30,0.15);
+}
+
+.auth-card h1{
+  margin:0;
+  text-align:center;
+  color:#3d3123;
+  font-size:30px;
+}
+
+.auth-card h2{
+  margin-top:0;
+  text-align:center;
+}
+
+.auth-subtitle{
+  text-align:center;
+  color:#7b6b57;
+  margin:10px 0 24px;
+}
+
+.auth-card label{
+  margin-top:12px;
+}
+
+.auth-card input{
+  min-height:48px;
+  font-size:16px;
+}
+
+.auth-main-btn,
+.auth-secondary-btn{
+  width:100%;
+  min-height:48px;
+  margin-top:10px;
+}
+
+.auth-message{
+  min-height:22px;
+  margin:15px 0 0;
+  text-align:center;
+  font-weight:700;
+  color:#b75b52;
+}
+
+@media(max-width:600px){
+  .auth-overlay{
+    padding:12px;
+  }
+
+  .auth-card{
+    padding:20px;
+    border-radius:18px;
+  }
+
+  .auth-card h1{
+    font-size:26px;
+  }
+}
+
   </style>
 </head>
 <body>
+
+  <!-- ===== CONNEXION UTILISATEUR ===== -->
+<div id="authOverlay" class="auth-overlay">
+
+  <div class="auth-card">
+
+    <h1>🐾 Fiche Animaux</h1>
+
+    <p class="auth-subtitle">
+      Connectez-vous à votre espace personnel
+    </p>
+
+    <div id="authLoginZone">
+
+      <label for="authEmail">Adresse e-mail</label>
+      <input
+        id="authEmail"
+        type="email"
+        autocomplete="email"
+        placeholder="votre@email.com"
+      >
+
+      <label for="authPassword">Mot de passe</label>
+      <input
+        id="authPassword"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Mot de passe"
+      >
+
+      <button
+        type="button"
+        class="btn auth-main-btn"
+        onclick="connexionUtilisateur()"
+      >
+        🔐 Se connecter
+      </button>
+
+      <button
+        type="button"
+        class="btn secondary-btn auth-secondary-btn"
+        onclick="afficherCreationCompte()"
+      >
+        Créer un compte
+      </button>
+
+    </div>
+
+
+    <div id="authCreateZone" class="hidden">
+
+      <h2>Créer mon compte</h2>
+
+      <label for="authCreateEmail">Adresse e-mail</label>
+      <input
+        id="authCreateEmail"
+        type="email"
+        autocomplete="email"
+        placeholder="votre@email.com"
+      >
+
+      <label for="authCreatePassword">Mot de passe</label>
+      <input
+        id="authCreatePassword"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Minimum 6 caractères"
+      >
+
+      <label for="authCreatePasswordConfirm">
+        Confirmer le mot de passe
+      </label>
+      <input
+        id="authCreatePasswordConfirm"
+        type="password"
+        autocomplete="new-password"
+        placeholder="Confirmez le mot de passe"
+      >
+
+      <button
+        type="button"
+        class="btn auth-main-btn"
+        onclick="creerCompteUtilisateur()"
+      >
+        ✅ Créer mon compte
+      </button>
+
+      <button
+        type="button"
+        class="btn secondary-btn auth-secondary-btn"
+        onclick="afficherConnexion()"
+      >
+        ← Retour à la connexion
+      </button>
+
+    </div>
+
+    <p id="authMessage" class="auth-message"></p>
+
+  </div>
+
+</div>
+<!-- ===== FIN CONNEXION UTILISATEUR ===== -->
 
   <div class="layout">
 

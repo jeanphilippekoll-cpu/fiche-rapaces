@@ -226,6 +226,148 @@ function unlockApp() {
   document.body.classList.remove("locked");
 }
 
+function afficherConnexion() {
+  document.getElementById("authLoginZone")?.classList.remove("hidden");
+  document.getElementById("authCreateZone")?.classList.add("hidden");
+
+  const message = document.getElementById("authMessage");
+  if (message) message.textContent = "";
+}
+
+function afficherCreationCompte() {
+  document.getElementById("authLoginZone")?.classList.add("hidden");
+  document.getElementById("authCreateZone")?.classList.remove("hidden");
+
+  const message = document.getElementById("authMessage");
+  if (message) message.textContent = "";
+}
+
+async function connexionUtilisateur() {
+  const email = document.getElementById("authEmail")?.value.trim() || "";
+  const password = document.getElementById("authPassword")?.value || "";
+  const message = document.getElementById("authMessage");
+
+  if (!email || !password) {
+    if (message) {
+      message.textContent = "Entre ton adresse e-mail et ton mot de passe.";
+    }
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Connexion…";
+
+    await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+
+  } catch (error) {
+    console.error("Erreur connexion :", error);
+
+    if (message) {
+      message.textContent =
+        "Connexion impossible. Vérifie l'adresse e-mail et le mot de passe.";
+    }
+  }
+}
+
+async function creerCompteUtilisateur() {
+  const email =
+    document.getElementById("authCreateEmail")?.value.trim() || "";
+
+  const password =
+    document.getElementById("authCreatePassword")?.value || "";
+
+  const confirmation =
+    document.getElementById("authCreatePasswordConfirm")?.value || "";
+
+  const message = document.getElementById("authMessage");
+
+  if (!email || !password || !confirmation) {
+    if (message) {
+      message.textContent = "Complète tous les champs.";
+    }
+    return;
+  }
+
+  if (password.length < 6) {
+    if (message) {
+      message.textContent =
+        "Le mot de passe doit contenir au moins 6 caractères.";
+    }
+    return;
+  }
+
+  if (password !== confirmation) {
+    if (message) {
+      message.textContent =
+        "Les deux mots de passe ne correspondent pas.";
+    }
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Création du compte…";
+
+    const credential =
+      await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    const uid = credential.user.uid;
+
+    await setDoc(
+      doc(db, "users", uid),
+      {
+        compteCreeLe: new Date().toISOString(),
+        email: credential.user.email || "",
+        oiseaux: [],
+        encodages: [],
+        nourrissage: [],
+        veterinaire: [],
+        entretien: [],
+        vitamines: [],
+        vitaminesHistorique: [],
+        activites: [],
+        reproduction: [],
+        documents: [],
+        documentsGeneraux: [],
+        stock: {},
+        prixNourriture: {},
+        coutOiseauxMasques: []
+      },
+      { merge: true }
+    );
+
+  } catch (error) {
+    console.error("Erreur création compte :", error);
+
+    if (message) {
+      if (error.code === "auth/email-already-in-use") {
+        message.textContent =
+          "Cette adresse e-mail possède déjà un compte.";
+      } else {
+        message.textContent =
+          "Impossible de créer le compte.";
+      }
+    }
+  }
+}
+
+async function deconnexionUtilisateur() {
+  await signOut(auth);
+}
+
+window.afficherConnexion = afficherConnexion;
+window.afficherCreationCompte = afficherCreationCompte;
+window.connexionUtilisateur = connexionUtilisateur;
+window.creerCompteUtilisateur = creerCompteUtilisateur;
+window.deconnexionUtilisateur = deconnexionUtilisateur;
+
 function checkPin() {
   const input = document.getElementById("pinInput");
   const error = document.getElementById("pinError");
@@ -7049,19 +7191,29 @@ function saveLocalBackup() {
 }
 
 async function saveData() {
+    if (!userRef) {
+    console.warn("Sauvegarde annulée : aucun utilisateur connecté.");
+    return;
+  }
   try {
     if (statusEl) statusEl.textContent = "Sauvegarde…";
 
     const rapacesPayload = buildRapacesPayload();
-    const userPayload = buildUserPayload();
+const userPayload = buildUserPayload();
 
-    await Promise.all([
-      setDoc(mainRef, rapacesPayload),
-      setDoc(userRef, userPayload, { merge: true })
-    ]);
+const donneesUtilisateur = {
+  ...rapacesPayload,
+  ...userPayload
+};
 
-    rawRapacesData = rapacesPayload;
-    rawUserData = userPayload;
+await setDoc(
+  userRef,
+  donneesUtilisateur,
+  { merge: true }
+);
+
+rawRapacesData = donneesUtilisateur;
+rawUserData = donneesUtilisateur;
 
     // 💾 Sauvegarde locale anti-perte
     saveLocalBackup();
@@ -7121,16 +7273,24 @@ window.migrerDonneesComptePrincipal =
   migrerDonneesComptePrincipal;
 
 async function loadData() {
+    if (!userRef) {
+    console.warn("Chargement annulé : aucun utilisateur connecté.");
+    return;
+  }
   try {
     if (statusEl) statusEl.textContent = "Chargement…";
 
-    const [mainSnap, userSnap] = await Promise.all([
-      getDoc(mainRef),
-      getDoc(userRef)
-    ]);
+    const userSnap = await getDoc(userRef);
 
-    rawRapacesData = mainSnap.exists() ? mainSnap.data() : {};
-    rawUserData = userSnap.exists() ? userSnap.data() : {};
+rawUserData = userSnap.exists() ? userSnap.data() : {};
+
+/*
+  À partir de maintenant, toutes les données principales
+  sont chargées depuis le document de l'utilisateur connecté.
+*/
+rawRapacesData = rawUserData;
+
+appData = normalizeData(rawRapacesData, rawUserData);
 
     appData = normalizeData(rawRapacesData, rawUserData);
     window.appData = appData;
@@ -8694,12 +8854,36 @@ window.ajouterPeseeDepuisFiche = ajouterPeseeDepuisFiche;
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
 
-await migrerDonneesComptePrincipal();
-await loadData();
+onAuthStateChanged(auth, async (user) => {
+
+  const authOverlay =
+    document.getElementById("authOverlay");
+
+  if (!user) {
+    currentUserUid = "";
+    userRef = null;
+
+    if (authOverlay) {
+      authOverlay.classList.remove("hidden");
+    }
+
+    afficherConnexion();
+    return;
+  }
+
+  currentUserUid = user.uid;
+  userRef = doc(db, "users", user.uid);
+
+  if (authOverlay) {
+    authOverlay.classList.add("hidden");
+  }
+
+  await loadData();
 
   setTimeout(() => {
-  renderDashboardIntelligent();
-}, 500);
+    renderDashboardIntelligent();
+  }, 500);
+});
 
   const pinInput = document.getElementById("pinInput");
   if (pinInput) {
