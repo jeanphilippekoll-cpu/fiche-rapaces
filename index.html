@@ -1443,6 +1443,33 @@ bird-card .bird-badges {
   }
 }
 
+/* ===== FICHES INTERNES MOBILE / TABLETTE ===== */
+
+.mobile-sheet-toolbar{
+  display:flex;
+  gap:10px;
+  margin-bottom:14px;
+  position:sticky;
+  top:8px;
+  z-index:60;
+  background:#fffaf3;
+  padding:8px;
+  border-radius:14px;
+}
+
+#mobileSheetContent{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+@media(max-width:900px){
+  .mobile-sheet-toolbar .btn{
+    flex:1;
+    min-height:46px;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -1652,6 +1679,29 @@ bird-card .bird-badges {
 </div>
 
 </div>
+</section>
+<section id="section-fiche-mobile" class="section hidden">
+
+  <div class="mobile-sheet-toolbar">
+    <button
+      type="button"
+      class="btn secondary-btn"
+      onclick="fermerFicheMobile()"
+    >
+      ← Retour
+    </button>
+
+    <button
+      type="button"
+      class="btn"
+      onclick="showSection('accueil')"
+    >
+      🏠 Accueil
+    </button>
+  </div>
+
+  <div id="mobileSheetContent"></div>
+
 </section>
         <section id="section-oiseaux" class="section hidden">
           <div class="card oiseaux">
