@@ -7203,7 +7203,7 @@ function saveLocalBackup() {
   }
 }
 
-async function restaurerOiseauxBackup() {
+
   if (!userRef) {
     alert("Aucun utilisateur connecté.");
     return;
@@ -7270,6 +7270,7 @@ async function restaurerOiseauxBackup() {
 
       window.appData = appData;
 
+      
       renderAll();
       renderDashboardIntelligent();
 
@@ -7287,9 +7288,8 @@ async function restaurerOiseauxBackup() {
   };
 
   input.click();
-}
 
-window.restaurerOiseauxBackup = restaurerOiseauxBackup;
+
 
 async function saveData() {
     if (!userRef) {
