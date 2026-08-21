@@ -1477,7 +1477,6 @@ const ficheHtml = `
             <input
               type="date"
               value="${safeAttr(date)}"
-             onchange="
 onchange="
   if (window.opener) {
     window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value, window);
