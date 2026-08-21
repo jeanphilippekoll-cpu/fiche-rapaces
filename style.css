@@ -1157,3 +1157,36 @@ border-left:8px solid #9e9e9e;
     font-size: 10px !important;
   }
 }
+
+/* =========================================================
+   TABLETTE PORTRAIT — évite les colonnes coupées
+   ========================================================= */
+
+@media (min-width: 701px) and (max-width: 1000px) {
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-grid > * {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .dashboard-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .dashboard-bird-card {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .feed-table-wrap,
+  .table-wrap {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}
