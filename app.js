@@ -11,6 +11,13 @@ import {
   uploadBytes,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD8VfPlBsxN0F8PexqFfOaU4_slFQU3qsA",
@@ -26,7 +33,10 @@ const db = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);
 
 const mainRef = doc(db, "rapaces", "data");
-const userRef = doc(db, "users", "dQPT9eD5g2c7FkjCb86pJnqh4qF3");
+const OWNER_UID = "dQPT9eD5g2c7FkjCb86pJnqh4qF3";
+
+let currentUserUid = OWNER_UID;
+let userRef = doc(db, "users", currentUserUid);
 
 const statusEl = document.getElementById("status");
 const APP_PIN = "0212";
@@ -7067,6 +7077,49 @@ async function saveData() {
   }
 }
 
+async function migrerDonneesComptePrincipal() {
+  try {
+    const [mainSnap, userSnap] = await Promise.all([
+      getDoc(mainRef),
+      getDoc(userRef)
+    ]);
+
+    const mainData = mainSnap.exists() ? mainSnap.data() : {};
+    const userData = userSnap.exists() ? userSnap.data() : {};
+
+    if (userData?.migrationComptePrincipal === true) {
+      console.log("Migration compte principal déjà effectuée.");
+      return;
+    }
+
+    const donneesCompletes = {
+      ...mainData,
+      ...userData,
+
+      migrationComptePrincipal: true,
+      migrationDate: new Date().toISOString()
+    };
+
+    await setDoc(
+      userRef,
+      donneesCompletes,
+      { merge: true }
+    );
+
+    console.log(
+      "Copie complète des données vers le compte principal terminée."
+    );
+  } catch (error) {
+    console.error(
+      "Erreur migration compte principal :",
+      error
+    );
+  }
+}
+
+window.migrerDonneesComptePrincipal =
+  migrerDonneesComptePrincipal;
+
 async function loadData() {
   try {
     if (statusEl) statusEl.textContent = "Chargement…";
@@ -8640,7 +8693,9 @@ window.ajouterPeseeDepuisFiche = ajouterPeseeDepuisFiche;
 
 document.addEventListener("DOMContentLoaded", async () => {
   document.body.classList.add("locked");
-  await loadData();
+
+await migrerDonneesComptePrincipal();
+await loadData();
 
   setTimeout(() => {
   renderDashboardIntelligent();
