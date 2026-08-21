@@ -3117,13 +3117,21 @@ function openBirdSheet(id) {
       </tr>
     `).join("");
 
-  const win = window.open("", "_blank");
+ const utiliserInterne = utiliserFicheInterne();
+
+let win = null;
+
+if (!utiliserInterne) {
+  win = window.open("", "_blank");
+
   if (!win) {
     alert("Le navigateur bloque la fenêtre fiche.");
     return;
   }
+}
 
-  win.document.write(`
+const ficheHtml = `
+
     <!DOCTYPE html>
     <html lang="fr">
     <head>
@@ -3487,10 +3495,16 @@ ${
           `
           : `<p class="small">Aucun suivi vétérinaire.</p>`
       }
-    </body>
+       </body>
     </html>
-  `);
+  `;
 
+  if (utiliserInterne) {
+    ouvrirFicheMobile(ficheHtml, "oiseaux");
+    return;
+  }
+
+  win.document.write(ficheHtml);
   win.document.close();
 }
 
