@@ -2301,10 +2301,11 @@ ${getBirdCareBadge(b)}
     <span style="background:#d9f0ec;color:#14615d;border-radius:999px;padding:7px 14px;font-weight:800;">Fiche</span>
   </div>
 
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
     <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenWeight('${safeAttr(b.id)}')">⚖️ Pesée</button>
     <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenFeed('${safeAttr(b.id)}')">🍗 Nourrir</button>
     <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenVet('${safeAttr(b.id)}')">❤️ Soin</button>
+    <button style="min-height:48px;border-radius:14px;font-weight:800;" onclick="event.stopPropagation(); quickOpenActivity('${safeAttr(b.id)}')">🎯 Activité</button>
   </div>
 </div>
         `).join("")
@@ -7407,9 +7408,37 @@ function quickOpenVet(birdId) {
   }, 100);
 }
 
+function quickOpenActivity(birdId) {
+  const bird = appData.oiseaux.find(o => o.id === birdId);
+  if (!bird) return;
+
+  showSection("activites");
+
+  setTimeout(() => {
+    const dateInput = document.getElementById("activityDate");
+    if (dateInput) {
+      dateInput.value = todayStr();
+    }
+
+    const activityField = document.querySelector(
+      `.activity-type[data-bird-id="${CSS.escape(bird.id)}"]`
+    );
+
+    if (activityField) {
+      activityField.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+      activityField.focus();
+    }
+  }, 150);
+}
+
 window.quickOpenWeight = quickOpenWeight;
 window.quickOpenFeed = quickOpenFeed;
 window.quickOpenVet = quickOpenVet;
+window.quickOpenActivity = quickOpenActivity;
 
 window.openBirdFromDashboard = openBirdFromDashboard;
 
