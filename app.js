@@ -7204,12 +7204,6 @@ function saveLocalBackup() {
 }
 
 
-  if (!userRef) {
-    alert("Aucun utilisateur connecté.");
-    return;
-  }
-
-
 async function saveData() {
     if (!userRef) {
     console.warn("Sauvegarde annulée : aucun utilisateur connecté.");
