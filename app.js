@@ -1306,17 +1306,23 @@ function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "", fenetreExistante = n
       `).join("")
     : `<p class="empty-daily">Aucun soin enregistré ce jour.</p>`;
 
-  const win =
-  fenetreExistante && !fenetreExistante.closed
-    ? fenetreExistante
-    : window.open("", "_blank");
+ const utiliserInterne = utiliserFicheInterne() && !fenetreExistante;
+
+let win = null;
+
+if (!utiliserInterne) {
+  win =
+    fenetreExistante && !fenetreExistante.closed
+      ? fenetreExistante
+      : window.open("", "_blank");
 
   if (!win) {
     alert("Le navigateur bloque l'ouverture de la fiche.");
     return;
   }
+}
 
-  win.document.write(`
+const ficheHtml = `
     <!DOCTYPE html>
     <html lang="fr">
 
@@ -1471,7 +1477,16 @@ function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "", fenetreExistante = n
             <input
               type="date"
               value="${safeAttr(date)}"
-             onchange="window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value, window);" 
+             onchange="
+onchange="
+  if (window.opener) {
+    window.opener.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value, window);
+  } else {
+    window.ouvrirFicheQuotidienneOiseau('${safeAttr(bird.id)}', this.value);
+  }
+"
+>
+
             >
           </label>
 
@@ -1572,8 +1587,14 @@ function ouvrirFicheQuotidienneOiseau(id, dateChoisie = "", fenetreExistante = n
 
     </body>
     </html>
-  `);
+   `;
 
+  if (utiliserInterne) {
+    ouvrirFicheMobile(ficheHtml, "fiches-quotidiennes");
+    return;
+  }
+
+  win.document.write(ficheHtml);
   win.document.close();
 }
 
@@ -2974,6 +2995,36 @@ function openBirdActivities(id) {
 }
 
 window.openBirdActivities = openBirdActivities;
+
+let mobileSheetPreviousSection = "accueil";
+
+function utiliserFicheInterne() {
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function ouvrirFicheMobile(html, retourSection = "accueil") {
+  const zone = document.getElementById("mobileSheetContent");
+  if (!zone) return false;
+
+  mobileSheetPreviousSection = retourSection || currentSection || "accueil";
+
+  zone.innerHTML = html;
+
+  showSection("fiche-mobile");
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+  return true;
+}
+
+function fermerFicheMobile() {
+  showSection(mobileSheetPreviousSection || "accueil");
+}
+
+window.fermerFicheMobile = fermerFicheMobile;
 
 function openBirdSheetInline(id) {
   openBirdSheet(id);
