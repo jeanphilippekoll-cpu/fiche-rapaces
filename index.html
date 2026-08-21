@@ -1450,64 +1450,69 @@ bird-card .bird-badges {
 
 </div>
 
-<div class="stats-grid">
+<div class="stats-grid dashboard-quick-access">
 
-<div class="card dashboard-card border-green">
+  <div
+    class="card dashboard-card border-green dashboard-link-card"
+    onclick="showSection('oiseaux')"
+  >
+    <h3>🦅 Oiseaux</h3>
+    <div class="stats-number" id="statOiseaux">0</div>
+    <p>Présents</p>
+    <small>Gérer les fiches →</small>
+  </div>
 
-<h3>🦅 Oiseaux</h3>
+  <div
+    class="card dashboard-card border-blue dashboard-link-card"
+    onclick="showSection('pesees')"
+  >
+    <h3>⚖️ Pesées</h3>
+    <div class="stats-number" id="statPesees">0</div>
+    <p>Enregistrées</p>
+    <small>Suivre les poids →</small>
+  </div>
 
-<div class="stats-number" id="statOiseaux">0</div>
+  <div
+    class="card dashboard-card border-orange dashboard-link-card"
+    onclick="showSection('documents')"
+  >
+    <h3>📄 Documents</h3>
+    <div class="stats-number" id="statDocuments">0</div>
+    <p>Stockés</p>
+    <small>Consulter les dossiers →</small>
+  </div>
 
-<p>Présents</p>
+  <div
+    class="card dashboard-card border-red dashboard-link-card"
+    onclick="showSection('nourrissage')"
+  >
+    <h3>🍗 Nourrissage</h3>
+    <div class="stats-number" id="statNourrissages">0</div>
+    <p>Repas enregistrés</p>
+    <small>Encoder et consulter →</small>
+  </div>
+
+  <div
+    class="card dashboard-card border-blue dashboard-link-card"
+    onclick="showSection('activites')"
+  >
+    <h3>🎯 Activités</h3>
+    <div class="stats-number">→</div>
+    <p>Vols et entraînements</p>
+    <small>Encoder les activités →</small>
+  </div>
+
+  <div
+    class="card dashboard-card border-green dashboard-link-card"
+    onclick="ouvrirFichesQuotidiennes()"
+  >
+    <h3>📋 Fiche quotidienne</h3>
+    <div class="stats-number" id="statFichesQuotidiennes">0</div>
+    <p>Oiseaux suivis</p>
+    <small>Consulter une fiche →</small>
+  </div>
 
 </div>
-
-<div class="card dashboard-card border-blue">
-
-<h3>⚖️ Pesées</h3>
-
-<div class="stats-number" id="statPesees">0</div>
-
-<p>Enregistrées</p>
-
-</div>
-
-<div class="card dashboard-card border-orange">
-
-<h3>📄 Documents</h3>
-
-<div class="stats-number" id="statDocuments">0</div>
-
-<p>Stockés</p>
-
-</div>
-
-<div class="card dashboard-card border-red">
-
-<h3>🍗 Nourrissages</h3>
-
-<div class="stats-number" id="statNourrissages">0</div>
-
-<p>Repas</p>
-
-</div>
-
-<div
-  class="card dashboard-card border-green"
-  style="cursor:pointer;"
-  onclick="ouvrirFichesQuotidiennes()"
->
-
-  <h3>📋 Fiche quotidienne</h3>
-
-  <div class="stats-number" id="statFichesQuotidiennes">0</div>
-
-  <p>Oiseaux suivis</p>
-
-</div>
-
-</div>
-
 <div class="dashboard-grid">
 
   <div class="card dashboard-card">
