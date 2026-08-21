@@ -7500,8 +7500,8 @@ async function ajouterOiseau() {
     }
 
     resetBirdForm();
-    renderAll();
-    triggerAutoSave();
+renderAll();
+await saveData();
   } catch (e) {
     console.error("Erreur upload :", e);
     if (statusEl) statusEl.textContent = "Erreur upload";
