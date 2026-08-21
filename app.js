@@ -48,6 +48,8 @@ let rawUserData = {};
 let editingBirdId = null;
 let autoSaveTimer = null;
 let editingFeedId = null;
+let currentSection = "accueil";
+let previousSection = "accueil";
 
 let appData = {
   oiseaux: [],
@@ -747,51 +749,112 @@ activites: safeArray(appData.activites).map((a) => ({
 }
 
 function showSection(section) {
-  document.querySelectorAll(".section").forEach((el) => el.classList.add("hidden"));
+  const requestedSection = section === "dashboard" ? "accueil" : section;
+
+  if (requestedSection !== currentSection) {
+    previousSection = currentSection;
+    currentSection = requestedSection;
+  }
+
+  const navigationBar = document.getElementById("mobileNavigationBar");
+
+  if (navigationBar) {
+    if (currentSection === "accueil") {
+      navigationBar.classList.add("hidden");
+    } else {
+      navigationBar.classList.remove("hidden");
+    }
+  }
+
+  document.querySelectorAll(".section").forEach((el) => {
+    el.classList.add("hidden");
+  });
 
   document.querySelectorAll(".nav button, .sidebar button").forEach((btn) => {
     btn.classList.remove("active");
   });
 
-const realSection = section === "pesees" ? "pesee" : section;
+  const realSection =
+    requestedSection === "pesees"
+      ? "pesee"
+      : requestedSection;
 
-document.getElementById(`section-${realSection}`)?.classList.remove("hidden");
-document.getElementById(`btn-${realSection}`)?.classList.add("active");
+  document
+    .getElementById(`section-${realSection}`)
+    ?.classList.remove("hidden");
 
-if (section === "activites") {
-  renderActivityTable();
-  renderActivityHistory();
-}
+  document
+    .getElementById(`btn-${realSection}`)
+    ?.classList.add("active");
 
-  if (section === "vacances") renderVacances();
+  if (requestedSection === "activites") {
+    renderActivityTable();
+    renderActivityHistory();
+  }
 
-  if (section === "dashboard" || section === "accueil") {
+  if (requestedSection === "vacances") {
+    renderVacances();
+  }
+
+  if (requestedSection === "accueil") {
     renderDashboardIntelligent();
   }
-  if (section === "pesees" || section === "pesee") {
-  refreshBirdSelects();
-  const pesDate = document.getElementById("pesDate");
-  if (pesDate && !pesDate.value) pesDate.value = todayStr();
+
+  if (
+    requestedSection === "pesees" ||
+    requestedSection === "pesee"
+  ) {
+    refreshBirdSelects();
+
+    const pesDate = document.getElementById("pesDate");
+
+    if (pesDate && !pesDate.value) {
+      pesDate.value = todayStr();
+    }
+  }
+
+  if (requestedSection === "nourrissage") {
+    refreshBirdSelects();
+
+    const feedDate = document.getElementById("feedDate");
+
+    if (feedDate && !feedDate.value) {
+      feedDate.value = todayStr();
+    }
+
+    showFeedTab("nourrissage");
+  }
+
+  if (requestedSection === "veterinaire") {
+    refreshBirdSelects();
+
+    const vetDate = document.getElementById("vetDate");
+
+    if (vetDate && !vetDate.value) {
+      vetDate.value = todayStr();
+    }
+
+    renderVeterinaire();
+  }
 }
 
-if (section === "nourrissage") {
-  refreshBirdSelects();
+function goBackSection() {
+  const destination =
+    previousSection && previousSection !== currentSection
+      ? previousSection
+      : "accueil";
 
-  const feedDate = document.getElementById("feedDate");
-  if (feedDate && !feedDate.value) feedDate.value = todayStr();
+  const ancienneSection = currentSection;
 
-  showFeedTab("nourrissage");
+  showSection(destination);
+
+  previousSection =
+    destination === "accueil"
+      ? "accueil"
+      : ancienneSection;
 }
 
-if (section === "veterinaire") {
-  refreshBirdSelects();
-
-  const vetDate = document.getElementById("vetDate");
-  if (vetDate && !vetDate.value) vetDate.value = todayStr();
-
-  renderVeterinaire();
-}
-}
+window.goBackSection = goBackSection;
 
 function renderActivityTable() {
   const tbody = document.getElementById("activityTableBody");

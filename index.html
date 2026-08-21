@@ -1393,6 +1393,55 @@ bird-card .bird-badges {
   box-shadow:0 6px 14px rgba(75,57,30,0.14) !important;
 }
 
+/* ===== NAVIGATION RETOUR / ACCUEIL ===== */
+
+.mobile-navigation-bar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 16px 0;
+}
+
+.mobile-navigation-bar.hidden{
+  display:none !important;
+}
+
+.mobile-back-btn,
+.mobile-home-btn{
+  border:none;
+  border-radius:12px;
+  padding:10px 16px;
+  background:#f1e6d2;
+  color:#3d3123;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.mobile-back-btn:hover,
+.mobile-home-btn:hover{
+  background:#e4d4b8;
+}
+
+@media(max-width:900px){
+
+  .mobile-navigation-bar{
+    position:sticky;
+    top:8px;
+    z-index:50;
+    background:rgba(255,250,240,0.96);
+    padding:8px;
+    border-radius:14px;
+    box-shadow:0 4px 12px rgba(75,57,30,0.10);
+  }
+
+  .mobile-back-btn,
+  .mobile-home-btn{
+    flex:1;
+    min-height:44px;
+    font-size:15px !important;
+  }
+}
 
   </style>
 </head>
@@ -1460,6 +1509,16 @@ bird-card .bird-badges {
             <button class="btn" onclick="saveData()">Sauvegarder</button>
           </div>
         </header>
+
+        <div id="mobileNavigationBar" class="mobile-navigation-bar hidden">
+  <button type="button" class="mobile-back-btn" onclick="goBackSection()">
+    ← Retour
+  </button>
+
+  <button type="button" class="mobile-home-btn" onclick="showSection('accueil')">
+    🏠 Accueil
+  </button>
+</div>
 
 <section id="section-accueil" class="section active">
 
