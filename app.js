@@ -28,9 +28,11 @@ const firebaseConfig = {
   appId: "1:881543403206:web:17915a78ddbbde9a1929c7"
 };
 
+
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
 const storage = getStorage(firebaseApp);
+const auth = getAuth(firebaseApp);
 
 const mainRef = doc(db, "rapaces", "data");
 const OWNER_UID = "dQPT9eD5g2c7FkjCb86pJnqh4qF3";
