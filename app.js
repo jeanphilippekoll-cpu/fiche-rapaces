@@ -390,8 +390,19 @@ function checkPin() {
 
 async function uploadFile(file, path) {
   if (!file) return "";
-  const fileRef = ref(storage, path);
+
+  const uid = auth.currentUser?.uid;
+
+  if (!uid) {
+    throw new Error("Upload impossible : aucun utilisateur connecté.");
+  }
+
+  const cheminUtilisateur = `users/${uid}/${path}`;
+
+  const fileRef = ref(storage, cheminUtilisateur);
+
   await uploadBytes(fileRef, file);
+
   return await getDownloadURL(fileRef);
 }
 
