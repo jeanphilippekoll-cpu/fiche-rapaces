@@ -1892,7 +1892,6 @@ function getDashboardComplementPlan(dayIndex, bird) {
   else dose = "2 ml";
 
   if (dayIndex === 1) return `Aminovital — ${dose}`;
-  if (dayIndex === 3) return `Feather Energy — ${dose}`;
   if (dayIndex === 5) return `Aminovital + Condi Plus — ${dose}`;
 
   return "";
