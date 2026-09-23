@@ -370,6 +370,7 @@ window.afficherCreationCompte = afficherCreationCompte;
 window.connexionUtilisateur = connexionUtilisateur;
 window.creerCompteUtilisateur = creerCompteUtilisateur;
 window.deconnexionUtilisateur = deconnexionUtilisateur;
+window.ajouterFuret = ajouterFuret;
 
 function checkPin() {
   const input = document.getElementById("pinInput");
