@@ -1420,3 +1420,27 @@ border-left:8px solid #9e9e9e;
     flex-basis: 76px !important;
   }
 }
+
+/* =====================================================
+   🐾 FURETS - 2 CARTES PAR LIGNE SUR PC
+===================================================== */
+
+#furetsListe .furets-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+  width: 100% !important;
+}
+
+#furetsListe .furet-card {
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+/* Tablette et téléphone : 1 fiche par ligne */
+@media (max-width: 850px) {
+  #furetsListe .furets-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
