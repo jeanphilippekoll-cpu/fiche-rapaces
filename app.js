@@ -7545,7 +7545,15 @@ function renderFurets() {
   }
 
   zone.innerHTML = `
-    <div class="furets-grid">
+    <div
+      class="furets-grid"
+      style="
+        display:grid !important;
+        grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+        gap:18px !important;
+        width:100% !important;
+      "
+    >
       ${furets.map(furet => {
 
         const poids = toNumber(furet.poidsActuel);
@@ -7578,7 +7586,19 @@ function renderFurets() {
   "
 >
               ` : `
-                <div class="furet-photo furet-photo-empty">🐾</div>
+              <div
+  style="
+    width:92px;
+    height:92px;
+    min-width:92px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:15px;
+    background:#f4efe5;
+    font-size:34px;
+  "
+>🐾</div>
               `}
 
               <div class="furet-main-info">
