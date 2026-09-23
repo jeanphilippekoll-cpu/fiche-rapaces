@@ -1908,6 +1908,9 @@ function renderWeeklyVitaminTable(birds) {
     { label: "Dimanche", index: 0 }
   ];
 
+  const plans = safeArray(appData.vitamines)
+    .filter(plan => plan.actif !== false);
+
   return `
     <div class="feed-table-wrap">
       <table class="feed-table simple-table">
@@ -1918,29 +1921,47 @@ function renderWeeklyVitaminTable(birds) {
             <th>Oiseaux concernés</th>
           </tr>
         </thead>
+
         <tbody>
           ${days.map(day => {
-            const rows = birds
-              .map(bird => {
-                const plan = getDashboardComplementPlan(day.index, bird);
-                if (!plan) return "";
-                return `${safe(bird.nom)} — ${getLatestBirdWeight(bird) || "-"} g — ${getComplementDoseMl(bird)}`;
-              })
-              .filter(Boolean);
 
-            const produit =
-              day.index === 1 ? "Aminovital" :
-              day.index === 3 ? "Feather Energy" :
-              day.index === 5 ? "Aminovital + Condi Plus" :
-              "Repos";
+            const plansDuJour = plans.filter(plan =>
+              safeArray(plan.jours)
+                .map(j => toNumber(j))
+                .includes(day.index)
+            );
 
-            return `
-              <tr>
-                <td><strong>${day.label}</strong></td>
-                <td>${produit}</td>
-                <td>${rows.length ? rows.join("<br>") : "-"}</td>
-              </tr>
-            `;
+            if (!plansDuJour.length) {
+              return `
+                <tr>
+                  <td><strong>${day.label}</strong></td>
+                  <td>Repos</td>
+                  <td>-</td>
+                </tr>
+              `;
+            }
+
+            return plansDuJour.map(plan => {
+
+              const oiseauxDuPlan = safeArray(plan.oiseaux)
+                .map(id => birds.find(bird => bird.id === id))
+                .filter(Boolean);
+
+              const nomsOiseaux = oiseauxDuPlan.length
+                ? oiseauxDuPlan
+                    .map(bird => `${safe(bird.nom)} — ${safe(plan.dose || "-")}`)
+                    .join("<br>")
+                : "-";
+
+              return `
+                <tr>
+                  <td><strong>${day.label}</strong></td>
+                  <td>${safe(plan.produit || "Produit")}</td>
+                  <td>${nomsOiseaux}</td>
+                </tr>
+              `;
+            }).join("");
+
           }).join("")}
         </tbody>
       </table>
