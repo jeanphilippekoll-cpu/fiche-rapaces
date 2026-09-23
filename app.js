@@ -7252,6 +7252,40 @@ async function supprimerJeune(coupleId, saisonId, ponteId, jeuneId) {
   ouvrirDetailPonte(coupleId, saisonId);
 }
 
+async function ajouterPeseeFuret(furetId) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet) return;
+
+  const input = document.getElementById(`furetPoids_${furetId}`);
+  const poids = toNumber(input?.value);
+
+  if (!poids) {
+    alert("Indique le poids du furet.");
+    return;
+  }
+
+  if (!Array.isArray(furet.pesees)) {
+    furet.pesees = [];
+  }
+
+  furet.pesees.push({
+    id: makeId(),
+    date: todayStr(),
+    poids
+  });
+
+  furet.poidsActuel = poids;
+
+  await saveData();
+
+  renderFurets();
+
+  alert(`Pesée de ${furet.nom} enregistrée : ${poids} g`);
+}
+
+window.ajouterPeseeFuret = ajouterPeseeFuret;
+
 function renderFurets() {
   const zone = document.getElementById("furetsListe");
 
@@ -7288,6 +7322,24 @@ function renderFurets() {
             N° de puce : ${safe(furet.puce || "-")}<br>
             Poids actuel : ${poids ? `${poids} g` : "-"}
           </small>
+          <div style="margin-top:10px;">
+  <input
+    id="furetPoids_${furet.id}"
+    type="number"
+    min="0"
+    step="1"
+    placeholder="Nouvelle pesée (g)"
+    style="max-width:180px;"
+  >
+
+  <button
+    type="button"
+    class="btn info-btn"
+    onclick="ajouterPeseeFuret('${furet.id}')"
+  >
+    ⚖️ Ajouter la pesée
+  </button>
+</div>
         </div>
       </div>
     `;
