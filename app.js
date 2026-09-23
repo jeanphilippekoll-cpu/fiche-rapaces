@@ -7410,6 +7410,8 @@ async function ajouterFuret() {
   document.getElementById("furetPuce").value = "";
   document.getElementById("furetPoids").value = "";
 
+  renderFurets();
+
   alert(`${nom} a bien été enregistré.`);
 }
 
