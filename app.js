@@ -7286,6 +7286,258 @@ async function ajouterPeseeFuret(furetId) {
 
 window.ajouterPeseeFuret = ajouterPeseeFuret;
 
+// ======================================================
+// 🐾 GESTION COMPLÈTE DES FURETS
+// ======================================================
+
+
+// ---------- SUPPRIMER UNE PESÉE ----------
+
+async function supprimerPeseeFuret(furetId, peseeIndex) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet || !Array.isArray(furet.pesees)) return;
+
+  const pesee = furet.pesees[peseeIndex];
+
+  if (!pesee) return;
+
+  const ok = confirm(
+    `Supprimer la pesée de ${pesee.poids} g du ${formatDateFR(pesee.date || "")} ?`
+  );
+
+  if (!ok) return;
+
+  furet.pesees.splice(peseeIndex, 1);
+
+  const derniere = furet.pesees[furet.pesees.length - 1];
+
+  furet.poidsActuel = derniere
+    ? toNumber(derniere.poids)
+    : 0;
+
+  await saveData();
+
+  renderFurets();
+}
+
+window.supprimerPeseeFuret = supprimerPeseeFuret;
+
+
+// ---------- MODIFIER UN FURET ----------
+
+function modifierFuret(furetId) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet) return;
+
+  const nom = prompt("Nom du furet :", furet.nom || "");
+
+  if (nom === null) return;
+
+  const sexe = prompt(
+    "Sexe du furet (Mâle ou Femelle) :",
+    furet.sexe || ""
+  );
+
+  if (sexe === null) return;
+
+  const naissance = prompt(
+    "Date de naissance (AAAA-MM-JJ) :",
+    furet.dateNaissance || ""
+  );
+
+  if (naissance === null) return;
+
+  const puce = prompt(
+    "Numéro de puce :",
+    furet.puce || ""
+  );
+
+  if (puce === null) return;
+
+  furet.nom = nom.trim();
+  furet.sexe = sexe.trim();
+  furet.dateNaissance = naissance.trim();
+  furet.puce = puce.trim();
+
+  saveData().then(() => {
+    renderFurets();
+    alert("Fiche du furet modifiée.");
+  });
+}
+
+window.modifierFuret = modifierFuret;
+
+
+// ---------- CHANGER LA PHOTO ----------
+
+function changerPhotoFuret(furetId) {
+  const input = document.createElement("input");
+
+  input.type = "file";
+  input.accept = "image/*";
+
+  input.onchange = async () => {
+    const fichier = input.files?.[0];
+
+    if (!fichier) return;
+
+    const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+    if (!furet) return;
+
+    try {
+      if (statusEl) statusEl.textContent = "Upload photo…";
+
+      const photo = await uploadFile(
+        fichier,
+        `furets/${Date.now()}_${fichier.name}`
+      );
+
+      furet.photo = photo;
+
+      await saveData();
+
+      renderFurets();
+
+      alert("Photo modifiée.");
+    } catch (error) {
+      console.error(error);
+      alert("Impossible de modifier la photo.");
+    }
+  };
+
+  input.click();
+}
+
+window.changerPhotoFuret = changerPhotoFuret;
+
+
+// ---------- SUPPRIMER UN FURET ----------
+
+async function supprimerFuret(furetId) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet) return;
+
+  const ok = confirm(
+    `Supprimer complètement ${furet.nom} et son historique ?`
+  );
+
+  if (!ok) return;
+
+  appData.furets = safeArray(appData.furets)
+    .filter(f => f.id !== furetId);
+
+  await saveData();
+
+  renderFurets();
+
+  alert(`${furet.nom} a été supprimé.`);
+}
+
+window.supprimerFuret = supprimerFuret;
+
+
+// ---------- AJOUTER UN REPAS ----------
+
+async function ajouterAlimentationFuret(furetId) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet) return;
+
+  const nourriture =
+    document.getElementById(`furetFood_${furetId}`)?.value || "";
+
+  const quantite = toNumber(
+    document.getElementById(`furetFoodQty_${furetId}`)?.value
+  );
+
+  if (!nourriture) {
+    alert("Choisis une nourriture.");
+    return;
+  }
+
+  if (!quantite || quantite <= 0) {
+    alert("Indique une quantité.");
+    return;
+  }
+
+  const stockKey = foodToStockKey(nourriture);
+
+  if (stockKey) {
+    const stockActuel = toNumber(appData.stock?.[stockKey]);
+
+    if (stockActuel < quantite) {
+      alert(
+        `Stock insuffisant.\n\nStock disponible : ${stockActuel}`
+      );
+      return;
+    }
+
+    appData.stock[stockKey] = stockActuel - quantite;
+  }
+
+  if (!Array.isArray(furet.alimentation)) {
+    furet.alimentation = [];
+  }
+
+  furet.alimentation.push({
+    id: makeId(),
+    date: todayStr(),
+    nourriture,
+    quantite
+  });
+
+  await saveData();
+
+  renderFurets();
+  fillStockForm();
+
+  alert(
+    `${nourriture} enregistré pour ${furet.nom}.`
+  );
+}
+
+window.ajouterAlimentationFuret = ajouterAlimentationFuret;
+
+
+// ---------- SUPPRIMER UN REPAS ----------
+
+async function supprimerAlimentationFuret(furetId, alimentationIndex) {
+  const furet = safeArray(appData.furets).find(f => f.id === furetId);
+
+  if (!furet || !Array.isArray(furet.alimentation)) return;
+
+  const repas = furet.alimentation[alimentationIndex];
+
+  if (!repas) return;
+
+  const ok = confirm(
+    `Supprimer ${repas.quantite} ${repas.nourriture} du ${formatDateFR(repas.date || "")} ?`
+  );
+
+  if (!ok) return;
+
+  const stockKey = foodToStockKey(repas.nourriture);
+
+  if (stockKey) {
+    appData.stock[stockKey] =
+      toNumber(appData.stock?.[stockKey]) +
+      toNumber(repas.quantite);
+  }
+
+  furet.alimentation.splice(alimentationIndex, 1);
+
+  await saveData();
+
+  renderFurets();
+  fillStockForm();
+}
+
+window.supprimerAlimentationFuret = supprimerAlimentationFuret;
+
 function renderFurets() {
   const zone = document.getElementById("furetsListe");
 
@@ -7304,57 +7556,305 @@ function renderFurets() {
 
     const poids = toNumber(furet.poidsActuel);
 
+    const historiquePesees = safeArray(furet.pesees)
+      .map((pesee, index) => ({
+        pesee,
+        index
+      }))
+      .reverse();
+
+    const historiqueAlimentation = safeArray(furet.alimentation)
+      .map((repas, index) => ({
+        repas,
+        index
+      }))
+      .reverse();
+
     return `
-      <div class="dashboard-row">
-        <div>
-        ${furet.photo ? `
-  <img
-    src="${safe(furet.photo)}"
-    alt="${safe(furet.nom)}"
-    style="width:90px;height:90px;object-fit:cover;border-radius:12px;margin-right:12px;"
-  >
-` : ""}
-          <strong>🐾 ${safe(furet.nom)}</strong>
+      <div class="dashboard-row" style="margin-bottom:20px;">
+        <div style="width:100%;">
 
-          <small>
-            Sexe : ${safe(furet.sexe || "-")}<br>
-            Naissance : ${safe(furet.dateNaissance || "-")}<br>
-            N° de puce : ${safe(furet.puce || "-")}<br>
-            Poids actuel : ${poids ? `${poids} g` : "-"}
-            ${safeArray(furet.pesees).length ? `
-  <div style="margin-top:10px;">
-    <strong>⚖️ Historique des pesées</strong>
+          <div style="display:flex;gap:15px;align-items:flex-start;flex-wrap:wrap;">
 
-    ${safeArray(furet.pesees)
-      .slice()
-      .reverse()
-      .map(pesee => `
-        <div style="margin-top:5px;">
-          ${safe(pesee.date || "-")} — ${toNumber(pesee.poids)} g
-        </div>
-      `)
-      .join("")}
-  </div>
-` : ""}
-          </small>
-          <div style="margin-top:10px;">
-  <input
-    id="furetPoids_${furet.id}"
-    type="number"
-    min="0"
-    step="1"
-    placeholder="Nouvelle pesée (g)"
-    style="max-width:180px;"
-  >
+            ${furet.photo ? `
+              <img
+                src="${safeAttr(furet.photo)}"
+                alt="${safeAttr(furet.nom)}"
+                style="
+                  width:100px;
+                  height:100px;
+                  object-fit:cover;
+                  border-radius:12px;
+                "
+              >
+            ` : ""}
 
-  <button
-    type="button"
-    class="btn info-btn"
-    onclick="ajouterPeseeFuret('${furet.id}')"
-  >
-    ⚖️ Ajouter la pesée
-  </button>
-</div>
+            <div>
+              <strong style="font-size:20px;">
+                🐾 ${safe(furet.nom)}
+              </strong>
+
+              <div style="margin-top:6px;">
+                Sexe : ${safe(furet.sexe || "-")}<br>
+                Naissance :
+                ${furet.dateNaissance
+                  ? formatDateFR(furet.dateNaissance)
+                  : "-"}<br>
+
+                N° de puce : ${safe(furet.puce || "-")}<br>
+
+                <strong>
+                  Poids actuel :
+                  ${poids ? `${poids} g` : "-"}
+                </strong>
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- MODIFIER LA FICHE -->
+
+          <div
+            style="
+              display:flex;
+              gap:8px;
+              flex-wrap:wrap;
+              margin-top:12px;
+            "
+          >
+
+            <button
+              type="button"
+              class="btn info-btn"
+              onclick="modifierFuret('${safeAttr(furet.id)}')"
+            >
+              ✏️ Modifier
+            </button>
+
+            <button
+              type="button"
+              class="btn info-btn"
+              onclick="changerPhotoFuret('${safeAttr(furet.id)}')"
+            >
+              📸 Changer photo
+            </button>
+
+            <button
+              type="button"
+              class="btn"
+              onclick="supprimerFuret('${safeAttr(furet.id)}')"
+            >
+              🗑️ Supprimer le furet
+            </button>
+
+          </div>
+
+
+          <!-- NOUVELLE PESÉE -->
+
+          <div
+            style="
+              margin-top:18px;
+              padding-top:15px;
+              border-top:1px solid #ddd;
+            "
+          >
+
+            <strong>⚖️ Nouvelle pesée</strong>
+
+            <div
+              style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+                margin-top:8px;
+              "
+            >
+
+              <input
+                id="furetPoids_${safeAttr(furet.id)}"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Poids en g"
+                style="max-width:180px;"
+              >
+
+              <button
+                type="button"
+                class="btn info-btn"
+                onclick="ajouterPeseeFuret('${safeAttr(furet.id)}')"
+              >
+                ⚖️ Ajouter la pesée
+              </button>
+
+            </div>
+
+          </div>
+
+
+          <!-- HISTORIQUE PESÉES -->
+
+          ${historiquePesees.length ? `
+            <div style="margin-top:15px;">
+
+              <strong>📋 Historique des pesées</strong>
+
+              ${historiquePesees.map(({ pesee, index }) => `
+                <div
+                  style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:10px;
+                    margin-top:6px;
+                    padding:6px 0;
+                    border-bottom:1px solid #eee;
+                  "
+                >
+
+                  <span>
+                    ${pesee.date
+                      ? formatDateFR(pesee.date)
+                      : "-"}
+                    —
+                    <strong>
+                      ${toNumber(pesee.poids)} g
+                    </strong>
+                  </span>
+
+                  <button
+                    type="button"
+                    class="btn"
+                    onclick="supprimerPeseeFuret(
+                      '${safeAttr(furet.id)}',
+                      ${index}
+                    )"
+                  >
+                    🗑️
+                  </button>
+
+                </div>
+              `).join("")}
+
+            </div>
+          ` : ""}
+
+
+          <!-- ALIMENTATION -->
+
+          <div
+            style="
+              margin-top:20px;
+              padding-top:15px;
+              border-top:1px solid #ddd;
+            "
+          >
+
+            <strong>🍗 Alimentation</strong>
+
+            <div
+              style="
+                display:flex;
+                gap:8px;
+                flex-wrap:wrap;
+                margin-top:8px;
+              "
+            >
+
+              <select
+                id="furetFood_${safeAttr(furet.id)}"
+              >
+                <option value="">Choisir</option>
+                <option value="Poussin">Poussin</option>
+                <option value="Souris">Souris</option>
+                <option value="Caille">Caille</option>
+                <option value="Rat">Rat</option>
+                <option value="Pigeon">Pigeon</option>
+                <option value="Croquettes">Croquettes</option>
+              </select>
+
+              <input
+                id="furetFoodQty_${safeAttr(furet.id)}"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="Quantité"
+                style="max-width:130px;"
+              >
+
+              <button
+                type="button"
+                class="btn info-btn"
+                onclick="ajouterAlimentationFuret(
+                  '${safeAttr(furet.id)}'
+                )"
+              >
+                ➕ Ajouter
+              </button>
+
+            </div>
+
+            <small style="display:block;margin-top:5px;">
+              Poussin, souris, caille, rat et pigeon sont retirés
+              automatiquement du stock.
+            </small>
+
+          </div>
+
+
+          <!-- HISTORIQUE ALIMENTATION -->
+
+          ${historiqueAlimentation.length ? `
+            <div style="margin-top:15px;">
+
+              <strong>📋 Historique alimentation</strong>
+
+              ${historiqueAlimentation.map(({ repas, index }) => `
+                <div
+                  style="
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                    gap:10px;
+                    margin-top:6px;
+                    padding:6px 0;
+                    border-bottom:1px solid #eee;
+                  "
+                >
+
+                  <span>
+                    ${repas.date
+                      ? formatDateFR(repas.date)
+                      : "-"}
+
+                    —
+
+                    <strong>
+                      ${safe(repas.nourriture)}
+                    </strong>
+
+                    × ${toNumber(repas.quantite)}
+                  </span>
+
+                  <button
+                    type="button"
+                    class="btn"
+                    onclick="supprimerAlimentationFuret(
+                      '${safeAttr(furet.id)}',
+                      ${index}
+                    )"
+                  >
+                    🗑️
+                  </button>
+
+                </div>
+              `).join("")}
+
+            </div>
+          ` : ""}
+
         </div>
       </div>
     `;
