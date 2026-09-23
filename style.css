@@ -1399,3 +1399,24 @@ border-left:8px solid #9e9e9e;
     max-width: none;
   }
 }
+
+/* Correction taille photo fiche furet */
+.furet-card .furet-photo {
+  width: 92px !important;
+  height: 92px !important;
+  max-width: 92px !important;
+  min-width: 92px !important;
+  flex: 0 0 92px !important;
+  object-fit: cover !important;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .furet-card .furet-photo {
+    width: 76px !important;
+    height: 76px !important;
+    max-width: 76px !important;
+    min-width: 76px !important;
+    flex-basis: 76px !important;
+  }
+}
