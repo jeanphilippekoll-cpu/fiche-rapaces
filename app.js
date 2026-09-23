@@ -7273,6 +7273,13 @@ function renderFurets() {
     return `
       <div class="dashboard-row">
         <div>
+        ${furet.photo ? `
+  <img
+    src="${safe(furet.photo)}"
+    alt="${safe(furet.nom)}"
+    style="width:90px;height:90px;object-fit:cover;border-radius:12px;margin-right:12px;"
+  >
+` : ""}
           <strong>🐾 ${safe(furet.nom)}</strong>
 
           <small>
