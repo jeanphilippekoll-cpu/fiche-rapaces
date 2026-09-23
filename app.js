@@ -7321,6 +7321,21 @@ function renderFurets() {
             Naissance : ${safe(furet.dateNaissance || "-")}<br>
             N° de puce : ${safe(furet.puce || "-")}<br>
             Poids actuel : ${poids ? `${poids} g` : "-"}
+            ${safeArray(furet.pesees).length ? `
+  <div style="margin-top:10px;">
+    <strong>⚖️ Historique des pesées</strong>
+
+    ${safeArray(furet.pesees)
+      .slice()
+      .reverse()
+      .map(pesee => `
+        <div style="margin-top:5px;">
+          ${safe(pesee.date || "-")} — ${toNumber(pesee.poids)} g
+        </div>
+      `)
+      .join("")}
+  </div>
+` : ""}
           </small>
           <div style="margin-top:10px;">
   <input
