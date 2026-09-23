@@ -1880,6 +1880,32 @@ function getComplementDoseMl(bird) {
   return `${dose.toFixed(1).replace(".", ",")} ml`;
 }
 
+function getVitaminDoseForBird(bird, plan) {
+  const poids = getLatestBirdWeight(bird) || toNumber(bird.poidsActuel);
+
+  if (!poids) return "poids manquant";
+
+  const dosePour100g = toNumber(plan.dose);
+
+  if (!dosePour100g) return "dose à définir";
+
+  const unite = plan.unite || "ml";
+
+  const doseCalculee = (poids / 100) * dosePour100g;
+
+  let decimales = 2;
+
+  if (doseCalculee >= 1) {
+    decimales = 1;
+  }
+
+  const doseAffichee = doseCalculee
+    .toFixed(decimales)
+    .replace(".", ",");
+
+  return `${doseAffichee} ${unite}`;
+}
+
 function getDashboardComplementPlan(dayIndex, bird) {
   const poids = getLatestBirdWeight(bird);
 
@@ -1948,10 +1974,15 @@ function renderWeeklyVitaminTable(birds) {
                 .filter(Boolean);
 
               const nomsOiseaux = oiseauxDuPlan.length
-                ? oiseauxDuPlan
-                    .map(bird => `${safe(bird.nom)} — ${safe(plan.dose || "-")}`)
-                    .join("<br>")
-                : "-";
+  ? oiseauxDuPlan
+      .map(bird => {
+        const poids = getLatestBirdWeight(bird) || toNumber(bird.poidsActuel);
+        const doseCalculee = getVitaminDoseForBird(bird, plan);
+
+        return `${safe(bird.nom)} — ${poids || "-"} g — ${safe(doseCalculee)}`;
+      })
+      .join("<br>")
+  : "-";
 
               return `
                 <tr>
@@ -4813,14 +4844,23 @@ function renderVitaminesNourrissage() {
         </div>
 
         <div>
-          <label for="vitamineDose">Dose</label>
-          <input
-            id="vitamineDose"
-            placeholder="Ex : 0,5 ml"
-          >
-        </div>
+  <label for="vitamineDose">Dose pour 100 g de poids</label>
+  <input
+    id="vitamineDose"
+    type="number"
+    step="0.01"
+    min="0"
+    placeholder="Ex : 0.2"
+  >
+</div>
 
-      </div>
+<div>
+  <label for="vitamineUnite">Unité</label>
+  <select id="vitamineUnite">
+    <option value="ml">ml / 100 g</option>
+    <option value="g">g / 100 g</option>
+  </select>
+</div>
 
       <h4>Jours prévus</h4>
 
@@ -5080,6 +5120,7 @@ window.cocherVitamineAutomatique = cocherVitamineAutomatique;
 async function ajouterPlanningVitamine() {
   const produit = document.getElementById("vitamineProduit")?.value.trim() || "";
   const dose = document.getElementById("vitamineDose")?.value.trim() || "";
+  const unite = document.getElementById("vitamineUnite")?.value || "ml";
   const notes = document.getElementById("vitamineNotes")?.value.trim() || "";
 
   const jours = Array.from(
@@ -5114,6 +5155,7 @@ async function ajouterPlanningVitamine() {
     id: makeId(),
     produit,
     dose,
+    unite,
     oiseaux,
     jours,
     actif: true,
