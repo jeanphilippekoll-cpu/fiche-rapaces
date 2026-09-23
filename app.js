@@ -7377,11 +7377,21 @@ async function ajouterFuret() {
   const poidsActuel = toNumber(
     document.getElementById("furetPoids")?.value
   );
+  const photoFile = document.getElementById("furetPhoto")?.files?.[0] || null;
 
   if (!nom) {
     alert("Indique le nom du furet.");
     return;
   }
+
+  let photo = "";
+
+if (photoFile) {
+  photo = await uploadFile(
+    photoFile,
+    `furets/${Date.now()}_${photoFile.name}`
+  );
+}
 
   const nouveauFuret = {
     id: makeId(),
@@ -7397,7 +7407,7 @@ async function ajouterFuret() {
         }]
       : [],
     alimentation: [],
-    photo: ""
+    photo
   };
 
   appData.furets.push(nouveauFuret);
