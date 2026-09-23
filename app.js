@@ -7564,11 +7564,19 @@ function renderFurets() {
             <div class="furet-card-header">
 
               ${furet.photo ? `
-                <img
-                  class="furet-photo"
-                  src="${safeAttr(furet.photo)}"
-                  alt="${safeAttr(furet.nom)}"
-                >
+            <img
+  src="${safeAttr(furet.photo)}"
+  alt="${safeAttr(furet.nom)}"
+  style="
+    width:92px !important;
+    height:92px !important;
+    min-width:92px !important;
+    max-width:92px !important;
+    object-fit:cover !important;
+    border-radius:15px;
+    display:block;
+  "
+>
               ` : `
                 <div class="furet-photo furet-photo-empty">🐾</div>
               `}
