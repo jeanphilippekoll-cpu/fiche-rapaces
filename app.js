@@ -193,6 +193,7 @@ function foodToStockKey(food) {
   if (key === "poisson") return "poisson";
   if (key === "souris") return "souris";
   if (key === "rat") return "rat";
+  if (key === "croquettes") return "croquettes";
   if (key === "cailleteau 30gr") return "cailleteau30gr";
   return null;
 }
@@ -677,6 +678,7 @@ const activitesSource = safeArray(
     poisson: toNumber(rapacesData?.stock?.poisson),
     souris: toNumber(rapacesData?.stock?.souris),
     rat: toNumber(rapacesData?.stock?.rat),
+    croquettes: toNumber(rapacesData?.stock?.croquettes),
     cailleteau30gr: toNumber(rapacesData?.stock?.cailleteau30gr),
     boitePoussinsMoyenne225: toNumber(rapacesData?.stock?.boitePoussinsMoyenne225)
   };
@@ -825,6 +827,7 @@ historiquePoids: safeArray(o.historiquePoids).map((p) => ({
       poisson: toNumber(appData.stock.poisson),
       souris: toNumber(appData.stock.souris),
       rat: toNumber(appData.stock.rat),
+      croquettes: toNumber(appData.stock.croquettes),
       cailleteau30gr: toNumber(appData.stock.cailleteau30gr),
       boitePoussinsMoyenne225: computeBoitesFromPoussins(appData.stock.poussin)
     },
@@ -5228,6 +5231,7 @@ function fillStockForm() {
   const stockPoisson = document.getElementById("stockPoisson");
   const stockSouris = document.getElementById("stockSouris");
   const stockRat = document.getElementById("stockRat");
+  const stockCroquettes = document.getElementById("stockCroquettes");
   const stockCailleteau30gr = document.getElementById("stockCailleteau30gr");
 
   if (stockBoxes) stockBoxes.value = appData.stock.boitePoussinsMoyenne225 ?? 0;
@@ -5238,6 +5242,7 @@ function fillStockForm() {
   if (stockPoisson) stockPoisson.value = appData.stock.poisson ?? 0;
   if (stockSouris) stockSouris.value = appData.stock.souris ?? 0;
   if (stockRat) stockRat.value = appData.stock.rat ?? 0;
+  if (stockCroquettes) stockCroquettes.value = appData.stock.croquettes ?? 0;
   if (stockCailleteau30gr) stockCailleteau30gr.value = appData.stock.cailleteau30gr ?? 0;
 }
 
@@ -7331,40 +7336,27 @@ function modifierFuret(furetId) {
 
   if (!furet) return;
 
-  const nom = prompt("Nom du furet :", furet.nom || "");
+  document.getElementById("furetEditId").value = furet.id;
+  document.getElementById("furetNom").value = furet.nom || "";
+  document.getElementById("furetSexe").value = furet.sexe || "";
+  document.getElementById("furetNaissance").value = furet.dateNaissance || "";
+  document.getElementById("furetPuce").value = furet.puce || "";
+  document.getElementById("furetPoids").value = furet.poidsActuel || "";
 
-  if (nom === null) return;
+  const nomInput = document.getElementById("furetNom");
 
-  const sexe = prompt(
-    "Sexe du furet (Mâle ou Femelle) :",
-    furet.sexe || ""
+  if (nomInput) {
+    nomInput.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    setTimeout(() => nomInput.focus(), 400);
+  }
+
+  alert(
+    `Tu peux maintenant modifier la fiche de ${furet.nom} dans le formulaire du haut, puis cliquer sur "Enregistrer le furet".`
   );
-
-  if (sexe === null) return;
-
-  const naissance = prompt(
-    "Date de naissance (AAAA-MM-JJ) :",
-    furet.dateNaissance || ""
-  );
-
-  if (naissance === null) return;
-
-  const puce = prompt(
-    "Numéro de puce :",
-    furet.puce || ""
-  );
-
-  if (puce === null) return;
-
-  furet.nom = nom.trim();
-  furet.sexe = sexe.trim();
-  furet.dateNaissance = naissance.trim();
-  furet.puce = puce.trim();
-
-  saveData().then(() => {
-    renderFurets();
-    alert("Fiche du furet modifiée.");
-  });
 }
 
 window.modifierFuret = modifierFuret;
@@ -7946,28 +7938,126 @@ rawUserData = donneesUtilisateur;
 }
 
 async function ajouterFuret() {
-  const nom = document.getElementById("furetNom")?.value.trim() || "";
-  const sexe = document.getElementById("furetSexe")?.value || "";
-  const dateNaissance = document.getElementById("furetNaissance")?.value || "";
-  const puce = document.getElementById("furetPuce")?.value.trim() || "";
+  const editId =
+    document.getElementById("furetEditId")?.value || "";
+
+  const nom =
+    document.getElementById("furetNom")?.value.trim() || "";
+
+  const sexe =
+    document.getElementById("furetSexe")?.value || "";
+
+  const dateNaissance =
+    document.getElementById("furetNaissance")?.value || "";
+
+  const puce =
+    document.getElementById("furetPuce")?.value.trim() || "";
+
   const poidsActuel = toNumber(
     document.getElementById("furetPoids")?.value
   );
-  const photoFile = document.getElementById("furetPhoto")?.files?.[0] || null;
+
+  const photoInput =
+    document.getElementById("furetPhoto");
+
+  const photoFile =
+    photoInput?.files?.[0] || null;
+
 
   if (!nom) {
     alert("Indique le nom du furet.");
     return;
   }
 
+
+  // ==================================================
+  // ✏️ MODIFICATION D'UN FURET EXISTANT
+  // ==================================================
+
+  if (editId) {
+    const furet = safeArray(appData.furets)
+      .find(f => f.id === editId);
+
+    if (!furet) {
+      alert("Impossible de retrouver ce furet.");
+      return;
+    }
+
+    let photo = furet.photo || "";
+
+    if (photoFile) {
+      try {
+        photo = await uploadFile(
+          photoFile,
+          `furets/${Date.now()}_${photoFile.name}`
+        );
+      } catch (error) {
+        console.error(error);
+        alert("Impossible d'envoyer la nouvelle photo.");
+        return;
+      }
+    }
+
+
+    // Si le poids a changé, on ajoute automatiquement
+    // une nouvelle entrée dans l'historique.
+
+    const ancienPoids = toNumber(furet.poidsActuel);
+
+    if (
+      poidsActuel > 0 &&
+      poidsActuel !== ancienPoids
+    ) {
+      if (!Array.isArray(furet.pesees)) {
+        furet.pesees = [];
+      }
+
+      furet.pesees.push({
+        id: makeId(),
+        date: todayStr(),
+        poids: poidsActuel
+      });
+    }
+
+
+    furet.nom = nom;
+    furet.sexe = sexe;
+    furet.dateNaissance = dateNaissance;
+    furet.puce = puce;
+    furet.poidsActuel = poidsActuel;
+    furet.photo = photo;
+
+    await saveData();
+
+    resetFormulaireFuret();
+
+    renderFurets();
+
+    alert(`${nom} a bien été modifié.`);
+
+    return;
+  }
+
+
+  // ==================================================
+  // ➕ NOUVEAU FURET
+  // ==================================================
+
   let photo = "";
 
-if (photoFile) {
-  photo = await uploadFile(
-    photoFile,
-    `furets/${Date.now()}_${photoFile.name}`
-  );
-}
+  if (photoFile) {
+    try {
+      photo = await uploadFile(
+        photoFile,
+        `furets/${Date.now()}_${photoFile.name}`
+      );
+    } catch (error) {
+      console.error(error);
+      alert("Impossible d'envoyer la photo.");
+      return;
+    }
+  }
+
 
   const nouveauFuret = {
     id: makeId(),
@@ -7976,29 +8066,57 @@ if (photoFile) {
     dateNaissance,
     puce,
     poidsActuel,
+
     pesees: poidsActuel
       ? [{
+          id: makeId(),
           date: todayStr(),
           poids: poidsActuel
         }]
       : [],
+
     alimentation: [],
+
     photo
   };
+
+
+  if (!Array.isArray(appData.furets)) {
+    appData.furets = [];
+  }
 
   appData.furets.push(nouveauFuret);
 
   await saveData();
 
-  document.getElementById("furetNom").value = "";
-  document.getElementById("furetSexe").value = "";
-  document.getElementById("furetNaissance").value = "";
-  document.getElementById("furetPuce").value = "";
-  document.getElementById("furetPoids").value = "";
+  resetFormulaireFuret();
 
   renderFurets();
 
   alert(`${nom} a bien été enregistré.`);
+}
+
+
+// ======================================================
+// 🧹 REMISE À ZÉRO DU FORMULAIRE FURET
+// ======================================================
+
+function resetFormulaireFuret() {
+  const editId = document.getElementById("furetEditId");
+  const nom = document.getElementById("furetNom");
+  const sexe = document.getElementById("furetSexe");
+  const naissance = document.getElementById("furetNaissance");
+  const puce = document.getElementById("furetPuce");
+  const poids = document.getElementById("furetPoids");
+  const photo = document.getElementById("furetPhoto");
+
+  if (editId) editId.value = "";
+  if (nom) nom.value = "";
+  if (sexe) sexe.value = "";
+  if (naissance) naissance.value = "";
+  if (puce) puce.value = "";
+  if (poids) poids.value = "";
+  if (photo) photo.value = "";
 }
 
 async function migrerDonneesComptePrincipal() {
@@ -8901,6 +9019,7 @@ function enregistrerStock() {
   appData.stock.poisson = Math.max(0, toNumber(document.getElementById("stockPoisson")?.value || 0));
   appData.stock.souris = Math.max(0, toNumber(document.getElementById("stockSouris")?.value || 0));
   appData.stock.rat = Math.max(0, toNumber(document.getElementById("stockRat")?.value || 0));
+  appData.stock.croquettes = Math.max(0, toNumber(document.getElementById("stockCroquettes")?.value || 0));
   appData.stock.cailleteau30gr = Math.max(0, toNumber(document.getElementById("stockCailleteau30gr")?.value || 0));
 
   renderAll();
