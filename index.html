@@ -1896,14 +1896,86 @@ bird-card .bird-badges {
 
   <div id="mobileSheetContent"></div>
 
-</section>
 <section id="section-furets" class="section hidden">
 
   <div class="card">
     <h2>🐾 Mes furets</h2>
-    <p>
-      Gestion des furets, fiches individuelles, pesées et alimentation.
-    </p>
+    <p>Fiches individuelles, pesées et alimentation.</p>
+
+    <div class="card-section">
+      <h3>➕ Ajouter un furet</h3>
+
+      <input id="furetEditId" type="hidden">
+
+      <div class="form-grid">
+
+        <div>
+          <label for="furetNom">Nom</label>
+          <input
+            id="furetNom"
+            type="text"
+            placeholder="Ex : Nala"
+          >
+        </div>
+
+        <div>
+          <label for="furetSexe">Sexe</label>
+          <select id="furetSexe">
+            <option value="">Choisir</option>
+            <option value="Femelle">Femelle</option>
+            <option value="Mâle">Mâle</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="furetNaissance">Date de naissance</label>
+          <input
+            id="furetNaissance"
+            type="date"
+          >
+        </div>
+
+        <div>
+          <label for="furetPuce">N° de puce</label>
+          <input
+            id="furetPuce"
+            type="text"
+            placeholder="Numéro de puce"
+          >
+        </div>
+
+        <div>
+          <label for="furetPoids">Poids actuel (g)</label>
+          <input
+            id="furetPoids"
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Ex : 850"
+          >
+        </div>
+
+      </div>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="btn info-btn"
+          onclick="ajouterFuret()"
+        >
+          Enregistrer le furet
+        </button>
+      </div>
+
+    </div>
+
+    <div class="card-section">
+      <h3>🐾 Mes furets enregistrés</h3>
+      <div id="furetsListe">
+        <p class="muted-line">Aucun furet enregistré.</p>
+      </div>
+    </div>
+
   </div>
 
 </section>

@@ -65,6 +65,7 @@ let previousSection = "accueil";
 
 let appData = {
   oiseaux: [],
+  furets: [],
   nourrissage: [],
   stock: {},
   veterinaire: [],
@@ -538,6 +539,9 @@ function normalizeVeterinaire(list) {
 
 function normalizeData(rapacesData, userData) {
   const oiseauxSource = safeArray(rapacesData?.oiseaux);
+  const furetsSource = safeArray(
+  userData?.furets || rapacesData?.furets || []
+);
   const peseesSource = safeArray(userData?.encodages || rapacesData?.encodages || []);
   const documentsSource = safeArray(rapacesData?.documents);
   const documentsGenerauxSource = safeArray(rapacesData?.documentsGeneraux);
@@ -682,10 +686,23 @@ const activitesSource = safeArray(
     stock.boitePoussinsMoyenne225 = computeBoitesFromPoussins(stock.poussin);
   }
 
-  return {
-    oiseaux,
-    pesees,
-    documents,
+ return {
+  oiseaux,
+
+  furets: furetsSource.map((f, index) => ({
+    id: f?.id || `furet_${index}_${makeId()}`,
+    nom: f?.nom || "",
+    sexe: f?.sexe || "",
+    dateNaissance: f?.dateNaissance || "",
+    puce: f?.puce || "",
+    poidsActuel: toNumber(f?.poidsActuel),
+    pesees: safeArray(f?.pesees),
+    alimentation: safeArray(f?.alimentation),
+    photo: f?.photo || ""
+  })),
+
+  pesees,
+  documents,
     nourrissage: normalizeNourrissage(nourrissageSource),
     veterinaire: normalizeVeterinaire(veterinaireSource),
    entretien: safeArray(userData?.entretien || rapacesData?.entretien),
@@ -797,6 +814,7 @@ historiquePoids: safeArray(o.historiquePoids).map((p) => ({
   return {
     ...rawRapacesData,
     oiseaux,
+    furets: safeArray(appData.furets),
     stock: {
       poussin: toNumber(appData.stock.poussin),
       caille: toNumber(appData.stock.caille),
@@ -835,6 +853,7 @@ historiquePoids: safeArray(o.historiquePoids).map((p) => ({
 function buildUserPayload() {
   return {
     ...rawUserData,
+    furets: safeArray(appData.furets),
     encodages: appData.pesees.map((e) => ({
       id: e.id || makeId(),
       date: e.date || "",
@@ -7230,12 +7249,48 @@ async function supprimerJeune(coupleId, saisonId, ponteId, jeuneId) {
   ouvrirDetailPonte(coupleId, saisonId);
 }
 
+function renderFurets() {
+  const zone = document.getElementById("furetsListe");
+
+  if (!zone) return;
+
+  const furets = safeArray(appData.furets);
+
+  if (!furets.length) {
+    zone.innerHTML = `
+      <p class="muted-line">Aucun furet enregistré.</p>
+    `;
+    return;
+  }
+
+  zone.innerHTML = furets.map(furet => {
+
+    const poids = toNumber(furet.poidsActuel);
+
+    return `
+      <div class="dashboard-row">
+        <div>
+          <strong>🐾 ${safe(furet.nom)}</strong>
+
+          <small>
+            Sexe : ${safe(furet.sexe || "-")}<br>
+            Naissance : ${safe(furet.dateNaissance || "-")}<br>
+            N° de puce : ${safe(furet.puce || "-")}<br>
+            Poids actuel : ${poids ? `${poids} g` : "-"}
+          </small>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderAll() {
   syncBoitesFromPoussins();
   refreshStats();
   renderDashboardIntelligent();
   refreshBirdSelects();
   renderOiseaux();
+  renderFurets();
   renderArchivesOiseaux();
   renderPesees();
   renderDocuments();
@@ -7281,6 +7336,7 @@ const donneesUtilisateur = {
   ...userPayload,
 
   oiseaux: rapacesPayload.oiseaux,
+  furets: rapacesPayload.furets,
   stock: rapacesPayload.stock,
   documents: rapacesPayload.documents,
   documentsGeneraux: rapacesPayload.documentsGeneraux,
@@ -7310,6 +7366,50 @@ rawUserData = donneesUtilisateur;
 
     if (statusEl) statusEl.textContent = "Erreur sauvegarde (backup local OK)";
   }
+}
+
+async function ajouterFuret() {
+  const nom = document.getElementById("furetNom")?.value.trim() || "";
+  const sexe = document.getElementById("furetSexe")?.value || "";
+  const dateNaissance = document.getElementById("furetNaissance")?.value || "";
+  const puce = document.getElementById("furetPuce")?.value.trim() || "";
+  const poidsActuel = toNumber(
+    document.getElementById("furetPoids")?.value
+  );
+
+  if (!nom) {
+    alert("Indique le nom du furet.");
+    return;
+  }
+
+  const nouveauFuret = {
+    id: makeId(),
+    nom,
+    sexe,
+    dateNaissance,
+    puce,
+    poidsActuel,
+    pesees: poidsActuel
+      ? [{
+          date: todayStr(),
+          poids: poidsActuel
+        }]
+      : [],
+    alimentation: [],
+    photo: ""
+  };
+
+  appData.furets.push(nouveauFuret);
+
+  await saveData();
+
+  document.getElementById("furetNom").value = "";
+  document.getElementById("furetSexe").value = "";
+  document.getElementById("furetNaissance").value = "";
+  document.getElementById("furetPuce").value = "";
+  document.getElementById("furetPoids").value = "";
+
+  alert(`${nom} a bien été enregistré.`);
 }
 
 async function migrerDonneesComptePrincipal() {
