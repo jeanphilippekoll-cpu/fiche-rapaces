@@ -1180,193 +1180,479 @@ function renderActivityHistory() {
   const zone = document.getElementById("activityHistoryZone");
   if (!zone) return;
 
-  const mois = getActivityHistoryMonth();
+  const activites = safeArray(appData.activites);
 
-  const items = safeArray(appData.activites)
-    .filter((a) => (a.date || "").slice(0, 7) === mois)
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (!activites.length) {
+    zone.innerHTML = `
+      <p class="muted-line">
+        Aucune activité enregistrée.
+      </p>
+    `;
+    return;
+  }
 
-  const [annee, numeroMois] = mois.split("-");
 
-  const nomsMois = [
-    "",
-    "Janvier",
-    "Février",
-    "Mars",
-    "Avril",
-    "Mai",
-    "Juin",
-    "Juillet",
-    "Août",
-    "Septembre",
-    "Octobre",
-    "Novembre",
-    "Décembre"
-  ];
+  // ==========================================
+  // REGROUPEMENT DES ACTIVITÉS PAR MOIS
+  // ==========================================
 
-  const titreMois =
-    `${nomsMois[toNumber(numeroMois)] || ""} ${annee || ""}`;
+  const groupesParMois = {};
+
+  activites.forEach((a) => {
+    if (!a.date) return;
+
+    const mois = a.date.slice(0, 7);
+
+    if (!groupesParMois[mois]) {
+      groupesParMois[mois] = [];
+    }
+
+    groupesParMois[mois].push(a);
+  });
+
+
+  const moisTries = Object.keys(groupesParMois)
+    .sort((a, b) => b.localeCompare(a));
+
+  const moisActuel = todayStr().slice(0, 7);
 
 
   zone.innerHTML = `
-    <div class="card-section">
+    <div style="
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    ">
 
-      <div
-        style="
-          display:flex;
-          align-items:end;
-          gap:12px;
-          flex-wrap:wrap;
-          margin-bottom:16px;
-        "
-      >
+      ${moisTries.map((mois) => {
 
-        <div style="min-width:220px;">
-          <label for="activityHistoryMonth">
-            📅 Mois de l'historique
-          </label>
+        const items = groupesParMois[mois]
+          .slice()
+          .sort((a, b) =>
+            (b.date || "").localeCompare(a.date || "")
+          );
 
-          <input
-            id="activityHistoryMonth"
-            type="month"
-            value="${safeAttr(mois)}"
-            onchange="renderActivityHistory()"
+
+        return `
+          <details
+            class="card-section"
+            ${mois === moisActuel ? "open" : ""}
+            style="
+              margin:0;
+              padding:0;
+              overflow:hidden;
+            "
           >
-        </div>
 
-        <div style="padding-bottom:12px;">
-          <strong>
-            ${safe(titreMois)}
-          </strong><br>
+            <summary style="
+              cursor:pointer;
+              padding:16px 18px;
+              font-weight:800;
+              font-size:17px;
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:12px;
+              flex-wrap:wrap;
+            ">
 
-          <small>
-            ${items.length} activité${items.length > 1 ? "s" : ""}
-          </small>
-        </div>
+              <span>
+                📅 ${safe(getNomMoisHistorique(mois))}
+              </span>
 
-      </div>
+              <span style="
+                display:flex;
+                align-items:center;
+                gap:10px;
+                flex-wrap:wrap;
+              ">
 
-      ${
-        !items.length
-          ? `
-            <p class="muted-line">
-              Aucune activité enregistrée pour ${safe(titreMois)}.
-            </p>
-          `
-          : `
-            <div class="feed-table-wrap">
+                <small style="font-weight:600;">
+                  ${items.length}
+                  activité${items.length > 1 ? "s" : ""}
+                </small>
 
-              <table class="feed-table simple-table">
+                <button
+                  type="button"
+                  class="btn info-btn"
+                  onclick="
+                    event.preventDefault();
+                    event.stopPropagation();
+                    imprimerActivitesMois('${safeAttr(mois)}');
+                  "
+                >
+                  🖨️ Imprimer le mois
+                </button>
 
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Oiseau</th>
-                    <th>Activité</th>
-                    <th>Attitude</th>
-                    <th>Durée</th>
-                    <th>Rappels</th>
-                    <th>Remarque</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
+              </span>
 
-                <tbody>
+            </summary>
 
-                  ${items.map((a) => `
+
+            <div style="padding:0 14px 14px 14px;">
+
+              <div class="feed-table-wrap">
+
+                <table class="feed-table simple-table">
+
+                  <thead>
+
                     <tr>
+                      <th>Date</th>
+                      <th>Oiseau</th>
+                      <th>Activité</th>
+                      <th>Attitude</th>
+                      <th>Durée</th>
+                      <th>Rappels</th>
+                      <th>Remarque</th>
+                      <th>Actions</th>
+                    </tr>
 
-                      <td>
-                        ${safe(formatDateFR(a.date))}
-                      </td>
+                  </thead>
 
-                      <td>
-                        <strong>${safe(a.oiseau)}</strong>
-                      </td>
 
-                      <td>
-                        ${safe(
-                          getActivityTypeLabel(
-                            a.type,
-                            a.autreType
-                          )
-                        )}
-                      </td>
+                  <tbody>
 
-                      <td>
-                        ${safe(
-                          getActivityEvaluationLabel(
-                            a.evaluation
-                          )
-                        )}
-                      </td>
+                    ${items.map((a) => `
+                      <tr>
 
-                      <td>
-                        ${
-                          toNumber(a.duree) > 0
-                            ? `${toNumber(a.duree)} min`
-                            : "—"
-                        }
-                      </td>
+                        <td>
+                          ${safe(formatDateFR(a.date))}
+                        </td>
 
-                      <td>
-                        ${
-                          toNumber(a.rappels) > 0
-                            ? toNumber(a.rappels)
-                            : "—"
-                        }
-                      </td>
+                        <td>
+                          <strong>
+                            ${safe(a.oiseau || "—")}
+                          </strong>
+                        </td>
 
-                      <td>
-                        ${safe(a.remarque || "—")}
-                      </td>
+                        <td>
+                          ${safe(
+                            getActivityTypeLabel(
+                              a.type,
+                              a.autreType
+                            )
+                          )}
+                        </td>
 
-                      <td>
-                        <div
-                          style="
+                        <td>
+                          ${safe(
+                            getActivityEvaluationLabel(
+                              a.evaluation
+                            )
+                          )}
+                        </td>
+
+                        <td>
+                          ${
+                            toNumber(a.duree) > 0
+                              ? `${toNumber(a.duree)} min`
+                              : "—"
+                          }
+                        </td>
+
+                        <td>
+                          ${
+                            toNumber(a.rappels) > 0
+                              ? toNumber(a.rappels)
+                              : "—"
+                          }
+                        </td>
+
+                        <td>
+                          ${safe(a.remarque || "—")}
+                        </td>
+
+                        <td>
+
+                          <div style="
                             display:flex;
                             gap:6px;
                             flex-wrap:wrap;
-                          "
-                        >
+                          ">
 
-                          <button
-                            type="button"
-                            class="btn info-btn"
-                            onclick="modifierActivite(
-                              '${safeAttr(a.id)}'
-                            )"
-                          >
-                            ✏️ Modifier
-                          </button>
+                            <button
+                              type="button"
+                              class="btn info-btn"
+                              onclick="modifierActivite('${safeAttr(a.id)}')"
+                            >
+                              ✏️ Modifier
+                            </button>
 
-                          <button
-                            type="button"
-                            class="btn btn-danger"
-                            onclick="supprimerActivite(
-                              '${safeAttr(a.id)}'
-                            )"
-                          >
-                            🗑️
-                          </button>
+                            <button
+                              type="button"
+                              class="btn btn-danger"
+                              onclick="supprimerActivite('${safeAttr(a.id)}')"
+                            >
+                              🗑️
+                            </button>
 
-                        </div>
-                      </td>
+                          </div>
 
-                    </tr>
-                  `).join("")}
+                        </td>
 
-                </tbody>
+                      </tr>
+                    `).join("")}
 
-              </table>
+                  </tbody>
+
+                </table>
+
+              </div>
 
             </div>
-          `
-      }
+
+          </details>
+        `;
+
+      }).join("")}
 
     </div>
   `;
 }
+
+// ======================================================
+// 🖨️ IMPRESSION DES ACTIVITÉS D'UN MOIS
+// ======================================================
+
+function imprimerActivitesMois(mois) {
+
+  const items = safeArray(appData.activites)
+    .filter((a) =>
+      (a.date || "").slice(0, 7) === mois
+    )
+    .sort((a, b) => {
+
+      const dateCompare =
+        (a.date || "").localeCompare(b.date || "");
+
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+
+      return (a.oiseau || "")
+        .localeCompare(b.oiseau || "");
+    });
+
+
+  if (!items.length) {
+    alert("Aucune activité pour ce mois.");
+    return;
+  }
+
+
+  const rows = items.map((a) => `
+    <tr>
+
+      <td>
+        ${safe(formatDateFR(a.date))}
+      </td>
+
+      <td>
+        ${safe(a.oiseau || "—")}
+      </td>
+
+      <td>
+        ${safe(
+          getActivityTypeLabel(
+            a.type,
+            a.autreType
+          )
+        )}
+      </td>
+
+      <td>
+        ${safe(
+          getActivityEvaluationLabel(
+            a.evaluation
+          )
+        )}
+      </td>
+
+      <td>
+        ${
+          toNumber(a.duree) > 0
+            ? `${toNumber(a.duree)} min`
+            : "—"
+        }
+      </td>
+
+      <td>
+        ${
+          toNumber(a.rappels) > 0
+            ? toNumber(a.rappels)
+            : "—"
+        }
+      </td>
+
+      <td>
+        ${safe(a.remarque || "—")}
+      </td>
+
+    </tr>
+  `).join("");
+
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert(
+      "Le navigateur bloque la fenêtre d'impression."
+    );
+    return;
+  }
+
+
+  win.document.write(`
+    <!DOCTYPE html>
+
+    <html lang="fr">
+
+      <head>
+
+        <meta charset="UTF-8">
+
+        <title>
+          Activités - ${safe(getNomMoisHistorique(mois))}
+        </title>
+
+        <style>
+
+          body {
+            font-family:Arial,Helvetica,sans-serif;
+            color:#111;
+            background:#fff;
+            padding:20px;
+          }
+
+          h1 {
+            margin-bottom:5px;
+          }
+
+          .subtitle {
+            margin-bottom:20px;
+          }
+
+          table {
+            width:100%;
+            border-collapse:collapse;
+            font-size:11px;
+          }
+
+          th,
+          td {
+            border:1px solid #bbb;
+            padding:6px;
+            text-align:left;
+            vertical-align:top;
+          }
+
+          th {
+            background:#eee;
+          }
+
+          tr {
+            break-inside:avoid;
+          }
+
+          .top-actions {
+            margin-bottom:18px;
+          }
+
+          button {
+            padding:10px 15px;
+            border:0;
+            border-radius:7px;
+            background:#333;
+            color:#fff;
+            font-weight:bold;
+            cursor:pointer;
+          }
+
+          @media print {
+
+            @page {
+              size:A4 landscape;
+              margin:10mm;
+            }
+
+            .top-actions {
+              display:none;
+            }
+
+            body {
+              padding:0;
+            }
+
+          }
+
+        </style>
+
+      </head>
+
+
+      <body>
+
+        <div class="top-actions">
+
+          <button onclick="window.print()">
+            🖨️ Imprimer / PDF
+          </button>
+
+        </div>
+
+
+        <h1>
+          Historique des activités
+        </h1>
+
+        <div class="subtitle">
+
+          <strong>
+            ${safe(getNomMoisHistorique(mois))}
+          </strong>
+
+          — ${items.length}
+          activité${items.length > 1 ? "s" : ""}
+
+        </div>
+
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Date</th>
+              <th>Oiseau</th>
+              <th>Activité</th>
+              <th>Attitude</th>
+              <th>Durée</th>
+              <th>Rappels</th>
+              <th>Remarque</th>
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+
+      </body>
+
+    </html>
+  `);
+
+
+  win.document.close();
+}
+
+
+window.imprimerActivitesMois =
+  imprimerActivitesMois;
 
 
 async function supprimerActivite(id) {
@@ -3349,54 +3635,416 @@ function partagerFicheOiseau(id) {
     .catch(() => alert("Impossible de partager automatiquement sur cet appareil."));
 }
 
-function renderPoidsChart(historique) {
+function renderPoidsChart(historique, bird = null) {
+
   const data = safeArray(historique)
-    .filter((h) => h.date && h.poids)
+    .filter((h) =>
+      h.date &&
+      h.poids !== "" &&
+      h.poids !== null &&
+      h.poids !== undefined
+    )
     .map((h) => ({
       date: h.date,
       poids: toNumber(h.poids)
     }))
-    .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    .sort((a, b) =>
+      (a.date || "").localeCompare(b.date || "")
+    );
+
 
   if (data.length < 2) {
-    return `<p class="small">Pas assez de données pour afficher une courbe.</p>`;
+    return `
+      <p class="small">
+        Pas assez de données pour afficher une courbe.
+      </p>
+    `;
   }
 
+
   const width = 700;
-  const height = 260;
-  const padding = 40;
+  const height = 280;
+
+  const paddingLeft = 55;
+  const paddingRight = 35;
+  const paddingTop = 35;
+  const paddingBottom = 45;
+
+
+  // ==========================================
+  // POIDS DE VOL IDÉAL
+  // ==========================================
+
+  const poidsVol = bird
+    ? toNumber(bird.poidsVol)
+    : 0;
+
+
+  // ==========================================
+  // CALCUL MIN / MAX
+  // ==========================================
 
   const poidsValues = data.map((d) => d.poids);
-  const min = Math.min(...poidsValues);
-  const max = Math.max(...poidsValues);
+
+  if (poidsVol > 0) {
+    poidsValues.push(poidsVol);
+  }
+
+
+  let min = Math.min(...poidsValues);
+  let max = Math.max(...poidsValues);
+
+
+  // Petite marge visuelle autour de la courbe
+
+  let marge = Math.max(
+    5,
+    Math.round((max - min) * 0.15)
+  );
+
+
+  min -= marge;
+  max += marge;
+
+
   const range = max - min || 1;
 
+
+  // ==========================================
+  // CONVERSION EN COORDONNÉES SVG
+  // ==========================================
+
   const points = data.map((d, i) => {
-    const x = padding + (i * (width - padding * 2)) / (data.length - 1);
-    const y = height - padding - ((d.poids - min) / range) * (height - padding * 2);
-    return { ...d, x, y };
+
+    const x =
+      paddingLeft +
+      (
+        i *
+        (width - paddingLeft - paddingRight)
+      ) /
+      (data.length - 1);
+
+
+    const y =
+      height -
+      paddingBottom -
+      (
+        (d.poids - min) /
+        range
+      ) *
+      (
+        height -
+        paddingTop -
+        paddingBottom
+      );
+
+
+    return {
+      ...d,
+      x,
+      y
+    };
+
   });
 
-  const polyline = points.map((p) => `${p.x},${p.y}`).join(" ");
+
+  const polyline = points
+    .map((p) => `${p.x},${p.y}`)
+    .join(" ");
+
+
+  // ==========================================
+  // LIGNE DU POIDS DE VOL
+  // ==========================================
+
+  let lignePoidsVol = "";
+
+
+  if (poidsVol > 0) {
+
+    const yPoidsVol =
+      height -
+      paddingBottom -
+      (
+        (poidsVol - min) /
+        range
+      ) *
+      (
+        height -
+        paddingTop -
+        paddingBottom
+      );
+
+
+    lignePoidsVol = `
+
+      <line
+        x1="${paddingLeft}"
+        y1="${yPoidsVol}"
+        x2="${width - paddingRight}"
+        y2="${yPoidsVol}"
+        stroke="#c0392b"
+        stroke-width="2"
+        stroke-dasharray="8 6"
+      />
+
+      <text
+        x="${width - paddingRight}"
+        y="${yPoidsVol - 7}"
+        text-anchor="end"
+        font-size="12"
+        font-weight="700"
+        fill="#c0392b"
+      >
+        🎯 Poids de vol : ${poidsVol} g
+      </text>
+
+    `;
+
+  }
+
+
+  // ==========================================
+  // VALEURS AFFICHÉES
+  // Maximum environ 7 valeurs
+  // ==========================================
+
+  const pasEtiquette = Math.max(
+    1,
+    Math.ceil(data.length / 7)
+  );
+
+
+  const pointsHtml = points.map((p, index) => {
+
+    const afficherValeur =
+      index === 0 ||
+      index === points.length - 1 ||
+      index % pasEtiquette === 0;
+
+
+    return `
+
+      <g>
+
+        <circle
+          cx="${p.x}"
+          cy="${p.y}"
+          r="5"
+          fill="#2f4f2f"
+        >
+
+          <title>
+            ${safe(formatDateFR(p.date))} — ${p.poids} g
+          </title>
+
+        </circle>
+
+
+        ${
+          afficherValeur
+
+            ? `
+              <text
+                x="${p.x}"
+                y="${p.y - 11}"
+                font-size="11"
+                font-weight="700"
+                text-anchor="middle"
+                fill="#333"
+              >
+                ${p.poids} g
+              </text>
+            `
+
+            : ""
+        }
+
+      </g>
+
+    `;
+
+  }).join("");
+
+
+  // ==========================================
+  // DERNIER POIDS / ÉCART
+  // ==========================================
+
+  const dernierPoids =
+    data[data.length - 1].poids;
+
+
+  const ecart =
+    poidsVol > 0
+      ? dernierPoids - poidsVol
+      : null;
+
+
+  const resume = `
+
+    <div style="
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-top:8px;
+      font-size:13px;
+      font-weight:700;
+    ">
+
+      <span>
+        ⚖️ Dernier :
+        ${safe(dernierPoids)} g
+      </span>
+
+
+      ${
+        poidsVol > 0
+
+          ? `
+            <span>
+              🎯 Poids de vol :
+              ${safe(poidsVol)} g
+            </span>
+
+            <span>
+              📊 Écart :
+              ${ecart > 0 ? "+" : ""}
+              ${safe(ecart)} g
+            </span>
+          `
+
+          : ""
+      }
+
+    </div>
+
+  `;
+
+
+  // ==========================================
+  // AFFICHAGE
+  // ==========================================
 
   return `
-    <svg width="100%" viewBox="0 0 ${width} ${height}" style="border:1px solid #ccc;border-radius:10px;background:#fff;">
-      <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" stroke="#999"/>
-      <line x1="${padding}" y1="${padding}" x2="${padding}" y2="${height - padding}" stroke="#999"/>
 
-      <polyline points="${polyline}" fill="none" stroke="#2f4f2f" stroke-width="3"/>
+    <div>
 
-      ${points.map((p) => `
-        <circle cx="${p.x}" cy="${p.y}" r="5" fill="#2f4f2f"/>
-        <text x="${p.x}" y="${p.y - 10}" font-size="12" text-anchor="middle">${p.poids}g</text>
-      `).join("")}
+      <svg
+        width="100%"
+        viewBox="0 0 ${width} ${height}"
+        style="
+          border:1px solid #ccc;
+          border-radius:10px;
+          background:#fff;
+        "
+      >
 
-      <text x="${padding}" y="${height - 10}" font-size="12">${safe(formatDateFR(data[0].date))}</text>
-      <text x="${width - padding}" y="${height - 10}" font-size="12" text-anchor="end">${safe(formatDateFR(data[data.length - 1].date))}</text>
+        <!-- Axe horizontal -->
 
-      <text x="${padding}" y="${padding - 12}" font-size="12">${max}g</text>
-      <text x="${padding}" y="${height - padding + 18}" font-size="12">${min}g</text>
-    </svg>
+        <line
+          x1="${paddingLeft}"
+          y1="${height - paddingBottom}"
+          x2="${width - paddingRight}"
+          y2="${height - paddingBottom}"
+          stroke="#999"
+        />
+
+
+        <!-- Axe vertical -->
+
+        <line
+          x1="${paddingLeft}"
+          y1="${paddingTop}"
+          x2="${paddingLeft}"
+          y2="${height - paddingBottom}"
+          stroke="#999"
+        />
+
+
+        <!-- Poids maximum -->
+
+        <text
+          x="${paddingLeft - 8}"
+          y="${paddingTop + 4}"
+          font-size="11"
+          text-anchor="end"
+          fill="#555"
+        >
+          ${max} g
+        </text>
+
+
+        <!-- Poids minimum -->
+
+        <text
+          x="${paddingLeft - 8}"
+          y="${height - paddingBottom + 4}"
+          font-size="11"
+          text-anchor="end"
+          fill="#555"
+        >
+          ${min} g
+        </text>
+
+
+        <!-- Ligne poids de vol -->
+
+        ${lignePoidsVol}
+
+
+        <!-- Courbe -->
+
+        <polyline
+          points="${polyline}"
+          fill="none"
+          stroke="#2f4f2f"
+          stroke-width="3"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+        />
+
+
+        <!-- Points -->
+
+        ${pointsHtml}
+
+
+        <!-- Première date -->
+
+        <text
+          x="${paddingLeft}"
+          y="${height - 15}"
+          font-size="11"
+          fill="#555"
+        >
+          ${safe(formatDateFR(data[0].date))}
+        </text>
+
+
+        <!-- Dernière date -->
+
+        <text
+          x="${width - paddingRight}"
+          y="${height - 15}"
+          font-size="11"
+          text-anchor="end"
+          fill="#555"
+        >
+          ${safe(
+            formatDateFR(
+              data[data.length - 1].date
+            )
+          )}
+        </text>
+
+
+      </svg>
+
+
+      ${resume}
+
+    </div>
   `;
 }
 
@@ -3971,7 +4619,7 @@ const ficheHtml = `
       }
 
       <h2>Courbe d'évolution du poids</h2>
-       ${renderPoidsChart(bird.historiquePoids)}
+      ${renderPoidsChart(getBirdWeightHistory(bird), bird)}
 
       <h2>Historique des poids</h2>
       ${
@@ -4286,13 +4934,553 @@ function renderArchivesOiseaux() {
 function renderPesees() {
   const zone = document.getElementById("listePesees");
   if (!zone) return;
-  zone.innerHTML = `
-  <p class="muted-line">Les poids sont enregistrés directement dans la fiche de chaque oiseau.</p>
-  <div id="tableauPoidsGlobal"></div>
-`;
 
-renderTableauPoidsGlobal();
+
+  // ==========================================
+  // HISTORIQUE COMPLET DES PESÉES
+  // ==========================================
+
+  const toutesLesPesees = [];
+
+  getSortedBirds(getActiveBirds()).forEach((bird) => {
+
+    const historique = getBirdWeightHistory(bird);
+
+    historique.forEach((p) => {
+
+      toutesLesPesees.push({
+        date: p.date || "",
+        nom: bird.nom || "",
+        espece: bird.espece || "",
+        poids: toNumber(p.poids),
+        poidsVol: toNumber(bird.poidsVol),
+        tolerance: toNumber(bird.toleranceVol)
+      });
+
+    });
+
+  });
+
+
+  const groupesParMois = {};
+
+  toutesLesPesees.forEach((p) => {
+
+    if (!p.date) return;
+
+    const mois = p.date.slice(0, 7);
+
+    if (!groupesParMois[mois]) {
+      groupesParMois[mois] = [];
+    }
+
+    groupesParMois[mois].push(p);
+
+  });
+
+
+  const moisTries = Object.keys(groupesParMois)
+    .sort((a, b) => b.localeCompare(a));
+
+  const moisActuel = todayStr().slice(0, 7);
+
+
+  zone.innerHTML = `
+
+    <div class="card-section">
+
+      <h3>⚖️ État actuel des poids</h3>
+
+      <p class="muted-line">
+        Dernier poids enregistré de chaque oiseau
+        comparé à son poids de vol.
+      </p>
+
+      <div id="tableauPoidsGlobal"></div>
+
+    </div>
+
+
+    <div class="card-section">
+
+      <h3>📅 Historique des pesées</h3>
+
+      ${
+        !moisTries.length
+
+          ? `
+            <p class="muted-line">
+              Aucune pesée enregistrée.
+            </p>
+          `
+
+          : `
+
+            <div style="
+              display:flex;
+              flex-direction:column;
+              gap:12px;
+            ">
+
+              ${moisTries.map((mois) => {
+
+                const items = groupesParMois[mois]
+                  .slice()
+                  .sort((a, b) => {
+
+                    const dateCompare =
+                      (b.date || "")
+                        .localeCompare(a.date || "");
+
+                    if (dateCompare !== 0) {
+                      return dateCompare;
+                    }
+
+                    return (a.nom || "")
+                      .localeCompare(b.nom || "");
+                  });
+
+
+                return `
+
+                  <details
+                    class="card-section"
+                    ${mois === moisActuel ? "open" : ""}
+                    style="
+                      margin:0;
+                      padding:0;
+                      overflow:hidden;
+                    "
+                  >
+
+                    <summary style="
+                      cursor:pointer;
+                      padding:16px 18px;
+                      font-weight:800;
+                      font-size:17px;
+                      display:flex;
+                      justify-content:space-between;
+                      align-items:center;
+                      gap:12px;
+                      flex-wrap:wrap;
+                    ">
+
+                      <span>
+                        ⚖️ ${safe(getNomMoisHistorique(mois))}
+                      </span>
+
+
+                      <span style="
+                        display:flex;
+                        gap:10px;
+                        align-items:center;
+                        flex-wrap:wrap;
+                      ">
+
+                        <small style="font-weight:600;">
+                          ${items.length}
+                          pesée${items.length > 1 ? "s" : ""}
+                        </small>
+
+
+                        <button
+                          type="button"
+                          class="btn info-btn"
+                          onclick="
+                            event.preventDefault();
+                            event.stopPropagation();
+                            imprimerPeseesMois('${safeAttr(mois)}');
+                          "
+                        >
+                          🖨️ Imprimer le mois
+                        </button>
+
+                      </span>
+
+                    </summary>
+
+
+                    <div style="padding:0 14px 14px 14px;">
+
+                      <div class="feed-table-wrap">
+
+                        <table class="feed-table simple-table">
+
+                          <thead>
+
+                            <tr>
+                              <th>Date</th>
+                              <th>Oiseau</th>
+                              <th>Poids</th>
+                              <th>Poids de vol</th>
+                              <th>Écart</th>
+                            </tr>
+
+                          </thead>
+
+
+                          <tbody>
+
+                            ${items.map((p) => {
+
+                              const ecart =
+                                p.poidsVol > 0
+                                  ? p.poids - p.poidsVol
+                                  : null;
+
+
+                              return `
+
+                                <tr>
+
+                                  <td>
+                                    ${safe(formatDateFR(p.date))}
+                                  </td>
+
+                                  <td>
+                                    <strong>
+                                      ${safe(p.nom || "—")}
+                                    </strong>
+
+                                    ${
+                                      p.espece
+                                        ? `<br><small>${safe(p.espece)}</small>`
+                                        : ""
+                                    }
+                                  </td>
+
+                                  <td>
+                                    <strong>
+                                      ${safe(p.poids)} g
+                                    </strong>
+                                  </td>
+
+                                  <td>
+                                    ${
+                                      p.poidsVol > 0
+                                        ? `${safe(p.poidsVol)} g`
+                                        : "—"
+                                    }
+                                  </td>
+
+                                  <td>
+                                    ${
+                                      ecart !== null
+                                        ? `${ecart > 0 ? "+" : ""}${safe(ecart)} g`
+                                        : "—"
+                                    }
+                                  </td>
+
+                                </tr>
+
+                              `;
+
+                            }).join("")}
+
+                          </tbody>
+
+                        </table>
+
+                      </div>
+
+                    </div>
+
+                  </details>
+
+                `;
+
+              }).join("")}
+
+            </div>
+
+          `
+      }
+
+    </div>
+  `;
+
+
+  renderTableauPoidsGlobal();
 }
+
+
+// ======================================================
+// 🖨️ IMPRESSION DES PESÉES D'UN MOIS
+// ======================================================
+
+function imprimerPeseesMois(mois) {
+
+  const items = [];
+
+
+  getSortedBirds(getActiveBirds()).forEach((bird) => {
+
+    getBirdWeightHistory(bird)
+      .filter((p) =>
+        (p.date || "").slice(0, 7) === mois
+      )
+      .forEach((p) => {
+
+        items.push({
+          date: p.date || "",
+          nom: bird.nom || "",
+          espece: bird.espece || "",
+          poids: toNumber(p.poids),
+          poidsVol: toNumber(bird.poidsVol)
+        });
+
+      });
+
+  });
+
+
+  items.sort((a, b) => {
+
+    const dateCompare =
+      (a.date || "").localeCompare(b.date || "");
+
+    if (dateCompare !== 0) {
+      return dateCompare;
+    }
+
+    return (a.nom || "")
+      .localeCompare(b.nom || "");
+
+  });
+
+
+  if (!items.length) {
+
+    alert("Aucune pesée pour ce mois.");
+
+    return;
+
+  }
+
+
+  const rows = items.map((p) => {
+
+    const ecart =
+      p.poidsVol > 0
+        ? p.poids - p.poidsVol
+        : null;
+
+
+    return `
+
+      <tr>
+
+        <td>
+          ${safe(formatDateFR(p.date))}
+        </td>
+
+        <td>
+          ${safe(p.nom || "—")}
+        </td>
+
+        <td>
+          ${safe(p.espece || "—")}
+        </td>
+
+        <td>
+          ${safe(p.poids)} g
+        </td>
+
+        <td>
+          ${
+            p.poidsVol > 0
+              ? `${safe(p.poidsVol)} g`
+              : "—"
+          }
+        </td>
+
+        <td>
+          ${
+            ecart !== null
+              ? `${ecart > 0 ? "+" : ""}${safe(ecart)} g`
+              : "—"
+          }
+        </td>
+
+      </tr>
+
+    `;
+
+  }).join("");
+
+
+  const win = window.open("", "_blank");
+
+
+  if (!win) {
+
+    alert(
+      "Le navigateur bloque la fenêtre d'impression."
+    );
+
+    return;
+
+  }
+
+
+  win.document.write(`
+
+    <!DOCTYPE html>
+
+    <html lang="fr">
+
+      <head>
+
+        <meta charset="UTF-8">
+
+        <title>
+          Pesées - ${safe(getNomMoisHistorique(mois))}
+        </title>
+
+
+        <style>
+
+          body {
+            font-family:Arial,Helvetica,sans-serif;
+            color:#111;
+            background:#fff;
+            padding:20px;
+          }
+
+          h1 {
+            margin-bottom:5px;
+          }
+
+          .subtitle {
+            margin-bottom:20px;
+          }
+
+          table {
+            width:100%;
+            border-collapse:collapse;
+            font-size:12px;
+          }
+
+          th,
+          td {
+            border:1px solid #bbb;
+            padding:7px;
+            text-align:left;
+            vertical-align:top;
+          }
+
+          th {
+            background:#eee;
+          }
+
+          tr {
+            break-inside:avoid;
+          }
+
+          .top-actions {
+            margin-bottom:18px;
+          }
+
+          button {
+            padding:10px 15px;
+            border:0;
+            border-radius:7px;
+            background:#333;
+            color:#fff;
+            font-weight:bold;
+            cursor:pointer;
+          }
+
+
+          @media print {
+
+            @page {
+              size:A4 portrait;
+              margin:10mm;
+            }
+
+            .top-actions {
+              display:none;
+            }
+
+            body {
+              padding:0;
+            }
+
+          }
+
+        </style>
+
+      </head>
+
+
+      <body>
+
+
+        <div class="top-actions">
+
+          <button onclick="window.print()">
+            🖨️ Imprimer / PDF
+          </button>
+
+        </div>
+
+
+        <h1>
+          Historique des pesées
+        </h1>
+
+
+        <div class="subtitle">
+
+          <strong>
+            ${safe(getNomMoisHistorique(mois))}
+          </strong>
+
+          — ${items.length}
+          pesée${items.length > 1 ? "s" : ""}
+
+        </div>
+
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Date</th>
+              <th>Oiseau</th>
+              <th>Espèce</th>
+              <th>Poids</th>
+              <th>Poids de vol</th>
+              <th>Écart</th>
+            </tr>
+
+          </thead>
+
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+
+      </body>
+
+    </html>
+
+  `);
+
+
+  win.document.close();
+
+}
+
+
+window.imprimerPeseesMois =
+  imprimerPeseesMois;
+
 
 function renderTableauPoidsGlobal() {
   const zone = document.getElementById("tableauPoidsGlobal");
@@ -4579,88 +5767,556 @@ function imprimerFicheNourrissage() {
   win.document.close();
 }
 
+function getNomMoisHistorique(mois) {
+  const noms = [
+    "Janvier",
+    "Février",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Août",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Décembre"
+  ];
+
+  const [annee, numero] = (mois || "").split("-");
+
+  return `${noms[toNumber(numero) - 1] || ""} ${annee || ""}`.trim();
+}
+
+
 function renderNourrissageHistory() {
   const zone = document.getElementById("listeNourrissage");
   if (!zone) return;
 
-  if (!appData.nourrissage.length) {
-    zone.innerHTML = `<p class="muted-line">Aucun nourrissage.</p>`;
+  const nourrissages = safeArray(appData.nourrissage);
+
+  if (!nourrissages.length) {
+    zone.innerHTML = `
+      <p class="muted-line">
+        Aucun nourrissage.
+      </p>
+    `;
     return;
   }
 
-  const groupesParDate = {};
 
-  appData.nourrissage.forEach((item) => {
+  // ==========================================
+  // REGROUPEMENT PAR MOIS PUIS PAR JOUR
+  // ==========================================
+
+  const groupesParMois = {};
+
+  nourrissages.forEach((item) => {
     const date = item.date || "";
-    if (!groupesParDate[date]) groupesParDate[date] = [];
-    groupesParDate[date].push(item);
+
+    if (!date) return;
+
+    const mois = date.slice(0, 7);
+
+    if (!groupesParMois[mois]) {
+      groupesParMois[mois] = {};
+    }
+
+    if (!groupesParMois[mois][date]) {
+      groupesParMois[mois][date] = [];
+    }
+
+    groupesParMois[mois][date].push(item);
   });
 
-  const datesTriees = Object.keys(groupesParDate).sort((a, b) => b.localeCompare(a));
+
+  const moisTries = Object.keys(groupesParMois)
+    .sort((a, b) => b.localeCompare(a));
+
+  const moisActuel = todayStr().slice(0, 7);
+
 
   zone.innerHTML = `
     <div class="card-section">
+
       <h3>Historique des nourrissages</h3>
 
-      <div class="list-grid">
-        ${datesTriees.map((date) => {
-          const items = groupesParDate[date];
-          const total = items.reduce((sum, item) => sum + toNumber(item.quantite), 0);
+      <div style="
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+      ">
+
+        ${moisTries.map((mois) => {
+
+          const jours = groupesParMois[mois];
+
+          const datesTriees = Object.keys(jours)
+            .sort((a, b) => b.localeCompare(a));
+
+          const nbNourrissages = datesTriees.reduce(
+            (total, date) =>
+              total + jours[date].length,
+            0
+          );
+
 
           return `
-            <div class="item">
-              <h3>${safe(formatDateFR(date || ""))}</h3>
+            <details
+              class="card-section"
+              ${mois === moisActuel ? "open" : ""}
+              style="
+                margin:0;
+                padding:0;
+                overflow:hidden;
+              "
+            >
 
-              <button class="btn secondary-btn" onclick="toggleNourrissageDate('${date}')">
-                Voir détail
-              </button>
+              <summary style="
+                cursor:pointer;
+                padding:16px 18px;
+                font-weight:800;
+                font-size:17px;
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:12px;
+                flex-wrap:wrap;
+              ">
 
-              <button class="btn info-btn" onclick="imprimerNourrissageDate('${date}')">
-               Imprimer ce jour
-              </button>
+                <span>
+                  📅 ${safe(getNomMoisHistorique(mois))}
+                </span>
 
-              <button
-  class="btn btn-danger"
-  onclick="supprimerJourNourrissage('${safeAttr(date)}')"
->
-  🗑️ Supprimer toute la journée
-</button>
+                <span style="
+                  display:flex;
+                  gap:10px;
+                  align-items:center;
+                  flex-wrap:wrap;
+                ">
 
-              <div id="detailNourrissage_${safeAttr(date)}" class="hidden" style="margin-top:12px;">
-                <div class="feed-table-wrap">
-                  <table class="feed-table">
-                    <thead>
-                      <tr>
-                        <th>Oiseau</th>
-                        <th>Nourriture</th>
-                        <th>Quantité</th>
-                        <th>Remarque</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${items
-                        .slice()
-                        .sort((a, b) => (a.oiseau || "").localeCompare(b.oiseau || ""))
-                        .map((item) => `
-                          <tr>
-                            <td>${safe(item.oiseau || "")}</td>
-                            <td>${safe(item.nourriture || "")}</td>
-                            <td>${safe(item.quantite || 0)}</td>
-                            <td>${safe(item.remarques || "")}</td>
-    
-                          </tr>
-                        `).join("")}
-                    </tbody>
-                  </table>
+                  <small style="font-weight:600;">
+                    ${datesTriees.length}
+                    jour${datesTriees.length > 1 ? "s" : ""}
+                  </small>
+
+                  <button
+                    type="button"
+                    class="btn info-btn"
+                    onclick="
+                      event.preventDefault();
+                      event.stopPropagation();
+                      imprimerNourrissageMois('${safeAttr(mois)}');
+                    "
+                  >
+                    🖨️ Imprimer le mois
+                  </button>
+
+                </span>
+
+              </summary>
+
+
+              <div style="padding:0 14px 14px 14px;">
+
+                <div class="list-grid">
+
+                  ${datesTriees.map((date) => {
+
+                    const items = jours[date];
+
+                    const total = items.reduce(
+                      (sum, item) =>
+                        sum + toNumber(item.quantite),
+                      0
+                    );
+
+
+                    return `
+                      <div class="item">
+
+                        <h3>
+                          ${safe(formatDateFR(date))}
+                        </h3>
+
+                        <p class="small">
+                          ${items.length}
+                          ligne${items.length > 1 ? "s" : ""}
+                          ·
+                          ${total} distribué${total > 1 ? "s" : ""}
+                        </p>
+
+
+                        <button
+                          class="btn secondary-btn"
+                          onclick="toggleNourrissageDate('${safeAttr(date)}')"
+                        >
+                          Voir détail
+                        </button>
+
+
+                        <button
+                          class="btn info-btn"
+                          onclick="imprimerNourrissageDate('${safeAttr(date)}')"
+                        >
+                          Imprimer ce jour
+                        </button>
+
+
+                        <button
+                          class="btn btn-danger"
+                          onclick="supprimerJourNourrissage('${safeAttr(date)}')"
+                        >
+                          🗑️ Supprimer toute la journée
+                        </button>
+
+
+                        <div
+                          id="detailNourrissage_${safeAttr(date)}"
+                          class="hidden"
+                          style="margin-top:12px;"
+                        >
+
+                          <div class="feed-table-wrap">
+
+                            <table class="feed-table">
+
+                              <thead>
+
+                                <tr>
+                                  <th>Oiseau</th>
+                                  <th>Nourriture</th>
+                                  <th>Quantité</th>
+                                  <th>Remarque</th>
+                                </tr>
+
+                              </thead>
+
+                              <tbody>
+
+                                ${items
+                                  .slice()
+                                  .sort((a, b) =>
+                                    (a.oiseau || "")
+                                      .localeCompare(b.oiseau || "")
+                                  )
+                                  .map((item) => `
+                                    <tr>
+
+                                      <td>
+                                        ${safe(item.oiseau || "")}
+                                      </td>
+
+                                      <td>
+                                        ${safe(item.nourriture || "")}
+                                      </td>
+
+                                      <td>
+                                        ${safe(item.quantite || 0)}
+                                      </td>
+
+                                      <td>
+                                        ${safe(item.remarques || "")}
+                                      </td>
+
+                                    </tr>
+                                  `).join("")}
+
+                              </tbody>
+
+                            </table>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+                    `;
+
+                  }).join("")}
+
                 </div>
+
               </div>
-            </div>
+
+            </details>
           `;
+
         }).join("")}
+
       </div>
+
     </div>
   `;
 }
+
+
+// ======================================================
+// 🖨️ IMPRESSION NOURRISSAGE D'UN MOIS COMPLET
+// ======================================================
+
+function imprimerNourrissageMois(mois) {
+
+  const items = safeArray(appData.nourrissage)
+    .filter((item) =>
+      (item.date || "").slice(0, 7) === mois
+    )
+    .sort((a, b) => {
+
+      const dateCompare =
+        (a.date || "").localeCompare(b.date || "");
+
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+
+      return (a.oiseau || "")
+        .localeCompare(b.oiseau || "");
+    });
+
+
+  if (!items.length) {
+    alert("Aucun nourrissage pour ce mois.");
+    return;
+  }
+
+
+  const groupesParDate = {};
+
+  items.forEach((item) => {
+
+    const date = item.date || "";
+
+    if (!groupesParDate[date]) {
+      groupesParDate[date] = [];
+    }
+
+    groupesParDate[date].push(item);
+
+  });
+
+
+  const dates = Object.keys(groupesParDate)
+    .sort((a, b) => a.localeCompare(b));
+
+
+  const contenu = dates.map((date) => {
+
+    const lignes = groupesParDate[date];
+
+    const total = lignes.reduce(
+      (sum, item) =>
+        sum + toNumber(item.quantite),
+      0
+    );
+
+
+    const rows = lignes.map((item) => `
+      <tr>
+
+        <td>
+          ${safe(item.oiseau || "-")}
+        </td>
+
+        <td>
+          ${safe(item.nourriture || "-")}
+        </td>
+
+        <td>
+          ${safe(item.quantite || 0)}
+        </td>
+
+        <td>
+          ${safe(item.remarques || "-")}
+        </td>
+
+      </tr>
+    `).join("");
+
+
+    return `
+      <section class="jour">
+
+        <h2>
+          ${safe(formatDateFR(date))}
+        </h2>
+
+        <table>
+
+          <thead>
+            <tr>
+              <th>Oiseau</th>
+              <th>Nourriture</th>
+              <th>Quantité</th>
+              <th>Remarque</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+        <div class="total">
+          Total distribué : ${total}
+        </div>
+
+      </section>
+    `;
+
+  }).join("");
+
+
+  const win = window.open("", "_blank");
+
+  if (!win) {
+    alert(
+      "Le navigateur bloque la fenêtre d'impression."
+    );
+    return;
+  }
+
+
+  win.document.write(`
+    <!DOCTYPE html>
+
+    <html lang="fr">
+
+      <head>
+
+        <meta charset="UTF-8">
+
+        <title>
+          Nourrissage - ${safe(getNomMoisHistorique(mois))}
+        </title>
+
+        <style>
+
+          body {
+            font-family:Arial,Helvetica,sans-serif;
+            color:#111;
+            background:#fff;
+            padding:20px;
+          }
+
+          h1 {
+            margin-bottom:5px;
+          }
+
+          .subtitle {
+            margin-bottom:22px;
+            font-size:15px;
+          }
+
+          .jour {
+            margin-bottom:25px;
+            break-inside:avoid;
+          }
+
+          .jour h2 {
+            font-size:16px;
+            margin-bottom:8px;
+            padding-bottom:5px;
+            border-bottom:2px solid #555;
+          }
+
+          table {
+            width:100%;
+            border-collapse:collapse;
+            font-size:12px;
+          }
+
+          th,
+          td {
+            border:1px solid #bbb;
+            padding:7px;
+            text-align:left;
+          }
+
+          th {
+            background:#eee;
+          }
+
+          .total {
+            margin-top:6px;
+            font-weight:bold;
+            font-size:12px;
+          }
+
+          .top-actions {
+            margin-bottom:18px;
+          }
+
+          button {
+            padding:10px 15px;
+            border:0;
+            border-radius:7px;
+            background:#333;
+            color:#fff;
+            font-weight:bold;
+            cursor:pointer;
+          }
+
+          @media print {
+
+            .top-actions {
+              display:none;
+            }
+
+            body {
+              padding:0;
+            }
+
+          }
+
+        </style>
+
+      </head>
+
+
+      <body>
+
+        <div class="top-actions">
+
+          <button onclick="window.print()">
+            🖨️ Imprimer / PDF
+          </button>
+
+        </div>
+
+
+        <h1>
+          Historique des nourrissages
+        </h1>
+
+        <div class="subtitle">
+
+          <strong>
+            ${safe(getNomMoisHistorique(mois))}
+          </strong>
+
+          — ${dates.length}
+          jour${dates.length > 1 ? "s" : ""}
+
+        </div>
+
+
+        ${contenu}
+
+
+      </body>
+
+    </html>
+  `);
+
+
+  win.document.close();
+}
+
+
+window.imprimerNourrissageMois =
+  imprimerNourrissageMois;
 
 function supprimerJourNourrissage(date) {
   const items = safeArray(appData.nourrissage).filter(
@@ -7984,6 +9640,13 @@ function renderFurets() {
                 class="btn"
                 onclick="supprimerFuret('${safeAttr(furet.id)}')"
               >
+              <button
+  type="button"
+  class="btn info-btn"
+  onclick="imprimerFicheFuret('${safeAttr(furet.id)}')"
+>
+  🖨️ Fiche
+</button>
                 🗑️ Supprimer
               </button>
 
