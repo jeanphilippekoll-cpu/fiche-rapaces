@@ -1396,104 +1396,150 @@ function modifierActivite(id) {
   const activite = safeArray(appData.activites)
     .find((a) => a.id === id);
 
-  if (!activite) return;
-
-  const type = prompt(
-    "Type d'activité :\n\n" +
-    "animation = Animation\n" +
-    "vol = Entraînement / Vol\n" +
-    "repos = Repos\n" +
-    "convalescence = Convalescence / Blessé\n" +
-    "autre = Autre",
-    activite.type || ""
-  );
-
-  if (type === null) return;
-
-  const typesAutorises = [
-    "animation",
-    "vol",
-    "repos",
-    "convalescence",
-    "autre"
-  ];
-
-  const nouveauType = type.trim().toLowerCase();
-
-  if (!typesAutorises.includes(nouveauType)) {
-    alert("Type d'activité non reconnu.");
+  if (!activite) {
+    alert("Activité introuvable.");
     return;
   }
 
-  let autreType = activite.autreType || "";
+  document.getElementById("activityEditId").value =
+    activite.id || "";
 
-  if (nouveauType === "autre") {
-    const valeur = prompt(
-      "Précise l'activité :",
-      autreType
-    );
+  document.getElementById("activityEditDate").value =
+    activite.date || todayStr();
 
-    if (valeur === null) return;
+  document.getElementById("activityEditType").value =
+    activite.type || "repos";
 
-    autreType = valeur.trim();
-  } else {
-    autreType = "";
+  document.getElementById("activityEditAutre").value =
+    activite.autreType || "";
+
+  document.getElementById("activityEditEvaluation").value =
+    activite.evaluation || "";
+
+  document.getElementById("activityEditDuree").value =
+    toNumber(activite.duree) || "";
+
+  document.getElementById("activityEditRappels").value =
+    toNumber(activite.rappels) || "";
+
+  document.getElementById("activityEditRemarque").value =
+    activite.remarque || "";
+
+  actualiserModificationActivite();
+
+  const modal = document.getElementById("activityEditModal");
+
+  if (modal) {
+    modal.style.display = "flex";
+  }
+}
+
+
+function actualiserModificationActivite() {
+  const type =
+    document.getElementById("activityEditType")?.value || "";
+
+  const zone =
+    document.getElementById("activityEditAutreZone");
+
+  if (zone) {
+    zone.style.display =
+      type === "autre" ? "block" : "none";
+  }
+}
+
+
+function fermerModificationActivite() {
+  const modal = document.getElementById("activityEditModal");
+
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+
+async function enregistrerModificationActivite() {
+  const id =
+    document.getElementById("activityEditId")?.value || "";
+
+  const activite = safeArray(appData.activites)
+    .find((a) => a.id === id);
+
+  if (!activite) {
+    alert("Activité introuvable.");
+    return;
+  }
+
+  const date =
+    document.getElementById("activityEditDate")?.value || "";
+
+  const type =
+    document.getElementById("activityEditType")?.value || "";
+
+  const autreType =
+    document.getElementById("activityEditAutre")?.value.trim() || "";
+
+  const evaluation =
+    document.getElementById("activityEditEvaluation")?.value || "";
+
+  const duree = toNumber(
+    document.getElementById("activityEditDuree")?.value
+  );
+
+  const rappels = toNumber(
+    document.getElementById("activityEditRappels")?.value
+  );
+
+  const remarque =
+    document.getElementById("activityEditRemarque")?.value.trim() || "";
+
+
+  if (!date) {
+    alert("Indique une date.");
+    return;
+  }
+
+  if (!type) {
+    alert("Choisis une activité.");
+    return;
+  }
+
+  if (type === "autre" && !autreType) {
+    alert("Précise le type d'activité.");
+    return;
   }
 
 
-  const evaluation = prompt(
-    "Attitude :\n\n" +
-    "aucune = Aucune réaction\n" +
-    "bon = Bon\n" +
-    "tres-bon = Très bon\n" +
-    "top = Top\n\n" +
-    "Laisse vide si aucune.",
-    activite.evaluation || ""
-  );
+  activite.date = date;
+  activite.type = type;
+  activite.autreType =
+    type === "autre" ? autreType : "";
 
-  if (evaluation === null) return;
-
-  const nouvelleEvaluation =
-    evaluation.trim().toLowerCase();
+  activite.evaluation = evaluation;
+  activite.duree = duree;
+  activite.rappels = rappels;
+  activite.remarque = remarque;
 
 
-  const duree = prompt(
-    "Durée en minutes :",
-    activite.duree || ""
-  );
+  await saveData();
 
-  if (duree === null) return;
+  fermerModificationActivite();
 
+  renderActivityHistory();
 
-  const rappels = prompt(
-    "Nombre de rappels :",
-    activite.rappels || ""
-  );
-
-  if (rappels === null) return;
-
-
-  const remarque = prompt(
-    "Remarque / attitude :",
-    activite.remarque || ""
-  );
-
-  if (remarque === null) return;
-
-
-  activite.type = nouveauType;
-  activite.autreType = autreType;
-  activite.evaluation = nouvelleEvaluation;
-  activite.duree = toNumber(duree);
-  activite.rappels = toNumber(rappels);
-  activite.remarque = remarque.trim();
-
-  saveData().then(() => {
-    renderActivityHistory();
-
-    alert("Activité modifiée.");
-  });
+  alert("Activité modifiée.");
 }
+
+
+window.modifierActivite = modifierActivite;
+window.actualiserModificationActivite =
+  actualiserModificationActivite;
+
+window.fermerModificationActivite =
+  fermerModificationActivite;
+
+window.enregistrerModificationActivite =
+  enregistrerModificationActivite;
 
 
 window.renderActivityHistory = renderActivityHistory;

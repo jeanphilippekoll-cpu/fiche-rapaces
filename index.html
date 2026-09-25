@@ -2323,6 +2323,138 @@ bird-card .bird-badges {
     <div id="activityHistoryZone">
       Aucun historique affiché pour l'instant.
     </div>
+    <!-- Fenêtre de modification d'une activité -->
+<div
+  id="activityEditModal"
+  style="
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:9999;
+    background:rgba(0,0,0,0.45);
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  "
+>
+  <div
+    style="
+      background:#fffaf2;
+      width:min(700px, 95vw);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:18px;
+      padding:24px;
+      box-shadow:0 12px 40px rgba(0,0,0,0.25);
+    "
+  >
+
+    <h2 style="margin-top:0;">✏️ Modifier l'activité</h2>
+
+    <input id="activityEditId" type="hidden">
+
+    <div class="form-grid">
+
+      <div>
+        <label for="activityEditDate">Date</label>
+        <input id="activityEditDate" type="date">
+      </div>
+
+      <div>
+        <label for="activityEditType">Activité</label>
+
+        <select id="activityEditType" onchange="actualiserModificationActivite()">
+          <option value="animation">🎪 Animation</option>
+          <option value="vol">🦅 Entraînement / Vol</option>
+          <option value="repos">😴 Repos</option>
+          <option value="convalescence">🩹 Convalescence / Blessé</option>
+          <option value="autre">✋ Autre</option>
+        </select>
+      </div>
+
+      <div id="activityEditAutreZone" style="display:none;">
+        <label for="activityEditAutre">Préciser l'activité</label>
+        <input
+          id="activityEditAutre"
+          type="text"
+          placeholder="Ex : Manipulation / sociabilisation"
+        >
+      </div>
+
+      <div>
+        <label for="activityEditEvaluation">Attitude</label>
+
+        <select id="activityEditEvaluation">
+          <option value="">—</option>
+          <option value="aucune">☆☆☆ Aucune réaction</option>
+          <option value="bon">⭐ Bon</option>
+          <option value="tres-bon">⭐⭐ Très bon</option>
+          <option value="top">⭐⭐⭐ Top</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="activityEditDuree">Durée (minutes)</label>
+        <input
+          id="activityEditDuree"
+          type="number"
+          min="0"
+          step="1"
+        >
+      </div>
+
+      <div>
+        <label for="activityEditRappels">Nombre de rappels</label>
+        <input
+          id="activityEditRappels"
+          type="number"
+          min="0"
+          step="1"
+        >
+      </div>
+
+    </div>
+
+    <div style="margin-top:14px;">
+      <label for="activityEditRemarque">Remarque / attitude</label>
+
+      <textarea
+        id="activityEditRemarque"
+        rows="4"
+        placeholder="Remarque..."
+      ></textarea>
+    </div>
+
+    <div
+      class="actions"
+      style="
+        margin-top:20px;
+        display:flex;
+        gap:10px;
+        justify-content:flex-end;
+      "
+    >
+
+      <button
+        type="button"
+        class="btn"
+        onclick="fermerModificationActivite()"
+      >
+        Annuler
+      </button>
+
+      <button
+        type="button"
+        class="btn info-btn"
+        onclick="enregistrerModificationActivite()"
+      >
+        💾 Enregistrer
+      </button>
+
+    </div>
+
+  </div>
+</div>
   </div>
 
 </section>
