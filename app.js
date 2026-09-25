@@ -9523,6 +9523,765 @@ async function supprimerAlimentationFuret(furetId, alimentationIndex) {
 
 window.supprimerAlimentationFuret = supprimerAlimentationFuret;
 
+// ======================================================
+// 🖨️ FICHE IMPRIMABLE D'UN FURET
+// ======================================================
+
+function imprimerFicheFuret(furetId) {
+
+  const furet = safeArray(appData.furets)
+    .find(f => f.id === furetId);
+
+  if (!furet) {
+    alert("Impossible de retrouver ce furet.");
+    return;
+  }
+
+
+  // ====================================================
+  // PESÉES
+  // ====================================================
+
+  const pesees = safeArray(furet.pesees)
+    .filter(p =>
+      p.date &&
+      p.poids !== "" &&
+      p.poids !== null &&
+      p.poids !== undefined
+    )
+    .map(p => ({
+      date: p.date,
+      poids: toNumber(p.poids)
+    }))
+    .sort((a, b) =>
+      (a.date || "").localeCompare(b.date || "")
+    );
+
+
+  // ====================================================
+  // ALIMENTATION
+  // ====================================================
+
+  const alimentation = safeArray(furet.alimentation)
+    .filter(r => r.date)
+    .slice()
+    .sort((a, b) =>
+      (b.date || "").localeCompare(a.date || "")
+    );
+
+
+  // ====================================================
+  // COURBE DE POIDS DU FURET
+  // ====================================================
+
+  function creerCourbeFuret() {
+
+    if (pesees.length < 2) {
+      return `
+        <p class="small">
+          Pas assez de pesées pour afficher une courbe.
+        </p>
+      `;
+    }
+
+
+    const width = 700;
+    const height = 250;
+
+    const paddingLeft = 55;
+    const paddingRight = 30;
+    const paddingTop = 35;
+    const paddingBottom = 45;
+
+
+    const valeurs = pesees.map(p => p.poids);
+
+    let min = Math.min(...valeurs);
+    let max = Math.max(...valeurs);
+
+
+    const marge = Math.max(
+      5,
+      Math.round((max - min) * 0.15)
+    );
+
+
+    min -= marge;
+    max += marge;
+
+
+    const range = max - min || 1;
+
+
+    const points = pesees.map((p, index) => {
+
+      const x =
+        paddingLeft +
+        (
+          index *
+          (width - paddingLeft - paddingRight)
+        ) /
+        (pesees.length - 1);
+
+
+      const y =
+        height -
+        paddingBottom -
+        (
+          (p.poids - min) /
+          range
+        ) *
+        (
+          height -
+          paddingTop -
+          paddingBottom
+        );
+
+
+      return {
+        ...p,
+        x,
+        y
+      };
+
+    });
+
+
+    const polyline = points
+      .map(p => `${p.x},${p.y}`)
+      .join(" ");
+
+
+    const pasEtiquette = Math.max(
+      1,
+      Math.ceil(points.length / 7)
+    );
+
+
+    return `
+
+      <svg
+        width="100%"
+        viewBox="0 0 ${width} ${height}"
+        style="
+          border:1px solid #bbb;
+          border-radius:10px;
+          background:white;
+        "
+      >
+
+        <line
+          x1="${paddingLeft}"
+          y1="${height - paddingBottom}"
+          x2="${width - paddingRight}"
+          y2="${height - paddingBottom}"
+          stroke="#999"
+        />
+
+        <line
+          x1="${paddingLeft}"
+          y1="${paddingTop}"
+          x2="${paddingLeft}"
+          y2="${height - paddingBottom}"
+          stroke="#999"
+        />
+
+
+        <text
+          x="${paddingLeft - 8}"
+          y="${paddingTop + 4}"
+          font-size="11"
+          text-anchor="end"
+        >
+          ${max} g
+        </text>
+
+
+        <text
+          x="${paddingLeft - 8}"
+          y="${height - paddingBottom + 4}"
+          font-size="11"
+          text-anchor="end"
+        >
+          ${min} g
+        </text>
+
+
+        <polyline
+          points="${polyline}"
+          fill="none"
+          stroke="#333"
+          stroke-width="3"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+        />
+
+
+        ${points.map((p, index) => {
+
+          const afficher =
+            index === 0 ||
+            index === points.length - 1 ||
+            index % pasEtiquette === 0;
+
+
+          return `
+
+            <circle
+              cx="${p.x}"
+              cy="${p.y}"
+              r="5"
+              fill="#333"
+            />
+
+
+            ${
+              afficher
+
+                ? `
+                  <text
+                    x="${p.x}"
+                    y="${p.y - 10}"
+                    font-size="11"
+                    font-weight="700"
+                    text-anchor="middle"
+                  >
+                    ${p.poids} g
+                  </text>
+                `
+
+                : ""
+            }
+
+          `;
+
+        }).join("")}
+
+
+        <text
+          x="${paddingLeft}"
+          y="${height - 14}"
+          font-size="11"
+        >
+          ${safe(formatDateFR(pesees[0].date))}
+        </text>
+
+
+        <text
+          x="${width - paddingRight}"
+          y="${height - 14}"
+          text-anchor="end"
+          font-size="11"
+        >
+          ${safe(
+            formatDateFR(
+              pesees[pesees.length - 1].date
+            )
+          )}
+        </text>
+
+      </svg>
+    `;
+  }
+
+
+  // ====================================================
+  // TABLEAU DES PESÉES
+  // ====================================================
+
+  const lignesPesees = pesees
+    .slice()
+    .reverse()
+    .map(p => `
+
+      <tr>
+
+        <td>
+          ${safe(formatDateFR(p.date))}
+        </td>
+
+        <td>
+          <strong>${safe(p.poids)} g</strong>
+        </td>
+
+      </tr>
+
+    `)
+    .join("");
+
+
+  // ====================================================
+  // TABLEAU ALIMENTATION
+  // ====================================================
+
+  const lignesAlimentation = alimentation
+    .map(r => `
+
+      <tr>
+
+        <td>
+          ${safe(formatDateFR(r.date))}
+        </td>
+
+        <td>
+          ${safe(r.nourriture || "—")}
+        </td>
+
+        <td>
+          ${safe(toNumber(r.quantite))}
+        </td>
+
+      </tr>
+
+    `)
+    .join("");
+
+
+  // ====================================================
+  // OUVERTURE DE LA FICHE
+  // ====================================================
+
+  const win = window.open("", "_blank");
+
+
+  if (!win) {
+
+    alert(
+      "Le navigateur bloque la fenêtre d'impression."
+    );
+
+    return;
+  }
+
+
+  win.document.write(`
+
+    <!DOCTYPE html>
+
+    <html lang="fr">
+
+    <head>
+
+      <meta charset="UTF-8">
+
+      <title>
+        Fiche furet - ${safe(furet.nom || "")}
+      </title>
+
+
+      <style>
+
+        * {
+          box-sizing:border-box;
+        }
+
+
+        body {
+          font-family:Arial,Helvetica,sans-serif;
+          color:#222;
+          background:#fff;
+          margin:0;
+          padding:25px;
+        }
+
+
+        .actions {
+          margin-bottom:20px;
+        }
+
+
+        .print-btn {
+          border:0;
+          border-radius:8px;
+          padding:10px 16px;
+          background:#333;
+          color:white;
+          font-weight:bold;
+          cursor:pointer;
+        }
+
+
+        .header {
+          display:flex;
+          gap:22px;
+          align-items:center;
+          border-bottom:3px solid #333;
+          padding-bottom:18px;
+          margin-bottom:22px;
+        }
+
+
+        .photo {
+          width:135px;
+          height:135px;
+          object-fit:cover;
+          border-radius:16px;
+          border:1px solid #aaa;
+        }
+
+
+        .photo-placeholder {
+          width:135px;
+          height:135px;
+          border-radius:16px;
+          background:#eee;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:48px;
+          border:1px solid #ccc;
+        }
+
+
+        h1 {
+          margin:0 0 8px 0;
+          font-size:30px;
+        }
+
+
+        .subtitle {
+          font-size:16px;
+          margin-bottom:6px;
+        }
+
+
+        .current-weight {
+          display:inline-block;
+          margin-top:8px;
+          padding:8px 12px;
+          border-radius:8px;
+          background:#eee;
+          font-size:18px;
+          font-weight:bold;
+        }
+
+
+        h2 {
+          margin-top:25px;
+          padding-bottom:6px;
+          border-bottom:1px solid #bbb;
+          font-size:20px;
+        }
+
+
+        table {
+          width:100%;
+          border-collapse:collapse;
+          font-size:12px;
+        }
+
+
+        th,
+        td {
+          border:1px solid #bbb;
+          padding:7px;
+          text-align:left;
+          vertical-align:top;
+        }
+
+
+        th {
+          background:#eee;
+        }
+
+
+        tr {
+          break-inside:avoid;
+        }
+
+
+        .identity-table {
+          max-width:700px;
+        }
+
+
+        .small {
+          color:#666;
+          font-size:12px;
+        }
+
+
+        .summary {
+          display:flex;
+          gap:15px;
+          flex-wrap:wrap;
+          margin:10px 0 15px 0;
+          font-size:13px;
+          font-weight:bold;
+        }
+
+
+        .footer {
+          margin-top:30px;
+          padding-top:10px;
+          border-top:1px solid #ccc;
+          font-size:10px;
+          color:#777;
+          text-align:center;
+        }
+
+
+        @media print {
+
+          @page {
+            size:A4 portrait;
+            margin:10mm;
+          }
+
+
+          body {
+            padding:0;
+          }
+
+
+          .actions {
+            display:none;
+          }
+
+
+          h2 {
+            break-after:avoid;
+          }
+
+
+          svg {
+            break-inside:avoid;
+          }
+
+        }
+
+      </style>
+
+    </head>
+
+
+    <body>
+
+
+      <div class="actions">
+
+        <button
+          class="print-btn"
+          onclick="window.print()"
+        >
+          🖨️ Imprimer / PDF
+        </button>
+
+      </div>
+
+
+      <div class="header">
+
+
+        ${
+          furet.photo
+
+            ? `
+              <img
+                class="photo"
+                src="${safeAttr(furet.photo)}"
+                alt="${safeAttr(furet.nom || "Furet")}"
+              >
+            `
+
+            : `
+              <div class="photo-placeholder">
+                🐾
+              </div>
+            `
+        }
+
+
+        <div>
+
+          <h1>
+            🐾 ${safe(furet.nom || "Furet")}
+          </h1>
+
+
+          <div class="subtitle">
+            Fiche individuelle
+          </div>
+
+
+          <div class="current-weight">
+            ⚖️ Poids actuel :
+            ${
+              toNumber(furet.poidsActuel)
+                ? `${safe(toNumber(furet.poidsActuel))} g`
+                : "Non renseigné"
+            }
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <h2>Identité</h2>
+
+
+      <table class="identity-table">
+
+        <tbody>
+
+          <tr>
+
+            <th>Nom</th>
+
+            <td>
+              ${safe(furet.nom || "—")}
+            </td>
+
+            <th>Sexe</th>
+
+            <td>
+              ${safe(furet.sexe || "—")}
+            </td>
+
+          </tr>
+
+
+          <tr>
+
+            <th>Date de naissance</th>
+
+            <td>
+              ${
+                furet.dateNaissance
+                  ? safe(formatDateFR(furet.dateNaissance))
+                  : "—"
+              }
+            </td>
+
+            <th>N° puce</th>
+
+            <td>
+              ${safe(furet.puce || "—")}
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+
+      <h2>📈 Évolution du poids</h2>
+
+
+      <div class="summary">
+
+        <span>
+          ⚖️ Poids actuel :
+          ${
+            toNumber(furet.poidsActuel)
+              ? `${safe(toNumber(furet.poidsActuel))} g`
+              : "—"
+          }
+        </span>
+
+        <span>
+          📊 Nombre de pesées :
+          ${pesees.length}
+        </span>
+
+      </div>
+
+
+      ${creerCourbeFuret()}
+
+
+      <h2>⚖️ Historique des pesées</h2>
+
+
+      ${
+        lignesPesees
+
+          ? `
+
+            <table>
+
+              <thead>
+
+                <tr>
+                  <th>Date</th>
+                  <th>Poids</th>
+                </tr>
+
+              </thead>
+
+              <tbody>
+                ${lignesPesees}
+              </tbody>
+
+            </table>
+
+          `
+
+          : `
+            <p class="small">
+              Aucune pesée enregistrée.
+            </p>
+          `
+      }
+
+
+      <h2>🍗 Historique alimentaire</h2>
+
+
+      ${
+        lignesAlimentation
+
+          ? `
+
+            <table>
+
+              <thead>
+
+                <tr>
+                  <th>Date</th>
+                  <th>Aliment</th>
+                  <th>Quantité</th>
+                </tr>
+
+              </thead>
+
+              <tbody>
+                ${lignesAlimentation}
+              </tbody>
+
+            </table>
+
+          `
+
+          : `
+            <p class="small">
+              Aucun repas enregistré.
+            </p>
+          `
+      }
+
+
+      <div class="footer">
+        Fiche générée depuis l'application de suivi
+      </div>
+
+
+    </body>
+
+    </html>
+
+  `);
+
+
+  win.document.close();
+}
+
+
+window.imprimerFicheFuret =
+  imprimerFicheFuret;
+
 function renderFurets() {
   const zone = document.getElementById("furetsListe");
 
@@ -9617,40 +10376,41 @@ function renderFurets() {
             </div>
 
 
-            <div class="furet-actions">
+          <div class="furet-actions">
 
-              <button
-                type="button"
-                class="btn info-btn"
-                onclick="modifierFuret('${safeAttr(furet.id)}')"
-              >
-                ✏️ Modifier
-              </button>
+  <button
+    type="button"
+    class="btn info-btn"
+    onclick="modifierFuret('${safeAttr(furet.id)}')"
+  >
+    ✏️ Modifier
+  </button>
 
-              <button
-                type="button"
-                class="btn info-btn"
-                onclick="changerPhotoFuret('${safeAttr(furet.id)}')"
-              >
-                📸 Photo
-              </button>
+  <button
+    type="button"
+    class="btn info-btn"
+    onclick="changerPhotoFuret('${safeAttr(furet.id)}')"
+  >
+    📸 Photo
+  </button>
 
-              <button
-                type="button"
-                class="btn"
-                onclick="supprimerFuret('${safeAttr(furet.id)}')"
-              >
-              <button
-  type="button"
-  class="btn info-btn"
-  onclick="imprimerFicheFuret('${safeAttr(furet.id)}')"
->
-  🖨️ Fiche
-</button>
-                🗑️ Supprimer
-              </button>
+  <button
+    type="button"
+    class="btn info-btn"
+    onclick="imprimerFicheFuret('${safeAttr(furet.id)}')"
+  >
+    🖨️ Fiche
+  </button>
 
-            </div>
+  <button
+    type="button"
+    class="btn"
+    onclick="supprimerFuret('${safeAttr(furet.id)}')"
+  >
+    🗑️ Supprimer
+  </button>
+
+</div>
 
 
             <details class="furet-panel">
