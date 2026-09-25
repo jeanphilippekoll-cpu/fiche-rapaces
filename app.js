@@ -1165,58 +1165,340 @@ function getActivityEvaluationLabel(evaluation) {
   return "—";
 }
 
+function getActivityHistoryMonth() {
+  const input = document.getElementById("activityHistoryMonth");
+
+  if (input?.value) {
+    return input.value;
+  }
+
+  return todayStr().slice(0, 7);
+}
+
+
 function renderActivityHistory() {
   const zone = document.getElementById("activityHistoryZone");
   if (!zone) return;
 
-  const date = document.getElementById("activityDate")?.value || todayStr();
-  const mois = date.slice(0, 7);
+  const mois = getActivityHistoryMonth();
 
   const items = safeArray(appData.activites)
     .filter((a) => (a.date || "").slice(0, 7) === mois)
     .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
 
-  if (!items.length) {
-    zone.innerHTML = `
-      <p class="muted-line">
-        Aucune activité enregistrée pour ce mois.
-      </p>
-    `;
-    return;
-  }
+  const [annee, numeroMois] = mois.split("-");
+
+  const nomsMois = [
+    "",
+    "Janvier",
+    "Février",
+    "Mars",
+    "Avril",
+    "Mai",
+    "Juin",
+    "Juillet",
+    "Août",
+    "Septembre",
+    "Octobre",
+    "Novembre",
+    "Décembre"
+  ];
+
+  const titreMois =
+    `${nomsMois[toNumber(numeroMois)] || ""} ${annee || ""}`;
+
 
   zone.innerHTML = `
-    <div class="feed-table-wrap">
-      <table class="feed-table simple-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Oiseau</th>
-            <th>Activité</th>
-            <th>Attitude</th>
-            <th>Durée</th>
-            <th>Rappels</th>
-            <th>Remarque</th>
-          </tr>
-        </thead>
+    <div class="card-section">
 
-        <tbody>
-          ${items.map((a) => `
-            <tr>
-              <td>${formatDateFR(a.date)}</td>
-              <td><strong>${safe(a.oiseau)}</strong></td>
-              <td>${safe(getActivityTypeLabel(a.type, a.autreType))}</td>
-              <td>${safe(getActivityEvaluationLabel(a.evaluation))}</td>
-              <td>${toNumber(a.duree) > 0 ? `${toNumber(a.duree)} min` : "—"}</td>
-              <td>${toNumber(a.rappels) > 0 ? toNumber(a.rappels) : "—"}</td>
-              <td>${safe(a.remarque || "—")}</td>
-            </tr>
-          `).join("")}
-        </tbody>
-      </table>
+      <div
+        style="
+          display:flex;
+          align-items:end;
+          gap:12px;
+          flex-wrap:wrap;
+          margin-bottom:16px;
+        "
+      >
+
+        <div style="min-width:220px;">
+          <label for="activityHistoryMonth">
+            📅 Mois de l'historique
+          </label>
+
+          <input
+            id="activityHistoryMonth"
+            type="month"
+            value="${safeAttr(mois)}"
+            onchange="renderActivityHistory()"
+          >
+        </div>
+
+        <div style="padding-bottom:12px;">
+          <strong>
+            ${safe(titreMois)}
+          </strong><br>
+
+          <small>
+            ${items.length} activité${items.length > 1 ? "s" : ""}
+          </small>
+        </div>
+
+      </div>
+
+      ${
+        !items.length
+          ? `
+            <p class="muted-line">
+              Aucune activité enregistrée pour ${safe(titreMois)}.
+            </p>
+          `
+          : `
+            <div class="feed-table-wrap">
+
+              <table class="feed-table simple-table">
+
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Oiseau</th>
+                    <th>Activité</th>
+                    <th>Attitude</th>
+                    <th>Durée</th>
+                    <th>Rappels</th>
+                    <th>Remarque</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+
+                  ${items.map((a) => `
+                    <tr>
+
+                      <td>
+                        ${safe(formatDateFR(a.date))}
+                      </td>
+
+                      <td>
+                        <strong>${safe(a.oiseau)}</strong>
+                      </td>
+
+                      <td>
+                        ${safe(
+                          getActivityTypeLabel(
+                            a.type,
+                            a.autreType
+                          )
+                        )}
+                      </td>
+
+                      <td>
+                        ${safe(
+                          getActivityEvaluationLabel(
+                            a.evaluation
+                          )
+                        )}
+                      </td>
+
+                      <td>
+                        ${
+                          toNumber(a.duree) > 0
+                            ? `${toNumber(a.duree)} min`
+                            : "—"
+                        }
+                      </td>
+
+                      <td>
+                        ${
+                          toNumber(a.rappels) > 0
+                            ? toNumber(a.rappels)
+                            : "—"
+                        }
+                      </td>
+
+                      <td>
+                        ${safe(a.remarque || "—")}
+                      </td>
+
+                      <td>
+                        <div
+                          style="
+                            display:flex;
+                            gap:6px;
+                            flex-wrap:wrap;
+                          "
+                        >
+
+                          <button
+                            type="button"
+                            class="btn info-btn"
+                            onclick="modifierActivite(
+                              '${safeAttr(a.id)}'
+                            )"
+                          >
+                            ✏️ Modifier
+                          </button>
+
+                          <button
+                            type="button"
+                            class="btn btn-danger"
+                            onclick="supprimerActivite(
+                              '${safeAttr(a.id)}'
+                            )"
+                          >
+                            🗑️
+                          </button>
+
+                        </div>
+                      </td>
+
+                    </tr>
+                  `).join("")}
+
+                </tbody>
+
+              </table>
+
+            </div>
+          `
+      }
+
     </div>
   `;
 }
+
+
+async function supprimerActivite(id) {
+  const activite = safeArray(appData.activites)
+    .find((a) => a.id === id);
+
+  if (!activite) return;
+
+  const confirmation = confirm(
+    `Supprimer l'activité de ${activite.oiseau || "cet oiseau"} du ${
+      formatDateFR(activite.date)
+    } ?`
+  );
+
+  if (!confirmation) return;
+
+  appData.activites = safeArray(appData.activites)
+    .filter((a) => a.id !== id);
+
+  await saveData();
+
+  renderActivityHistory();
+}
+
+
+function modifierActivite(id) {
+  const activite = safeArray(appData.activites)
+    .find((a) => a.id === id);
+
+  if (!activite) return;
+
+  const type = prompt(
+    "Type d'activité :\n\n" +
+    "animation = Animation\n" +
+    "vol = Entraînement / Vol\n" +
+    "repos = Repos\n" +
+    "convalescence = Convalescence / Blessé\n" +
+    "autre = Autre",
+    activite.type || ""
+  );
+
+  if (type === null) return;
+
+  const typesAutorises = [
+    "animation",
+    "vol",
+    "repos",
+    "convalescence",
+    "autre"
+  ];
+
+  const nouveauType = type.trim().toLowerCase();
+
+  if (!typesAutorises.includes(nouveauType)) {
+    alert("Type d'activité non reconnu.");
+    return;
+  }
+
+  let autreType = activite.autreType || "";
+
+  if (nouveauType === "autre") {
+    const valeur = prompt(
+      "Précise l'activité :",
+      autreType
+    );
+
+    if (valeur === null) return;
+
+    autreType = valeur.trim();
+  } else {
+    autreType = "";
+  }
+
+
+  const evaluation = prompt(
+    "Attitude :\n\n" +
+    "aucune = Aucune réaction\n" +
+    "bon = Bon\n" +
+    "tres-bon = Très bon\n" +
+    "top = Top\n\n" +
+    "Laisse vide si aucune.",
+    activite.evaluation || ""
+  );
+
+  if (evaluation === null) return;
+
+  const nouvelleEvaluation =
+    evaluation.trim().toLowerCase();
+
+
+  const duree = prompt(
+    "Durée en minutes :",
+    activite.duree || ""
+  );
+
+  if (duree === null) return;
+
+
+  const rappels = prompt(
+    "Nombre de rappels :",
+    activite.rappels || ""
+  );
+
+  if (rappels === null) return;
+
+
+  const remarque = prompt(
+    "Remarque / attitude :",
+    activite.remarque || ""
+  );
+
+  if (remarque === null) return;
+
+
+  activite.type = nouveauType;
+  activite.autreType = autreType;
+  activite.evaluation = nouvelleEvaluation;
+  activite.duree = toNumber(duree);
+  activite.rappels = toNumber(rappels);
+  activite.remarque = remarque.trim();
+
+  saveData().then(() => {
+    renderActivityHistory();
+
+    alert("Activité modifiée.");
+  });
+}
+
+
+window.renderActivityHistory = renderActivityHistory;
+window.modifierActivite = modifierActivite;
+window.supprimerActivite = supprimerActivite;
 
 async function previsualiserActivitesDuJour() {
   const date = document.getElementById("activityDate")?.value || todayStr();
