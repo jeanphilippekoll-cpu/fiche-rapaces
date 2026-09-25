@@ -1081,6 +1081,7 @@ function renderActivityTable() {
           <option value="animation">🎪 Animation</option>
           <option value="vol">🦅 Entraînement / Vol</option>
           <option value="repos">😴 Repos</option>
+          <option value="convalescence">🩹 Convalescence / Blessé</option>
           <option value="autre">✋ Autre</option>
         </select>
       </td>
@@ -1151,6 +1152,7 @@ function getActivityTypeLabel(type, autreType = "") {
   if (type === "animation") return "🎪 Animation";
   if (type === "vol") return "🦅 Entraînement / Vol";
   if (type === "repos") return "😴 Repos";
+  if (type === "convalescence") return "🩹 Convalescence / Blessé";
   if (type === "autre") return `✋ ${autreType || "Autre"}`;
   return type || "—";
 }
