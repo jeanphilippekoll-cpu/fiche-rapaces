@@ -1932,20 +1932,27 @@ function getVitaminDoseForBird(bird, plan) {
 }
 
 function getDashboardComplementPlan(dayIndex, bird) {
-  const poids = getLatestBirdWeight(bird);
+  if (!bird) return "";
 
-  if (!poids) return "";
+  const plans = safeArray(appData.vitamines);
 
-  let dose = "dose à définir";
-  if (poids < 200) dose = "0,5 ml";
-  else if (poids < 500) dose = "1 ml";
-  else if (poids < 900) dose = "1,5 ml";
-  else dose = "2 ml";
+  const plan = plans.find(p => {
+    const jours = safeArray(p.jours).map(j => toNumber(j));
+    const oiseaux = safeArray(p.oiseaux).map(String);
 
-  if (dayIndex === 1) return `Aminovital — ${dose}`;
-  if (dayIndex === 5) return `Aminovital + Condi Plus — ${dose}`;
+    return (
+      jours.includes(toNumber(dayIndex)) &&
+      oiseaux.includes(String(bird.id))
+    );
+  });
 
-  return "";
+  if (!plan) return "";
+
+  const produit = plan.produit || "Complément";
+
+  const dose = getVitaminDoseForBird(bird, plan);
+
+  return `${produit} — ${dose || "dose à définir"}`;
 }
 
 function renderWeeklyVitaminTable(birds) {
